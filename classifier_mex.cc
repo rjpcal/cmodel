@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 25 16:13:20 2002
+// written: Mon Feb 25 16:43:11 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -28,6 +28,7 @@
 
 #include "mtx/mtx.h"
 
+#include "mx/mexfcn.h"
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
 
@@ -35,7 +36,6 @@
 #include "util/pointers.h"
 #include "util/strings.h"
 
-#include <exception>
 #include <iostream>
 #include <libmatlb.h>
 
@@ -47,19 +47,13 @@
 #define MEXFUNCNAME "classifier"
 #endif
 
-extern "C"
-void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]);
-
 namespace
 {
-  const int NARGIN = 4;
-  const int NARGOUT = 1;
-
   class MyMexPkg : public MexPkg
   {
   public:
     MyMexPkg(ExitFcn f) :
-      MexPkg(MEXFUNCNAME, f, mlxClassifier, NARGIN, NARGOUT),
+      MexPkg(MEXFUNCNAME, f),
       recentNumStored(-1),
       recentModel(0),
       recentObjParams(0,0)
@@ -210,6 +204,12 @@ static mxArray* Mclassifier(const Mtx& modelParams,
 //
 ///////////////////////////////////////////////////////////////////////
 
+namespace
+{
+  const int NARGIN = 4;
+  const int NARGOUT = 1;
+}
+
 extern "C"
 void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 {
@@ -249,11 +249,9 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 //
 ///////////////////////////////////////////////////////////////////////
 
-void TerminateModule_classifier()
+namespace
 {
-  mexPrintf("\tdeleting mexPkg...\n");
-  delete mexPkg;
-  mexPrintf("\tdone.\n");
+  void terminateModule() { delete mexPkg; }
 }
 
 extern "C"
@@ -262,7 +260,10 @@ mex_information mexLibrary()
   DOTRACE("mexLibrary");
 
   if (mexPkg == 0)
-    mexPkg = new MyMexPkg(TerminateModule_classifier);
+    {
+      mexPkg = new MyMexPkg(terminateModule);
+      mexPkg->addFcn(MexFcn(MEXFUNCNAME, mlxClassifier, NARGIN, NARGOUT));
+    }
 
   return mexPkg->mexInfo();
 }
