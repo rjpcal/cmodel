@@ -61,8 +61,8 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
 									  mxArray * func,
 									  mxArray * varargin);
 
-static mxArray * sampleFromPdf(mxArray * temp,
-										 mxArray * costs);
+static int sampleFromPdf_zerobased(mxArray * temp, mxArray * costs);
+
 
 static mxArray * makePDF(mxArray * temp,
 								 mxArray * costs);
@@ -233,7 +233,6 @@ static mxArray * MannealVisitParameters(int nargout_,
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * s_mx = mclGetUninitializedArray();
   mxArray * costs_mx = mclGetUninitializedArray();
   mxArray * modelmatrix_mx = mclGetUninitializedArray();
   mxArray * x_mx = mclGetUninitializedArray();
@@ -265,6 +264,7 @@ static mxArray * MannealVisitParameters(int nargout_,
   mclCopyArray(&varargin_mx);
 
   int nevals = 0;
+  int s_zerobased = 0;
 
   // for x = find(deltas' ~= 0)
   {
@@ -307,9 +307,7 @@ static mxArray * MannealVisitParameters(int nargout_,
 
 		// Sample from probability distribution
 		// s = sampleFromPdf(temp, costs);
-		mlfAssign(&s_mx, sampleFromPdf(temp_mx, costs_mx));
-
-		int s_zerobased = int(mxGetScalar(s_mx)) - 1;
+		s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
 
 		// bestModel(x, 1) = modelmatrix(x, s);
 		Mtx modelmatrix(modelmatrix_mx, Mtx::REFER);
@@ -331,12 +329,11 @@ static mxArray * MannealVisitParameters(int nargout_,
 
   // S.cost = costs(s);
   mxSetField(output, 0, "cost",
-				 mxCreateScalarDouble(mxGetPr(costs_mx)[int(mxGetScalar(s_mx))-1]));
+				 mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
 
   mxDestroyArray(x_mx);
   mxDestroyArray(modelmatrix_mx);
   mxDestroyArray(costs_mx);
-  mxDestroyArray(s_mx);
   mxDestroyArray(varargin_mx);
   mxDestroyArray(temp_mx);
   mxDestroyArray(FUN_mx);
@@ -525,7 +522,7 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix_mx,
 /*
  * function s = sampleFromPdf(temp, costs)
  */
-static mxArray * sampleFromPdf(mxArray * temp_mx, mxArray * costs_mx)
+static int sampleFromPdf_zerobased(mxArray * temp_mx, mxArray * costs_mx)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -549,8 +546,7 @@ static mxArray * sampleFromPdf(mxArray * temp_mx, mxArray * costs_mx)
 						  mclGe(mlfCumsum(dist, NULL), cutoff)));
 
   // s = s(1);
-  mlfAssign(&s_mx, mclIntArrayRef1(s_mx, 1));
-  mclValidateOutput(s_mx, 1, 1, "s", "annealVisitParameters/sampleFromPdf");
+  int s_zerobased = int(mxGetPr(s_mx)[0]) - 1;
 
   mxDestroyArray(dist);
   mxDestroyArray(cutoff);
@@ -559,7 +555,9 @@ static mxArray * sampleFromPdf(mxArray * temp_mx, mxArray * costs_mx)
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-  return s_mx;
+  mxDestroyArray(s_mx);
+
+  return s_zerobased;
 }
 
 /*
