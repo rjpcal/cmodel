@@ -35,67 +35,67 @@ private:
 
   void updateMtx() const
   {
-         itsMtx = mtx(itsArray);
-         itsMtxIsValid = true;
+    itsMtx = mtx(itsArray);
+    itsMtxIsValid = true;
   }
 
   void updateArray() const
   {
-         mlfAssign(&itsArray, itsMtx.make_mxarray());
-         itsArrayIsValid = true;
+    mlfAssign(&itsArray, itsMtx.make_mxarray());
+    itsArrayIsValid = true;
   }
 
 public:
   DualRepMtx() :
-         itsMtx(0,0),
-         itsMtxIsValid(true),
-         itsArray(mclGetUninitializedArray()),
-         itsArrayIsValid(false)
+    itsMtx(0,0),
+    itsMtxIsValid(true),
+    itsArray(mclGetUninitializedArray()),
+    itsArrayIsValid(false)
   {}
 
   DualRepMtx(const mtx& other) :
-         itsMtx(other),
-         itsMtxIsValid(true),
-         itsArray(mclGetUninitializedArray()),
-         itsArrayIsValid(false)
+    itsMtx(other),
+    itsMtxIsValid(true),
+    itsArray(mclGetUninitializedArray()),
+    itsArrayIsValid(false)
   {}
 
   ~DualRepMtx()
   {
-         mxDestroyArray(itsArray);
+    mxDestroyArray(itsArray);
   }
 
   void assignArray(mxArray* rhs)
   {
-         mlfAssign(&itsArray, rhs);
-         itsArrayIsValid = true;
-         itsMtxIsValid = false;
+    mlfAssign(&itsArray, rhs);
+    itsArrayIsValid = true;
+    itsMtxIsValid = false;
   }
 
   void assignMtx(const mtx& rhs)
   {
-         itsMtx = rhs;
-         itsMtxIsValid = true;
-         itsArrayIsValid = false;
+    itsMtx = rhs;
+    itsMtxIsValid = true;
+    itsArrayIsValid = false;
   }
 
   mxArray* asArray() const
   {
-         if (!itsArrayIsValid) updateArray();
-         return itsArray;
+    if (!itsArrayIsValid) updateArray();
+    return itsArray;
   }
 
   const mtx& asMtx() const
   {
-         if (!itsMtxIsValid) updateMtx();
-         return itsMtx;
+    if (!itsMtxIsValid) updateMtx();
+    return itsMtx;
   }
 
   mtx& ncMtx()
   {
-         if (!itsMtxIsValid) updateMtx();
-         itsArrayIsValid = false;
-         return itsMtx;
+    if (!itsMtxIsValid) updateMtx();
+    itsArrayIsValid = false;
+    return itsMtx;
   }
 };
 
