@@ -412,9 +412,6 @@ class AnnealingRun
 {
 public:
   AnnealingRun(mxArray* old_astate_mx,
-               const Mtx& valueScalingRange,
-               const Mtx& bounds,
-               const bool canUseMatrix,
                const fstring& funcName,
                int nvararg,
                mxArray** pvararg)
@@ -430,9 +427,11 @@ public:
     itsMinUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
     itsMaxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
     itsDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER),
-    itsValueScalingRange(valueScalingRange),
-    itsBounds(bounds),
-    itsCanUseMatrix(canUseMatrix),
+    itsValueScalingRange(mxGetField(astate_mx, 0, "valueScalingRange"),
+			 Mtx::BORROW),
+    itsBounds(mxGetField(astate_mx, 0, "bounds"), Mtx::BORROW),
+    itsCanUseMatrix(mxGetScalar(mxGetField(astate_mx, 0, "canUseMatrix"))
+		    != 0.0),
     itsFunFunName(funcName),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
@@ -461,6 +460,13 @@ public:
       }
   }
 
+  void updateModelHistory(const Mtx& bestModel)
+  {
+    Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
+
+    modelHist.column(itsNvisits-1) = bestModel;
+  }
+
 private:
   mxArray* const astate_mx;
   const int itsRunNum;
@@ -473,8 +479,8 @@ private:
   Mtx itsMinUsedParams;
   Mtx itsMaxUsedParams;
   Mtx itsDeltas;
-  Mtx itsValueScalingRange;
-  Mtx itsBounds;
+  const Mtx itsValueScalingRange;
+  const Mtx itsBounds;
   const bool itsCanUseMatrix;
   fstring itsFunFunName;
   int itsNvararg;
@@ -542,12 +548,7 @@ DOTRACE("AnnealingRun::go");
 
 	  updateUsedParams(bestModel);
 
-          // Update the model history matrix
-          {
-            Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
-
-            modelHist.column(itsNvisits-1) = bestModel;
-          }
+	  updateModelHistory(bestModel);
         }
     }
 
@@ -576,7 +577,7 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of outputs (1).");
     }
 
-  const int NDECLARED = 5;
+  const int NDECLARED = 2;
 
   if (nrhs < NDECLARED)
     {
@@ -584,9 +585,7 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of inputs (7).");
     }
 
-  mlfEnterNewContext(0, NDECLARED,
-                     prhs[0], prhs[1], prhs[2],
-                     prhs[3], prhs[4]);
+  mlfEnterNewContext(0, NDECLARED, prhs[0], prhs[1]);
 
   int nvararg = nrhs - NDECLARED;
   mxArray** pvararg = prhs + NDECLARED;
@@ -595,10 +594,7 @@ DOTRACE("mlxAnnealVisitParameters");
     {
       AnnealingRun ar
         (prhs[0], // astate
-         Mtx(prhs[1], Mtx::BORROW), // valueScalingRange
-         Mtx(prhs[2], Mtx::BORROW), // bounds
-         (mxGetScalar(prhs[3]) != 0.0), // canUseMatrix
-         MxWrapper::extractString(prhs[4]), // funcName
+         MxWrapper::extractString(prhs[1]), // funcName
          nvararg,
          pvararg);
 
@@ -613,9 +609,7 @@ DOTRACE("mlxAnnealVisitParameters");
       mexErrMsgTxt("an unknown C++ exception occurred.");
     }
 
-  mlfRestorePreviousContext(0, NDECLARED,
-                            prhs[0], prhs[1], prhs[2],
-                            prhs[3], prhs[4]);
+  mlfRestorePreviousContext(0, NDECLARED, prhs[0], prhs[1]);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
