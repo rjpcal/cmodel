@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Fri Mar  9 14:31:51 2001
+// written: Tue Mar 13 18:01:31 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,8 +19,8 @@ class CModelCssm : public CModelExemplar {
 private:
   // These will change depending on the most recent call to
   // findStoredExemplar
-  double itsStored1[DIM_OBJ_PARAMS];
-  double itsStored2[DIM_OBJ_PARAMS];
+  Mtx itsStored1;
+  Mtx itsStored2;
 
   Mtx itsScaledWeights;
 
