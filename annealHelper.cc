@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sat Feb 16 17:45:33 2002
+// written: Sun Feb 17 08:25:24 2002
 // $Id$
 //
 //
@@ -384,6 +384,21 @@ public:
   VisitResult visitParameters(mxArray* bestModel_mx,
                               const double temp);
 
+  void printRunHeader()
+  {
+    if (!itsTalking) return;
+
+    const double startingCost =
+      mxGetScalar(mxGetField(itsAstate_mx, 0, "startingCost"));
+
+    mexPrintf("\nStarting cost %7.2f", startingCost);
+    mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
+              itsRunNum+1, pow(10.0, itsCriticalTemp));
+    mexPrintf("------------------------------------------------\n\n");
+    mexPrintf("f-Calls\t\tTemperature\tMinimum f-Value\n");
+    mexPrintf("------------------------------------------------\n");
+  }
+
   void updateUsedParams(const Mtx& model)
   {
     for (int i = 0; i < model.nelems(); ++i)
@@ -520,17 +535,19 @@ mxArray* AnnealingRun::go()
 DOTRACE("AnnealingRun::go");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
- if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
-   {
-     Util::Prof::printAllProfData(std::cerr);
-     return mxCreateScalarDouble(-1.0);
-   }
- if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -2)
-   {
-     Util::Prof::resetAllProfData();
-     return mxCreateScalarDouble(-2.0);
-   }
+  if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
+    {
+      Util::Prof::printAllProfData(std::cerr);
+      return mxCreateScalarDouble(-1.0);
+    }
+  if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -2)
+    {
+      Util::Prof::resetAllProfData();
+      return mxCreateScalarDouble(-2.0);
+    }
 #endif
+
+  printRunHeader();
 
   for (int temps_i = 0; temps_i < itsNumTemps; ++temps_i)
     {
