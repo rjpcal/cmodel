@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Fri Mar 16 17:50:55 2001
+// written: Wed Mar 28 10:44:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,6 +19,9 @@ class CModelCssm : public CModelExemplar {
 private:
   Mtx itsStored1;
   Mtx itsStored2;
+
+  Mtx itsCachedRawWts1;
+  Mtx itsCachedRawWts2;
 
 public:
   CModelCssm(const Mtx& objParams,
