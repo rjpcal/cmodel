@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:37:02 2002
+// written: Mon Feb 18 16:40:36 2002
 // $Id$
 //
 //
@@ -404,7 +404,6 @@ class AnnealingRun
 private:
   Astate& itsAstate;
   int itsRunNum;
-  double itsCriticalTemp;
   const fstring itsFunFunName;
   const int itsNvararg;
   mxArray** const itsPvararg;
@@ -417,7 +416,6 @@ public:
     :
     itsAstate(astate),
     itsRunNum(0),
-    itsCriticalTemp(std::numeric_limits<double>::max()),
     itsFunFunName(funcName),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
@@ -455,7 +453,7 @@ public:
     return models;
   }
 
-  Mtx createStartingModel()
+  Mtx createStartingModel(double* criticalTemp)
   {
     DOTRACE("createStartingModel");
 
@@ -463,32 +461,24 @@ public:
 
     const Mtx startingCosts = doFuncEvals(startingModels);
 
-    itsCriticalTemp =
+    *criticalTemp =
       log10(startingCosts.sum() / startingCosts.nelems())
       - itsAstate.tempScales.at(itsRunNum);
 
     int startingPos = 0;
     const double startingCost = startingCosts.min(&startingPos);
 
-    printRunHeader(startingCost);
+    if (itsAstate.talking)
+      {
+        mexPrintf("\nStarting cost %7.2f", startingCost);
+        mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
+                  itsRunNum+1, pow(10.0, *criticalTemp));
+        mexPrintf("------------------------------------------------\n\n");
+        mexPrintf("f-Calls\t\tTemperature\tMinimum f-Value\n");
+        mexPrintf("------------------------------------------------\n");
+      }
 
-    Mtx startingModel = startingModels.column(startingPos);
-
-    return startingModel;
-  }
-
-  void printRunHeader(double startingCost)
-  {
-    DOTRACE("printRunHeader");
-
-    if (!itsAstate.talking) return;
-
-    mexPrintf("\nStarting cost %7.2f", startingCost);
-    mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
-              itsRunNum+1, pow(10.0, itsCriticalTemp));
-    mexPrintf("------------------------------------------------\n\n");
-    mexPrintf("f-Calls\t\tTemperature\tMinimum f-Value\n");
-    mexPrintf("------------------------------------------------\n");
+    return Mtx(startingModels.column(startingPos));
   }
 
   void displayParams(const Mtx& model, double cost)
@@ -641,11 +631,10 @@ DOTRACE("AnnealingRun::oneRun");
     }
 #endif
 
-//   itsNvisits = 0;
   int nvisits = 0;
-  itsCriticalTemp = std::numeric_limits<double>::max();
+  double criticalTemp = 0.0;
 
-  Mtx bestModel = createStartingModel();
+  Mtx bestModel = createStartingModel(&criticalTemp);
 
   Mtx minUsedParams = bestModel;
   Mtx maxUsedParams = bestModel;
@@ -654,7 +643,7 @@ DOTRACE("AnnealingRun::oneRun");
     {
       // so the temperatures range from 10^(crit_temp+1) ... 10^(crit_temp-1)
       const double temp =
-        pow(10.0, (itsCriticalTemp + 1.0
+        pow(10.0, (criticalTemp + 1.0
                    - 2.0*double(temps_i)/(itsAstate.numTemps-1)));
 
       const int temp_repeat = int(itsAstate.tempRepeats.at(temps_i));
