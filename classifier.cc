@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Feb 19 15:01:14 2002
+// written: Tue Feb 19 19:01:42 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,11 +15,13 @@
 
 #include "classifier.h"
 
-#include "util/error.h"
+#include "annealingoptimizer.h"
 #include "mxwrapper.h"
 #include "multivarfunction.h"
 #include "num.h"
 #include "simplexoptimizer.h"
+
+#include "util/error.h"
 #include "util/strings.h"
 
 #include "util/trace.h"
@@ -317,6 +319,23 @@ DOTRACE("Classifier::handleRequest");
       result.setStructField("algorithm", opt.algorithm());
 
       return result;
+    }
+
+  if ( action == "anneal" )
+    {
+      LLEvaluator objective(*this, testObjects, observedIncidence);
+
+      MxWrapper annealArgs(extraArgs.getStructField("annealOpts"));
+
+      // FIXME memory leak here?
+      AnnealOpts opts(annealArgs.release());
+
+      AnnealingOptimizer ar(objective, opts);
+
+      ar.optimize();
+
+      // FIXME memory leak here?
+      return MxWrapper(ar.getOutput());
     }
 
   return RequestResult();
