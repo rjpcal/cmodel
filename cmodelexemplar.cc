@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 28 09:00:46 2001
+// written: Wed Mar 28 09:16:56 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -174,7 +174,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const MtxIter diffEv = diffEvOut.colIter(0);
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
-
+	 DOTRACE("minkowski loop");
 	 MinkowskiBinder binder1(attWts, stored1.rowIter(x),
 									 minkPower, minkPowerInv);
 	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
@@ -183,15 +183,20 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
 
-	 int y = 0;
-	 for (MtxIter iter1 = distrust1, iter2 = distrust2;
-			iter1.hasMore();
-			++y, ++iter1, ++iter2) {
+  	 bool compute1 = true;
+  	 bool compute2 = true;
 
-		bool do1 = true;
-		bool do2 = true;
+//  	 bool compute1 = (itsStored1Cache.row(x) != stored1.row(x));
+//  	 bool compute2 = (itsStored2Cache.row(x) != stored2.row(x));
 
-		if (do1) {
+	 if (compute1) {
+		DOTRACE("compute1");
+		itsStored1Cache.row(x) = stored1.row(x);
+
+		int y = 0;
+		for (MtxIter iter1 = distrust1;
+			  iter1.hasMore();
+			  ++y, ++iter1) {
 		  if (minkPower == 2.0) {
 			 if (EXP_DECAY == itsTransferFunc) {
 				*iter1 = Num::fastexp7(-binder1.minkDist2(exemplars[y]));
@@ -209,8 +214,16 @@ DOTRACE("CModelExemplar::computeDiffEv");
 			 }
 		  }
 		}
+	 }
 
-		if (do2) {
+	 if (compute2) {
+		DOTRACE("compute1");
+		itsStored2Cache.row(x) = stored2.row(x);
+
+		int y = 0;
+		for (MtxIter iter2 = distrust2;
+			  iter2.hasMore();
+			  ++y, ++iter2) {
 		  if (minkPower == 2.0) {
 			 if (EXP_DECAY == itsTransferFunc) {
 				*iter2 = Num::fastexp7(-binder2.minkDist2(exemplars[y]));
@@ -228,8 +241,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 			 }
 		  }
 		}
-
 	 }
+
   }
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
