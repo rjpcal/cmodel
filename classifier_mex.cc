@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Wed Feb 20 17:52:15 2002
+// written: Mon Feb 25 13:56:40 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,10 +25,11 @@
 #include "cmodelpbi.h"
 #include "cmodelspc.h"
 #include "cmodelwpsm.h"
-#include "mexbuf.h"
-#include "mx.h"
 
 #include "mtx/mtx.h"
+
+#include "mx/mexbuf.h"
+#include "mx/mx.h"
 
 #include "util/error.h"
 #include "util/pointers.h"

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Wed Feb 20 17:53:01 2002
+// written: Mon Feb 25 13:56:45 2002
 // $Id$
 //
 //
@@ -23,12 +23,13 @@
 #ifndef DOSIMPLEX_CC_DEFINED
 #define DOSIMPLEX_CC_DEFINED
 
-#include "mexbuf.h"
-#include "mx.h"
 #include "matlabfunction.h"
 #include "simplexoptimizer.h"
 
 #include "mtx/mtx.h"
+
+#include "mx/mexbuf.h"
+#include "mx/mx.h"
 
 #include "util/error.h"
 #include "util/strings.h"

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Feb 20 18:07:31 2002
+// written: Mon Feb 25 13:54:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 #endif
 
 #if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MXWRAPPER_H_DEFINED)
-#include "mxwrapper.h"
+#include "mx/mxwrapper.h"
 #endif
 
 class fstring;

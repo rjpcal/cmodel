@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Feb 19 18:56:47 2002
+// written: Mon Feb 25 13:56:33 2002
 // $Id$
 //
 //
@@ -25,8 +25,9 @@
 
 #include "annealingoptimizer.h"
 #include "matlabfunction.h"
-#include "mexbuf.h"
-#include "mx.h"
+
+#include "mx/mexbuf.h"
+#include "mx/mx.h"
 
 #include "util/error.h"
 
