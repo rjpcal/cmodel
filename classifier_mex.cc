@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 25 13:56:40 2002
+// written: Mon Feb 25 14:20:36 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -28,7 +28,7 @@
 
 #include "mtx/mtx.h"
 
-#include "mx/mexbuf.h"
+#include "mx/mexpkg.h"
 #include "mx/mx.h"
 
 #include "util/error.h"
@@ -53,20 +53,12 @@ namespace
   Mtx* recentObjParams = 0;
   int recentNumStored = -1;
 
-  MexBuf* mexBuf = 0;
+  MexPkg* mexPkg = 0;
 }
 
 void InitializeModule_classifier()
 {
   DOTRACE("InitializeModule_classifier");
-  mexBuf = new MexBuf;
-#ifdef MIPS_PRO
-  cout = mexBuf;
-  cerr = mexBuf;
-#else
-  std::cout.rdbuf(mexBuf);
-  std::cerr.rdbuf(mexBuf);
-#endif
 
   mexPrintf("loading '" MEXFUNCNAME "' mex file\n");
 
@@ -88,10 +80,8 @@ void TerminateModule_classifier()
   mexPrintf("\tdeleting recentModel...\n");
   delete recentModel;
 
-  mexPrintf("\tdeleting recentModel...\n");
-  std::cout.rdbuf(0);
-  std::cerr.rdbuf(0);
-  delete mexBuf;
+  mexPrintf("\tdeleting mexPkg...\n");
+  delete mexPkg;
   mexPrintf("\tdone.\n");
 }
 
@@ -301,6 +291,9 @@ extern "C"
 mex_information mexLibrary()
 {
   DOTRACE("mexLibrary");
+
+  if (mexPkg == 0)
+    mexPkg = new MexPkg;
 
   static _mexInitTermTableEntry init_term_table[1] =
     { { InitializeModule_classifier, TerminateModule_classifier }, };
