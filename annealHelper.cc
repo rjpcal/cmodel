@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 15:28:53 2002
+// written: Fri Feb 15 15:35:31 2002
 // $Id$
 //
 //
@@ -440,78 +440,81 @@ DOTRACE("annealHelper");
 
   mxArray* const astate_mx = mxDuplicateArray(old_astate_mx);
 
-  const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
+  const int astate_t = int(mxGetScalar(mxGetField(astate_mx, 0, "t")));
 
-  const int w_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "w")));
-
-  const double temp = astate_T.at(w_onebased-1);
-
-  int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
-  ++astate_c;
-  mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
-
-  const bool astate_talk =
-    (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
-
-  Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
-  Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
-
-  const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
-
-  if (astate_talk && (astate_c % 10 == 0))
+  for (int w_onebased = 1; w_onebased <= astate_t; ++w_onebased)
     {
-      mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                int(numFunEvals.at(k_onebased -1)),
-                temp,
-                energy.column(k_onebased-1).leftmost(astate_c-1).min());
+      const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
+
+      const double temp = astate_T.at(w_onebased-1);
+
+      int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+      ++astate_c;
+      mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
+
+      const bool astate_talk =
+        (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
+
+      Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
+      Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
+
+      const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
+
+      if (astate_talk && (astate_c % 10 == 0))
+        {
+          mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
+                    int(numFunEvals.at(k_onebased -1)),
+                    temp,
+                    energy.column(k_onebased-1).leftmost(astate_c-1).min());
+        }
+
+      VisitResult vresult =
+        annealVisitParameters(mxGetField(astate_mx, 0, "bestModel"),
+                              valueScalingRange,
+                              deltas,
+                              bounds,
+                              canUseMatrix,
+                              func_name,
+                              temp,
+                              nvararg,
+                              pvararg);
+
+      mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
+
+      numFunEvals.at(k_onebased-1) += vresult.nevals;
+
+      energy.at(astate_c-1,k_onebased-1) = vresult.cost;
+
+      const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
+
+      // Update the used parameter ranges
+      {
+        Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
+        Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
+
+        if (minUsedParams.nelems() != bestModel.nelems()
+            || maxUsedParams.nelems() != bestModel.nelems())
+          {
+            mexErrMsgTxt("size mismatch in annealHelper()");
+          }
+
+        for (int i = 0; i < bestModel.nelems(); ++i)
+          {
+            minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
+                                           bestModel.at(i));
+
+            maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
+                                           bestModel.at(i));
+          }
+      }
+
+      // Update the model history matrix
+      {
+        Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
+
+        modelHist.column(astate_c-1) = bestModel;
+      }
     }
-
-  VisitResult vresult =
-    annealVisitParameters(mxGetField(astate_mx, 0, "bestModel"),
-                          valueScalingRange,
-                          deltas,
-                          bounds,
-                          canUseMatrix,
-                          func_name,
-                          temp,
-                          nvararg,
-                          pvararg);
-
-  mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
-
-  numFunEvals.at(k_onebased-1) = numFunEvals.at(k_onebased-1) + vresult.nevals;
-
-  energy.at(astate_c-1,k_onebased-1) = vresult.cost;
-
-  const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
-
-  // Update the used parameter ranges
-  {
-    Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
-    Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
-
-    if (minUsedParams.nelems() != bestModel.nelems()
-        || maxUsedParams.nelems() != bestModel.nelems())
-      {
-        mexErrMsgTxt("size mismatch in annealHelper()");
-      }
-
-    for (int i = 0; i < bestModel.nelems(); ++i)
-      {
-        minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
-                                       bestModel.at(i));
-
-        maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
-                                       bestModel.at(i));
-      }
-  }
-
-  // Update the model history matrix
-  {
-    Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
-
-    modelHist.column(astate_c-1) = bestModel;
-  }
 
   return astate_mx;
 }
