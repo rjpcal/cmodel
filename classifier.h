@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Apr 26 18:35:20 2001
+// written: Mon Apr 30 12:01:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -37,7 +37,7 @@ public:
 						const Mtx& observedIncidence);
 
   struct RequestResult {
-	 RequestResult() : requestHandled(false), result() {}
+	 RequestResult() : requestHandled(false), result(Mtx(0,0)) {}
 
 	 RequestResult(Mtx res) :
 		requestHandled(true), result(res) {}
