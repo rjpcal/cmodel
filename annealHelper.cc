@@ -425,6 +425,8 @@ public:
     itsNvisits(0),
     itsNumFunEvals(mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER),
     itsEnergy(mxGetField(astate_mx, 0, "energy"), Mtx::REFER),
+    itsMinUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
+    itsMaxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
     valueScalingRange(valueScalingRange_),
     bounds(bounds_),
     canUseMatrix(canUseMatrix_),
@@ -435,6 +437,18 @@ public:
 
   mxArray* go();
 
+  void updateUsedParams(const Mtx& model)
+  {
+    for (int i = 0; i < model.nelems(); ++i)
+      {
+	itsMinUsedParams.at(i) = std::min(double(itsMinUsedParams.at(i)),
+					  model.at(i));
+
+	itsMaxUsedParams.at(i) = std::max(double(itsMaxUsedParams.at(i)),
+					  model.at(i));
+      }
+  }
+
 private:
   mxArray* const astate_mx;
   const int itsRunNum;
@@ -442,6 +456,8 @@ private:
   int itsNvisits;
   Mtx itsNumFunEvals;
   Mtx itsEnergy;
+  Mtx itsMinUsedParams;
+  Mtx itsMaxUsedParams;
   Mtx valueScalingRange;
   Mtx bounds;
   const bool canUseMatrix;
@@ -472,9 +488,6 @@ DOTRACE("AnnealingRun::go");
      return mxCreateScalarDouble(-2.0);
    }
 #endif
-
-  Mtx minUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
-  Mtx maxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
 
   const Mtx temps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW);
   const Mtx astate_x(mxGetField(astate_mx, 0, "x"), Mtx::BORROW);
@@ -517,23 +530,7 @@ DOTRACE("AnnealingRun::go");
 
           const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
-          // Update the used parameter ranges
-          {
-            if (minUsedParams.nelems() != bestModel.nelems()
-                || maxUsedParams.nelems() != bestModel.nelems())
-              {
-                mexErrMsgTxt("size mismatch in AnnealingRun::go()");
-              }
-
-            for (int i = 0; i < bestModel.nelems(); ++i)
-              {
-                minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
-                                               bestModel.at(i));
-
-                maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
-                                               bestModel.at(i));
-              }
-          }
+	  updateUsedParams(bestModel);
 
           // Update the model history matrix
           {
@@ -551,7 +548,7 @@ DOTRACE("AnnealingRun::go");
     for (int i = 0; i < currentDeltas.nelems(); ++i)
       {
         currentDeltas.at(i) =
-          0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
+          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
       }
   }
 
