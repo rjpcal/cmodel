@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Feb 19 10:20:05 2002
+// written: Tue Feb 19 10:58:36 2002
 // $Id$
 //
 //
@@ -119,18 +119,35 @@ DOTRACE("mlxAnnealHelper");
 
   try
     {
-      AnnealOpts opts(prhs[0]);
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+      if (nvararg > 0 && Mx::getInt(pvararg[0]) == -1)
+        {
+          Util::Prof::printAllProfData(std::cerr);
+          plhs[0] = mxCreateScalarDouble(-1.0);
+        }
+      if (nvararg > 0 && Mx::getInt(pvararg[0]) == -2)
+        {
+          Util::Prof::resetAllProfData();
+          plhs[0] = mxCreateScalarDouble(-2.0);
+        }
+      else
+        {
+#endif
+          AnnealOpts opts(prhs[0]);
 
-      MatlabFunction objective(Mx::getString(prhs[1]), // funcName
-                               nvararg,
-                               pvararg,
-                               opts.canUseMatrix);
+          MatlabFunction objective(Mx::getString(prhs[1]), // funcName
+                                   nvararg,
+                                   pvararg,
+                                   opts.canUseMatrix);
 
-      AnnealingOptimizer ar(objective, opts);
+          AnnealingOptimizer ar(objective, opts);
 
-      ar.optimize();
+          ar.optimize();
 
-      plhs[0] = ar.getOutput();
+          plhs[0] = ar.getOutput();
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+        }
+#endif
     }
   catch (Util::Error& err)
     {

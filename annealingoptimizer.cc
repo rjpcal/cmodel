@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Feb 19 10:12:01 2002
+// written: Tue Feb 19 10:58:21 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ namespace
   double matlabRand()
   {
     mxArray* arr = mlfNRand(1, NULL);
-    double result = mxGetScalar(arr);
+    double result = Mx::getDouble(arr);
     mxDestroyArray(arr);
     return result;
   }
@@ -216,19 +216,6 @@ AnnealingOptimizer::AnnealingOptimizer(MultivarFunction& objective,
 void AnnealingOptimizer::doOneRun()
 {
 DOTRACE("AnnealingOptimizer::doOneRun");
-
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-  if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
-    {
-      Util::Prof::printAllProfData(std::cerr);
-      return mxCreateScalarDouble(-1.0);
-    }
-  if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -2)
-    {
-      Util::Prof::resetAllProfData();
-      return mxCreateScalarDouble(-2.0);
-    }
-#endif
 
   int nvisits = 0;
   double criticalTemp = 0.0;

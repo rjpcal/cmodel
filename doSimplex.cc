@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Feb 19 10:27:49 2002
+// written: Tue Feb 19 11:01:05 2002
 // $Id$
 //
 //
@@ -56,7 +56,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
         }
     }
 
-  return int(mxGetScalar(arr));
+  return Mx::getInt(arr);
 }
 
 namespace
@@ -122,32 +122,28 @@ static mxArray * MdoSimplex(mxArray * * fval,
 {
 DOTRACE("MdoSimplex");
 
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-  if (debugFlags_mx && mxIsStruct(debugFlags_mx))
-    {
-      mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
-
-      if (debugFlag)
-        {
-          if (mxGetScalar(debugFlag) == -1)
-            {
-              Util::Prof::printAllProfData(std::cerr);
-              return mxCreateScalarDouble(-1.0);
-            }
-
-          if (mxGetScalar(debugFlag) == -2)
-            {
-              Util::Prof::resetAllProfData();
-              return mxCreateScalarDouble(-2.0);
-            }
-        }
-    }
-#endif
-
   try
     {
-      // numModelParams = prod(size(x));
-      const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+      if (Mx::hasField(debugFlags_mx, "debugFlag"))
+        {
+          int debugFlag = Mx::getIntField(debugFlags_mx, "debugFlag");
+
+          if (debugFlag == -1)
+            {
+              Util::Prof::printAllProfData(std::cerr);
+            }
+          else if (debugFlag == -2)
+            {
+              Util::Prof::resetAllProfData();
+            }
+
+          return mxCreateScalarDouble(debugFlag);
+        }
+#endif
+
+      const Mtx x(x_in, Mtx::BORROW);
+      const int numModelParams = x.nelems();
 
       MatlabFunction objective(Mx::getString(funfcn_mx),
                                nvararg,
@@ -160,8 +156,8 @@ DOTRACE("MdoSimplex");
                            numModelParams,
                            extractMaxIters(maxfun_mx, numModelParams),
                            extractMaxIters(maxiter_mx, numModelParams),
-                           mxGetScalar(tolx_mx),
-                           mxGetScalar(tolf_mx)
+                           Mx::getDouble(tolx_mx),
+                           Mx::getDouble(tolf_mx)
                            );
 
       int exitFlag = opt.optimize();

@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:10:06 2002
-// written: Tue Feb 19 09:52:56 2002
+// written: Tue Feb 19 11:06:38 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,6 +16,7 @@
 #include "matlabfunction.h"
 
 #include "mtx.h"
+#include "mx.h"
 
 #include "util/error.h"
 
@@ -105,7 +106,7 @@ DOTRACE("MatlabFunction::evaluateSerial");
       if (err != 0)
         throw Util::Error("mexCallMATLAB failed in evaluateSerial");
 
-      result.at(e) = mxGetScalar(cost_mx);
+      result.at(e) = Mx::getDouble(cost_mx);
 
       mxDestroyArray(cost_mx);
     }

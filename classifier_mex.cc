@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 19 10:29:07 2002
+// written: Tue Feb 19 10:50:34 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -118,13 +118,8 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   if (whichType == "cssm")
     {
 
-      int numStoredExemplars = 0;
-      if (extraArgs_mx && mxIsStruct(extraArgs_mx))
-        {
-          mxArray* ns_mx = mxGetField(extraArgs_mx, 0, "numStoredExemplars");
-          if (ns_mx)
-            numStoredExemplars = int(mxGetScalar(ns_mx));
-        }
+      int numStoredExemplars =
+        Mx::getIntField(extraArgs_mx, "numStoredExemplars");
 
       if ( (numStoredExemplars == recentNumStored) &&
            (objParams == *recentObjParams) )
@@ -185,13 +180,8 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
     }
   else if (whichType == "spc")
     {
-      int numStoredExemplars = 0;
-      if (extraArgs_mx && mxIsStruct(extraArgs_mx))
-        {
-          mxArray* ns_mx = mxGetField(extraArgs_mx, 0, "numStoredExemplars");
-          if (ns_mx)
-            numStoredExemplars = int(mxGetScalar(ns_mx));
-        }
+      int numStoredExemplars =
+        Mx::getIntField(extraArgs_mx, "numStoredExemplars");
 
       return shared_ptr<Classifier>
         (new CModelSPC(objParams, numStoredExemplars));
@@ -215,31 +205,27 @@ static mxArray* Mclassifier(int /* nargout_ */,
 
   try
     {
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+      if (Mx::hasField(extraArgs_mx, "debugFlag"))
+        {
+          int debugFlag = Mx::getIntField(extraArgs_mx, "debugFlag");
+
+          if (debugFlag == -1)
+            {
+              Util::Prof::printAllProfData(cerr);
+            }
+          else if (debugFlag == -2)
+            {
+              Util::Prof::resetAllProfData();
+            }
+
+          return mxCreateScalarDouble(debugFlag);
+        }
+#endif
+
       fstring modelName = Mx::getString(modelName_mx);
 
       fstring actionRequest = Mx::getString(actionRequest_mx);
-
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (extraArgs_mx && mxIsStruct(extraArgs_mx))
-        {
-          mxArray* debugFlag = mxGetField(extraArgs_mx, 0, "debugFlag");
-
-          if (debugFlag)
-            {
-              if (mxGetScalar(debugFlag) == -1)
-                {
-                  Util::Prof::printAllProfData(cerr);
-                  return mxCreateScalarDouble(-1.0);
-                }
-
-              if (mxGetScalar(debugFlag) == -2)
-                {
-                  Util::Prof::resetAllProfData();
-                  return mxCreateScalarDouble(-2.0);
-                }
-            }
-        }
-#endif
 
       //---------------------------------------------------------------------
       //
