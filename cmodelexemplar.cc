@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar 12 17:04:06 2001
+// written: Mon Mar 12 17:05:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -243,6 +243,8 @@ double CModelExemplar::fetchSigmaNoise(const Mtx& modelParams) const
 {
   return modelParams.at(5) * sqrt(itsNumStoredExemplars*2.0);
 }
+
+void CModelExemplar::loadModelParams(Mtx& modelParams) {}
 
 static const char vcid_cmodelexemplar_cc[] = "$Header$";
 #endif // !CMODELEXEMPLAR_CC_DEFINED
