@@ -369,7 +369,8 @@ public:
     itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
-    itsCriticalTemp(mxGetScalar(Mx::getField(itsAstate_mx, "crit_temp"))),
+//     itsCriticalTemp(mxGetScalar(Mx::getField(itsAstate_mx, "crit_temp"))),
+    itsCriticalTemp(std::numeric_limits<double>::max()),
     itsNumTemps(int(mxGetScalar(Mx::getField(itsAstate_mx, "numTemps")))),
     itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
     itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
@@ -397,6 +398,12 @@ public:
     DOTRACE("createStartingModel");
 
     Mtx startingCosts(Mx::getField(itsAstate_mx, "startingCosts"), Mtx::BORROW);
+
+    Mtx tempScales(Mx::getField(itsAstate_mx, "tempScales"), Mtx::BORROW);
+
+    itsCriticalTemp =
+      log10(startingCosts.sum() / startingCosts.nelems())
+      - tempScales.at(itsRunNum);
 
     int startingPos = 0;
     const double startingCost = startingCosts.min(&startingPos);
@@ -479,7 +486,7 @@ private:
   const int itsRunNum;
   const bool itsTalking;
   int itsNvisits;
-  const double itsCriticalTemp;
+  double itsCriticalTemp;
   const int itsNumTemps;
   Mtx itsTempRepeats;
   Mtx itsNumFunEvals;
