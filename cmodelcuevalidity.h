@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Wed Feb 20 18:07:56 2002
+// written: Mon Mar  4 17:40:12 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,8 +34,8 @@ protected:
 
 private:
   Flag itsFlags;
-  Mtx itsTraining1;
-  Mtx itsTraining2;
+  const Mtx itsTraining1;
+  const Mtx itsTraining2;
 };
 
 static const char vcid_cmodelcuevalidity_h[] = "$Header$";
