@@ -59,20 +59,24 @@ ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
+		Slice result(&itsStored1[0], 1, DIM_OBJ_PARAMS);
+
 		Num::linearCombo(itsScaledWeights.row(n),
 							  training1(),
-							  &itsStored1[0]);
+							  result);
 
-		return Slice(&itsStored1[0], 1, DIM_OBJ_PARAMS);
+		return result;
 	 }
 
   else if (CAT2 == cat)
 	 {
+		Slice result (&itsStored2[0], 1, DIM_OBJ_PARAMS);
+
 		Num::linearCombo(itsScaledWeights.row(n+numStoredExemplars()),
 							  training2(),
-							  &itsStored2[0]);
+							  result);
 
-		return Slice(&itsStored2[0], 1, DIM_OBJ_PARAMS);
+		return result;
 	 }
 
   else
