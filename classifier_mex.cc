@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 19 10:50:34 2002
+// written: Tue Feb 19 11:38:06 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,7 +18,6 @@
 #endif
 
 #include "classifier.h"
-#include "classifier_mex.h"
 
 #include "cmodelcssm.h"
 #include "cmodelcuevalidity.h"
@@ -98,17 +97,6 @@ void TerminateModule_classifier()
   delete mexBuf;
   mexPrintf("\tdone.\n");
 }
-
-static mexFunctionTableEntry classifierFunctionTable[1] = {
-#ifndef LOCAL_DEBUG
-  { "classifier", mlxClassifier, 6, 1, &_local_function_table_classifier }
-#else
-  { "dclassifier", mlxClassifier, 6, 1, &_local_function_table_classifier }
-#endif
-};
-
-_mexLocalFunctionTable _local_function_table_classifier
-= { 1, classifierFunctionTable };
 
 shared_ptr<Classifier> makeClassifier(const fstring& whichType,
                                       const Mtx& objParams,
@@ -195,8 +183,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   return shared_ptr<Classifier>(0);
 }
 
-static mxArray* Mclassifier(int /* nargout_ */,
-                            mxArray* modelParams_mx,
+static mxArray* Mclassifier(mxArray* modelParams_mx,
                             mxArray* modelName_mx,
                             mxArray* actionRequest_mx,
                             mxArray* extraArgs_mx)
@@ -227,15 +214,6 @@ static mxArray* Mclassifier(int /* nargout_ */,
 
       fstring actionRequest = Mx::getString(actionRequest_mx);
 
-      //---------------------------------------------------------------------
-      //
-      // Set up
-      //
-      //---------------------------------------------------------------------
-
-      mexLocalFunctionTable save_local_function_table_ =
-        mclSetCurrentLocalFunctionTable(&_local_function_table_classifier);
-
       validateInput(modelParams_mx);
       // This Mtx will copy the data leaving the original mxArray untouched
       Mtx allModelParams(modelParams_mx);
@@ -254,14 +232,6 @@ static mxArray* Mclassifier(int /* nargout_ */,
           fstring msg("unknown model action: ", actionRequest);
           mexWarnMsgTxt(msg.c_str());
         }
-
-      //---------------------------------------------------------------------
-      //
-      // Clean up
-      //
-      //---------------------------------------------------------------------
-
-      mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
       return res.result.release();
     }
@@ -283,44 +253,6 @@ static mxArray* Mclassifier(int /* nargout_ */,
 
 
 
-
-///////////////////////////////////////////////////////////////////////
-//
-// The function "mlfClassifier" contains the normal interface for the
-// "classifier" function. This function processes any input arguments
-// and passes them to the implementation version of the function,
-// appearing above.
-//
-///////////////////////////////////////////////////////////////////////
-
-extern "C"
-mxArray* mlfClassifier(mxArray* modelParams_mx,
-                       mxArray* modelName_mx,
-                       mxArray* actionRequest_mx,
-                       mxArray* extraArgs_mx)
-{
-  DOTRACE("mlfClassifier");
-
-  int nargout = 1;
-
-  mlfEnterNewContext(0, CLASSIFIER_NARGIN,
-                     modelParams_mx, modelName_mx, actionRequest_mx,
-                     extraArgs_mx);
-
-  mxArray* result = Mclassifier(nargout,
-                                modelParams_mx, modelName_mx, actionRequest_mx,
-                                extraArgs_mx);
-
-  mlfRestorePreviousContext(0, CLASSIFIER_NARGIN,
-                            modelParams_mx, modelName_mx, actionRequest_mx,
-                            extraArgs_mx);
-
-  return mlfReturnValue(result);
-}
-
-
-
-
 ///////////////////////////////////////////////////////////////////////
 //
 // The function "mlxClassifier" contains the feval interface for the
@@ -331,44 +263,46 @@ mxArray* mlfClassifier(mxArray* modelParams_mx,
 //
 ///////////////////////////////////////////////////////////////////////
 
+namespace
+{
+  const int NARGIN = 4;
+  const int NARGOUT = 1;
+}
+
 extern "C"
 void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 {
   DOTRACE("mlxClassifier");
 
-  const int NUM_OUTPUTS = 1;
+  mxArray* mprhs[NARGIN];
 
-  mxArray * mprhs[CLASSIFIER_NARGIN];
-  mxArray * mplhs[NUM_OUTPUTS];
-  int i;
-  if (nlhs > NUM_OUTPUTS)
+  if (nlhs != NARGOUT)
     {
-      mexErrMsgTxt("Run-time Error: "
-                   "The function \"classifier\" was called with more "
-                   "than the declared number of outputs (1).");
+      mexErrMsgTxt("Error: classifier was called with the wrong "
+                   "number of outputs (should be 1).");
     }
-  if (nrhs > CLASSIFIER_NARGIN)
+
+  if (nrhs != NARGIN)
     {
-      mexErrMsgTxt("Run-time Error: "
-                   "The function \"classifier\" was called with more "
-                   "than the declared number of inputs.");
+      mexErrMsgTxt("Error: classifier was called with the wrong "
+                   "number of inputs (should be 4).");
     }
-  for (i = 0; i < NUM_OUTPUTS; ++i)
-    {
-      mplhs[i] = mclGetUninitializedArray();
-    }
-  for (i = 0; i < CLASSIFIER_NARGIN && i < nrhs; ++i)
+
+  for (int i = 0; i < NARGIN; ++i)
     {
       mprhs[i] = prhs[i];
     }
-  for (; i < CLASSIFIER_NARGIN; ++i)
-    {
-      mprhs[i] = NULL;
-    }
 
-  mplhs[0] = mlfClassifier(mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
 
-  plhs[0] = mplhs[0];
+  mlfEnterNewContext(0, NARGIN,
+                     mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+
+  mxArray* result = Mclassifier(mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+
+  mlfRestorePreviousContext(0, NARGIN,
+                            mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+
+  plhs[0] = mlfReturnValue(result);
 }
 
 
@@ -391,8 +325,14 @@ mex_information mexLibrary()
   static _mexInitTermTableEntry init_term_table[1] =
     { { InitializeModule_classifier, TerminateModule_classifier }, };
 
+  static mexFunctionTableEntry function_table[1] =
+    {
+      { MEXFUNCNAME, mlxClassifier, NARGIN, NARGOUT,
+        (_mexLocalFunctionTable*)0 }
+    };
+
   static _mex_information _mex_info
-    = { 1, 1, classifierFunctionTable, 0, NULL, 0, NULL, 1, init_term_table };
+    = { 1, 1, function_table, 0, NULL, 0, NULL, 1, init_term_table };
 
   return &_mex_info;
 }
