@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sun Feb 17 18:01:18 2002
+// written: Sun Feb 17 18:21:09 2002
 // $Id$
 //
 //
@@ -393,13 +393,26 @@ public:
   VisitResult visitParameters(mxArray* bestModel_mx,
                               const double temp);
 
+  Mtx doFuncEvals(const Mtx& models)
+  {
+    if (itsCanUseMatrix)
+      return doParallelFuncEvals(models, itsFunFunName,
+                                 itsNvararg, itsPvararg);
+
+    return doSerialFuncEvals(models, itsFunFunName,
+                             itsNvararg, itsPvararg);
+  }
+
   void createStartingModel()
   {
     DOTRACE("createStartingModel");
 
-    Mtx startingCosts(Mx::getField(itsAstate_mx, "startingCosts"), Mtx::BORROW);
+    const Mtx startingModels(Mx::getField(itsAstate_mx, "startingModels"),
+                             Mtx::BORROW);
 
-    Mtx tempScales(Mx::getField(itsAstate_mx, "tempScales"), Mtx::BORROW);
+    const Mtx startingCosts = doFuncEvals(startingModels);
+
+    const Mtx tempScales(Mx::getField(itsAstate_mx, "tempScales"), Mtx::BORROW);
 
     itsCriticalTemp =
       log10(startingCosts.sum() / startingCosts.nelems())
@@ -410,8 +423,6 @@ public:
 
     printRunHeader(startingCost);
 
-    Mtx startingModels(Mx::getField(itsAstate_mx, "startingModels"),
-                       Mtx::BORROW);
     Mtx startingModel = startingModels.column(startingPos);
 
     itsMinUsedParams = startingModel;
@@ -528,15 +539,8 @@ VisitResult AnnealingRun::visitParameters(mxArray* bestModel_mx,
                                        delta,
                                        itsBounds);
 
-      // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-      if (itsCanUseMatrix)
-        costs = doParallelFuncEvals(modelmatrix, itsFunFunName,
-                                    itsNvararg, itsPvararg);
-      else
-        costs = doSerialFuncEvals(modelmatrix, itsFunFunName,
-                                  itsNvararg, itsPvararg);
+      costs = doFuncEvals(modelmatrix);
 
-      // S.nevals = S.nevals + length(costs);
       nevals += costs.nelems();
 
       // Sample from probability distribution
