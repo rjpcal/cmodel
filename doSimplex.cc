@@ -16,6 +16,38 @@
 #define LOCAL_DEBUG
 #include "trace.h"
 
+// ? max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
+bool withinTolf(mxArray* funcVals_mx, const double tolf)
+{
+  Mtx funcVals_ref(funcVals_mx, Mtx::BORROW);
+  double max_fdiff = 0.0;
+  for (int elem = 1; elem < funcVals_ref.nelems(); ++elem)
+	 {
+		double current = fabs(funcVals_ref.at(elem) - funcVals_ref.at(0));
+		if (current > max_fdiff) max_fdiff = current;
+	 }
+
+  return (max_fdiff <= tolf);
+}
+
+// ? max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx
+bool withinTolx(mxArray* simplex_mx, const double tolx)
+{
+  Mtx simplex(simplex_mx, Mtx::BORROW);
+  double max_xdiff = 0.0;
+  for (int col = 1; col < simplex.ncols(); ++col)
+	 {
+		for (int row = 0; row < simplex.mrows(); ++row)
+		  {
+			 double current = fabs(simplex.at(row,col) - simplex.at(row,0));
+			 if (current > max_xdiff) max_xdiff = current;
+		  }
+	 }
+
+  return (max_xdiff <= tolx);
+}
+
+
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
                                 'l', 'e', ':', ' ', 'd', 'o', 'S', 'i', 'm',
@@ -601,6 +633,9 @@ DOTRACE("MdoSimplex");
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
+	 const double tolx = mxGetScalar(tolx_mx);
+	 const double tolf = mxGetScalar(tolf_mx);
+
     // doSimplex(funfcn,x,printtype,tolx,tolf,maxfun,maxiter,debugFlags,varargin)
     // 
     // %   Copyright 1984-2000 The MathWorks, Inc. 
@@ -968,76 +1003,11 @@ DOTRACE("MdoSimplex");
             break;
         }
 
-        // if max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx & ...
-		  // max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
         {
 			 DOTRACE("check if done");
 
-				Mtx theSimplex_ref(theSimplex, Mtx::BORROW);
-				double max_xdiff = 0.0;
-				for (int col = 1; col < theSimplex_ref.ncols(); ++col)
-				  {
-					 for (int row = 0; row < theSimplex_ref.mrows(); ++row)
-						{
-						  double current = fabs(theSimplex_ref.at(row,col) - theSimplex_ref.at(row,0));
-						  if (current > max_xdiff) max_xdiff = current;
-						}
-				  }
-
-				double tolx = mxGetScalar(tolx_mx);
-
-				bool within_tolx = (max_xdiff <= tolx);
-
-
-				mxArray* max_fdiff_mx = mclInitialize(
-															  mlfMax(
-																		NULL,
-																		mclVe(
-																				mlfAbs(
-																						 mclMinus(
-																									 mclVe(
-																											 mclIntArrayRef1(funcVals, 1)),
-																									 mclVe(
-																											 mclArrayRef1(funcVals, two2np1))))),
-																		NULL,
-																		NULL));
-
-				double max_fdiff_mat = mxGetScalar(max_fdiff_mx);
-				mxDestroyArray(max_fdiff_mx);
-
-				Mtx funcVals_ref(funcVals, Mtx::BORROW);
-				double max_fdiff = 0.0;
-				for (int elem = 1; elem < funcVals_ref.nelems(); ++elem)
-				  {
-					 double current = fabs(funcVals_ref.at(elem) - funcVals_ref.at(0));
-					 if (current > max_fdiff) max_fdiff = current;
-				  }
-
-				mexPrintf("max_fdiff %f, diff_diff %f\n", max_fdiff, (max_fdiff_mat - max_fdiff));
-
-            if (within_tolx
-                && mlfTobool(
-									  mclLe(
-											  mclVe(
-													  mlfMax(
-																NULL,
-																mclVe(
-																		mlfAbs(
-																				 mclMinus(
-																							 mclVe(
-																									 mclIntArrayRef1(funcVals, 1)),
-																							 mclVe(
-																									 mclArrayRef1(funcVals, two2np1))))),
-																NULL,
-																NULL)),
-											  mclVa(tolf_mx, "tolf"))))
-				  {
-                break;
-				  }
-				else
-				  {
-					 // nothing
-				  }
+			 if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
+				break; // main loop
         }
 
         // how = '';
