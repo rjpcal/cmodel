@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 17:54:23 2002
+// written: Thu Feb 14 18:33:43 2002
 // $Id$
 //
 //
@@ -44,8 +44,6 @@ static mxArray* _mxarray21_;
 static mxArray* _mxarray22_;
 static mxArray* _mxarray23_;
 
-static mxArray* _mxarray26_;
-
 namespace
 {
   MexBuf* mexBuf = 0;
@@ -83,7 +81,6 @@ void InitializeModule_annealVisitParameters()
   _mxarray21_ = mclInitializeDouble(1.0);
   _mxarray22_ = mclInitializeDouble(2.0);
   _mxarray23_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
-  _mxarray26_ = mclInitializeDouble(708.3964185322641);
 }
 
 void TerminateModule_annealVisitParameters()
@@ -100,7 +97,6 @@ void TerminateModule_annealVisitParameters()
 
   delete mexBuf;
 
-  mxDestroyArray(_mxarray26_);
   mxDestroyArray(_mxarray23_);
   mxDestroyArray(_mxarray22_);
   mxDestroyArray(_mxarray21_);
@@ -575,62 +571,36 @@ mxArray* eprob(const Mtx& temp, const Mtx& costs)
 {
 DOTRACE("eprob");
 
-  mxArray* pdf = mclGetUninitializedArray();
-  mxArray* scale = mclGetUninitializedArray();
-  mxArray* mpdf = mclGetUninitializedArray();
-  mxArray* toobig = mclGetUninitializedArray();
-  mxArray* temp_mx = 0; mlfAssign(&temp_mx, temp.makeMxArray());
-  mxArray* costs_mx = 0; mlfAssign(&costs_mx, costs.makeMxArray());
-
-  // Scales cost vector and calculates exponential probability distribution.  The
-  // scaling is necessary to permit wide ranges in temperature.  Internal
+  // Scales cost vector and calculates exponential probability distribution.
+  // The scaling is necessary to permit wide ranges in temperature.  Internal
   // function for simulated annealing algorithm.
 
-  // toobig = 708.3964185322641;
-  mlfAssign(&toobig, _mxarray26_);
+  const double toobig = 708.3964185322641;
 
-  // pdf = costs/temp;
-  mlfAssign(&pdf, mclMrdivide(costs_mx, temp_mx));
+  Mtx pdf = costs; pdf /= temp.at(0);
 
-  // mpdf = max(pdf);
-  mlfAssign(&mpdf, mlfMax(NULL, pdf, NULL, NULL));
+  const double mpdf = pdf.max();
 
-  // if mpdf>toobig
-  if (mclGtBool(mpdf, toobig))
+  if (mpdf > toobig)
     {
-      // scale = mpdf/toobig;
-      mlfAssign(&scale, mclMrdivide(mpdf, toobig));
+      const double scale = mpdf/toobig;
 
-      // pdf = exp(-pdf/scale);
-      mlfAssign(&pdf, mlfExp(mclMrdivide(mclUminus(pdf), scale)));
+      pdf *= (-1.0/scale); pdf.apply(exp);
 
-      // pdf = pdf/max(pdf);
-      mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+      pdf /= pdf.max();
 
-      // pdf = pdf.^scale;
-      mlfAssign(&pdf, mlfPower(pdf, scale));
+      pdf.applyF(ToPow(scale));
     }
   else
     {
-      // pdf = exp(-pdf);
-      mlfAssign(&pdf, mlfExp(mclUminus(pdf)));
+      pdf *= -1; pdf.apply(exp);
 
-      // pdf = pdf/max(pdf);
-      mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+      pdf /= pdf.max();
     }
 
-  // pdf = pdf/sum(pdf);
-  mlfAssign(&pdf, mclMrdivide(pdf, mlfSum(pdf, NULL)));
+  pdf /= pdf.sum();
 
-  mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/eprob");
-
-  mxDestroyArray(toobig);
-  mxDestroyArray(mpdf);
-  mxDestroyArray(scale);
-  mxDestroyArray(costs_mx);
-  mxDestroyArray(temp_mx);
-
-  return pdf;
+  return pdf.makeMxArray();
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
