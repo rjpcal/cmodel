@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Wed Jul 31 15:07:43 2002
+// written: Thu Aug  1 11:12:08 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -39,11 +39,19 @@ DOTRACE("CModelCssm::CModelCssm");
 
 CModelCssm::~CModelCssm() {}
 
+int CModelCssm::numModelParams() const
+{
+DOTRACE("CModelCssm::numModelParams");
+
+  return CModelExemplar::numModelParams()
+    + 2 * numStoredExemplars * numTrainingExemplars();
+}
+
 void CModelCssm::loadModelParams(Slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
 
-  int nex = numStoredExemplars();
+  const int nex = numStoredExemplars();
 
   Mtx allScaledWeights =
     Mtx(modelParams).as_shape(2*nex, numTrainingExemplars());
@@ -91,6 +99,17 @@ const Mtx& CModelCssm::getStoredExemplars(Category cat)
     throw Util::Error("unknown category enumerator in findStoredExemplar");
 
   return Mtx::emptyMtx(); // can't happen, but placate the compiler
+}
+
+int CModelCssm::fillModelParamsBounds(Mtx& bounds, int startRow) const
+{
+DOTRACE("CModelCssm::fillModelParamsBounds");
+
+  // We just use the default upper+lower bounds, which are filled in by
+  // Classifier to be negative and positive "infinity" (i.e. realmax)
+
+  return CModelExemplar::fillModelParamsBounds(bounds, startRow)
+    + 2 * numStoredExemplars * numTrainingExemplars();
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";

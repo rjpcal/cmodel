@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 13:59:00 2002
-// written: Wed Jul 31 15:06:45 2002
+// written: Thu Aug  1 11:05:35 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,9 +24,14 @@ public:
 
   virtual ~CModelSPC();
 
+  virtual int numModelParams() const;
+
   virtual RequestResult handleRequest(fstring action,
                                       const Mtx& allModelParams,
                                       const MxWrapper& extraArgs);
+
+protected:
+  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
 
 private:
   virtual void computeDiffEv(const Mtx& objects,

@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Wed Jul 31 16:28:53 2002
+// written: Thu Aug  1 11:07:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,6 +34,14 @@ CModelSPC::CModelSPC(const Mtx& objParams, int numStoredExemplars) :
 {}
 
 CModelSPC::~CModelSPC() {}
+
+int CModelSPC::numModelParams() const
+{
+DOTRACE("CModelSPC::numModelParams");
+
+  return Classifier::numModelParams()
+    + (itsNumStoredExemplars * 2 * DIM_OBJ_PARAMS);
+}
 
 Classifier::RequestResult
 CModelSPC::handleRequest(fstring action,
@@ -132,6 +140,48 @@ DOTRACE("CModelSPC::computeDiffEv");
 double CModelSPC::computeSigmaNoise(double rawSigma) const
 {
   return rawSigma;
+}
+
+int CModelSPC::fillModelParamsBounds(Mtx& bounds, int startRow) const
+{
+DOTRACE("CModelSPC::fillModelParamsBounds");
+
+  startRow += Classifier::fillModelParamsBounds(bounds, startRow);
+
+  // number per category
+  const int n = itsNumStoredExemplars * DIM_OBJ_PARAMS;
+
+  const int start1 = startRow;
+  const int start2 = startRow+n;
+
+  for (int row = 0; row < n; row += DIM_OBJ_PARAMS)
+    {
+      // first category lower bound
+      bounds.sub(row_range_n(start1+row, DIM_OBJ_PARAMS),
+                 col_range_n(0, 1))
+        =
+        itsHiLo0.sub(row_range_n(0,1));
+
+      // first category upper bound
+      bounds.sub(row_range_n(start1+row, DIM_OBJ_PARAMS),
+                 col_range_n(1, 1))
+        =
+        itsHiLo0.sub(row_range_n(1,1));
+
+      // second category lower bound
+      bounds.sub(row_range_n(start2+row, DIM_OBJ_PARAMS),
+                 col_range_n(0, 1))
+        =
+        itsHiLo1.sub(row_range_n(0,1));
+
+      // second category upper bound
+      bounds.sub(row_range_n(start2+row, DIM_OBJ_PARAMS),
+                 col_range_n(1, 1))
+        =
+        itsHiLo1.sub(row_range_n(1,1));
+    }
+
+  return startRow + n*2;
 }
 
 static const char vcid_cmodelspc_cc[] = "$Header$";

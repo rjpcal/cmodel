@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Wed Jul 31 15:08:07 2002
+// written: Thu Aug  1 11:09:05 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,14 +17,8 @@
 #include "cmodel/cmodelexemplar.h"
 #endif
 
-class CModelCssm : public CModelExemplar {
-private:
-  Mtx itsStored1;
-  Mtx itsStored2;
-
-  Mtx itsCachedRawWts1;
-  Mtx itsCachedRawWts2;
-
+class CModelCssm : public CModelExemplar
+{
 public:
   CModelCssm(const Mtx& objParams,
              TransferFunction transferFunc,
@@ -32,9 +26,21 @@ public:
 
   virtual ~CModelCssm();
 
+  virtual int numModelParams() const;
+
   virtual void loadModelParams(Slice& modelParams);
 
   virtual const Mtx& getStoredExemplars(Category cat);
+
+protected:
+  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
+
+private:
+  Mtx itsStored1;
+  Mtx itsStored2;
+
+  Mtx itsCachedRawWts1;
+  Mtx itsCachedRawWts2;
 };
 
 static const char vcid_cmodelcssm_h[] = "$Header$";
