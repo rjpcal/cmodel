@@ -102,6 +102,7 @@ public:
 };
 
 class FuncEvaluator {
+  int itsEvalCount;
   mxArray* itsFunfcn;
   mxArray* itsVarargin_ref;
 
@@ -114,6 +115,7 @@ class FuncEvaluator {
 
 public:
   FuncEvaluator(mxArray* funfcn_mx, mxArray* varargin_mx) :
+	 itsEvalCount(0),
 	 itsFunfcn(funfcn_mx),
 	 itsVarargin_ref(varargin_mx)
   {
@@ -123,9 +125,14 @@ public:
   {
   }
 
+  int evalCount() const { return itsEvalCount; }
+
   mxArray* evaluate_mx(mxArray* x_mx)
   {
 	 DOTRACE("evaluate_mx");
+
+	 ++itsEvalCount;
+
 	 return mlfFeval(mclValueVarargout(),
 						  itsFunfcn,
 						  x_mx,
@@ -136,6 +143,9 @@ public:
   double evaluate(mxArray* x_mx)
   {
 	 DOTRACE("evaluate");
+
+	 ++itsEvalCount;
+
 	 mxArray* mx =  mlfFeval(mclValueVarargout(),
 									 itsFunfcn,
 									 x_mx,
@@ -148,15 +158,7 @@ public:
 
   double evaluate(const Mtx& x)
   {
-	 DOTRACE("evaluate");
-	 mxArray* mx =  mlfFeval(mclValueVarargout(),
-									 itsFunfcn,
-									 x.makeMxArray(),
-									 getref(itsVarargin_ref),
-									 NULL);
-	 double result = mxGetScalar(mx);
-	 mxDestroyArray(mx);
-	 return result;
+	 return evaluate(x.makeMxArray());
   }
 };
 
@@ -728,8 +730,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 										 mxArray * * exitflag,
 										 mxArray * * output,
 										 int nargout_,
-										 FuncEvaluator& fevaluator,
-										 mxArray * x_in,
+										 FuncEvaluator& objective,
+										 const Mtx& x_in,
 										 const int prnt,
 										 const double tolx,
 										 const double tolf,
@@ -744,9 +746,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   double fxc = 0.0;
   double fxe = 0.0;
   double fxr = 0.0;
-  mxArray* formatsave_mx = mclGetUninitializedArray();
+
   mxArray* j_mx = mclGetUninitializedArray();
-  mxArray* ans_mx = mclGetUninitializedArray();
 
   fixed_string how;
 
@@ -756,18 +757,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   DualRepMtx xcc_dr;
   DualRepMtx xbar_dr;
 
-//    mclCopyArray(&funfcn_mx);
   Mtx xx(x_in);
-//    mclCopyArray(&varargin);
-
-
-//    FuncEvaluator fevaluator(funfcn_mx, varargin);
-
-
-  // Convert to inline function as needed.
-  // XXX Since this requires "object-oriented" programming, we can't keep this
-  // and still use the MATLAB compiler
-  // %funfcn = fcnchk(funfcn,length(varargin));
 
 
   const double rho = 1.0;
@@ -776,13 +766,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   const double sigma = 0.5;
 
   // Set up a simplex near the initial guess.
-  // Force initialParams to be a column vector
-  DualRepMtx initialParams_dr;
-  {
-	 Mtx xx_copy(xx);
-	 xx_copy.reshape(xx.nelems(),1);
-	 initialParams_dr.assignMtx(xx_copy);
-  }
+  DualRepMtx initialParams_dr(xx.asColumn());
 
   // theSimplex = zeros(numModelParams,numModelParams+1);
   DualRepMtx theSimplex_dr(Mtx(numModelParams,numModelParams+1));
@@ -794,7 +778,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   theSimplex_dr.ncMtx().column(0) = initialParams_dr.asMtx().columns(0,1);
 
   // funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
-  funcVals_dr.ncMtx().at(0,0) = fevaluator.evaluate(initialParams_dr.asMtx());
+  funcVals_dr.ncMtx().at(0,0) = objective.evaluate(initialParams_dr.asMtx());
 
   {
 	 // Following improvement suggested by L.Pfeffer at Stanford
@@ -820,7 +804,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 		  theSimplex_dr.ncMtx().column(j_zero_based+1) = y;
 
-		  funcVals_dr.ncMtx().at(0,j_zero_based+1) = fevaluator.evaluate(y);
+		  funcVals_dr.ncMtx().at(0,j_zero_based+1) = objective.evaluate(y);
 		}
   }
 
@@ -838,44 +822,21 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
   int itercount = 1;
 
-  int func_evals = numModelParams+1;
-
-  if (prnt == 3) {
-
-	 mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
-
-	 mexPrintf(" %5d        %5d     %12.6g         ",
-				  itercount, func_evals, double(funcVals_dr.asMtx().at(0,0)));
-	 mexPrintf(how.c_str());
-	 mexPrintf("\n");
-
-  } else if (prnt == 4) {
-
-	 // clc
-	 mlfClc();
-
-	 // formatsave_mx = get(0,{'format','formatspacing'});
-	 mlfAssign(&formatsave_mx, mlfNGet(1, _mxarray18_, _mxarray40_, NULL));
-
-	 // format compact
-	 mlfFormat(_mxarray46_, NULL);
-
-	 // format short e
-	 mlfFormat(_mxarray48_, _mxarray50_);
-
-	 mexPrintf("\n%s\n", how.c_str());
-
-        // theSimplex
-	 mclPrintArray(theSimplex_dr.asArray(), "theSimplex");
-
-	 // funcVals
-	 mclPrintArray(funcVals_dr.asArray(), "funcVals");
-
-	 // func_evals
-	 mclPrintArray(mxCreateScalarDouble(func_evals), "func_evals");
-
-    // end
-  }
+  if (prnt == 3)
+	 {
+		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
+		mexPrintf(" %5d        %5d     %12.6g         ",
+					 itercount, objective.evalCount(), double(funcVals_dr.asMtx().at(0,0)));
+		mexPrintf(how.c_str());
+		mexPrintf("\n");
+	 }
+  else if (prnt == 4)
+	 {
+		mexPrintf("\n%s\n", how.c_str());
+		theSimplex_dr.asMtx().print("theSimplex");
+		funcVals_dr.asMtx().print("funcVals");
+		mexPrintf("func_evals: %d\n", objective.evalCount());
+	 }
 
   // exitflag = 1;
   mlfAssign(exitflag, _mxarray11_);
@@ -891,12 +852,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   //---------------------------------------------------------------------
 
 
-  // while func_evals < maxfun & itercount_mx < maxiter
+  // while objective.evalCount() < maxfun & itercount_mx < maxiter
   for (;;) { // Main algorithm
 	 DOTRACE("Main algorithm");
 
 	 {DOTRACE("check feval and iter counts");
-	 if ((func_evals >= maxfun) || (itercount >= maxiter))
+	 if ((objective.evalCount() >= maxfun) || (itercount >= maxiter))
 		break; // out of main loop
 	 }
 
@@ -938,9 +899,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 						  theSimplex_dr.asMtx().columns(numModelParams,1) * rho);
 	 }
 
-	 fxr = fevaluator.evaluate(xr_dr.asArray());
-
-	 ++func_evals;
+	 fxr = objective.evaluate(xr_dr.asMtx());
 	 }
 
 	 // 
@@ -956,9 +915,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 								(theSimplex_dr.asMtx().columns(numModelParams,1)
 								 *(rho*chi)));
 
-		  fxe = fevaluator.evaluate(xe_dr.asArray());
-
-		  ++func_evals;
+		  fxe = objective.evaluate(xe_dr.asMtx());
 
 		  // if fxe < fxr
 		  if (fxe < fxr) {
@@ -1016,9 +973,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 										 * (psi * rho)));
 
 
-				fxc = fevaluator.evaluate(xc_dr.asArray());
-
-				++func_evals;
+				fxc = objective.evaluate(xc_dr.asMtx());
 
 				// if fxc <= fxr
 				if (fxc <= fxr) {
@@ -1046,9 +1001,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 									  (theSimplex_dr.asMtx().columns(numModelParams,1)
 										* psi));
 
-				fxcc = fevaluator.evaluate(xcc_dr.asArray());
-
-				++func_evals;
+				fxcc = objective.evaluate(xcc_dr.asMtx());
 
 				// if fxcc < funcVals(:,end)
 				if (fxcc < funcVals_dr.asMtx().at(0,numModelParams)) {
@@ -1069,33 +1022,26 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 			 }
 
-			 if (how == "shrink") {
+			 if (how == "shrink")
+				{
+				  // zero based index
+				  for (int j = 1; j < numModelParams+1; ++j)
+					 {
+						// theSimplex(:,j_mx)=theSimplex(:,1)+sigma*(theSimplex(:,j_mx) - theSimplex(:,1));
+						theSimplex_dr.ncMtx().column(j) =
+						  theSimplex_dr.asMtx().columns(0,1) +
+						  (theSimplex_dr.asMtx().columns(j,1) -
+							theSimplex_dr.asMtx().columns(0,1)) * sigma;
 
-				for (int j_zero_based = 1; j_zero_based < numModelParams+1;
-					  ++j_zero_based)
-				  {
-
-					 // theSimplex(:,j_mx)=theSimplex(:,1)+sigma*(theSimplex(:,j_mx) - theSimplex(:,1));
-					 theSimplex_dr.ncMtx().column(j_zero_based) =
-						theSimplex_dr.asMtx().columns(0,1) +
-						(theSimplex_dr.asMtx().columns(j_zero_based,1) -
-						 theSimplex_dr.asMtx().columns(0,1)) * sigma;
-
-					 // funcVals(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
-					 funcVals_dr.ncMtx().at(0,j_zero_based) =
-						fevaluator.evaluate(theSimplex_dr.asMtx()
-												  .columns(j_zero_based,1)
-												  .makeMxArray()
-												  );
-
-				  }
-
-				func_evals += numModelParams;
-
-			 }
-
+						// funcVals(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
+						funcVals_dr.ncMtx().at(0,j) =
+						  objective.evaluate(theSimplex_dr.asMtx()
+													.columns(j,1)
+													.makeMxArray()
+													);
+					 }
+				}
 		  }
-
       }
 
 	 {DOTRACE("sort funcVals");
@@ -1129,110 +1075,78 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 if (prnt == 3)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itercount, func_evals, double(funcVals_dr.asMtx().at(0,0)));
+						itercount, objective.evalCount(), double(funcVals_dr.asMtx().at(0,0)));
 		  mexPrintf(how.c_str());
 		  mexPrintf("\n");
-
 		}
 	 else if (prnt == 4)
 		{
 		  mexPrintf("\n%s\n", how.c_str());
-		  mclPrintArray(theSimplex_dr.asArray(), "theSimplex");
-		  mclPrintArray(funcVals_dr.asArray(), "funcVals");
-		  mclPrintArray(mxCreateScalarDouble(func_evals), "func_evals");
+		  theSimplex_dr.asMtx().print("theSimplex");
+		  funcVals_dr.asMtx().print("funcVals");
+		  mexPrintf("func_evals: %d\n", objective.evalCount());
 		}
   }
 
-  // x(:) = theSimplex(:,1);
   xx = theSimplex_dr.asMtx().columns(0,1);
 
-  if (prnt == 4)
-	 {
-		// % reset format
-		// set(0,{'format','formatspacing'},formatsave_mx);
-		mclAssignAns(
-						 &ans_mx,
-						 mlfNSet(
-									0,
-									_mxarray18_,
-									_mxarray40_,
-									mclVv(formatsave_mx, "formatsave_mx"),
-									NULL));
+  // end Main algorithm
 
-	 } // end Main algorithm
-
-  // output.iterations = itercount_mx;
   mlfIndexAssign(output, ".iterations", mxCreateScalarDouble(itercount));
 
-  // output.funcCount = func_evals;
-  mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(func_evals));
+  mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(objective.evalCount()));
 
   // output.algorithm = 'Nelder-Mead simplex direct search';
   mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
-  // fval = min(funcVals);
   mlfAssign(fval, mlfMin(NULL, funcVals_dr.asArray(), NULL, NULL));
 
-  // if func_evals >= maxfun 
-  if (func_evals >= maxfun) {
+  if (objective.evalCount() >= maxfun)
+	 {
+		if (prnt > 0) {
+		  mexPrintf("\nExiting: Maximum number of function evaluations "
+						"has been exceeded\n");
+		  mexPrintf("         - increase MaxFunEvals option.\n");
+		  mexPrintf("         Current function value: %f \n\n",
+						mxGetScalar(*fval));
+		}
 
-	 if (prnt > 0) {
-		mexPrintf("\nExiting: Maximum number of function evaluations "
-					 "has been exceeded\n");
-		mexPrintf("         - increase MaxFunEvals option.\n");
-		mexPrintf("         Current function value: %f \n\n",
-					 mxGetScalar(*fval));
+		mlfAssign(exitflag, mxCreateScalarDouble(0));
 	 }
+  else if (itercount >= maxiter)
+	 {
+		if (prnt > 0) {
+		  mexPrintf("\nExiting: Maximum number of iterations "
+						"has been exceeded\n");
+		  mexPrintf("         - increase MaxIter option.\n");
+		  mexPrintf("         Current function value: %f \n\n",
+						mxGetScalar(*fval));
+		}
 
-	 // exitflag = 0;
-	 mlfAssign(exitflag, _mxarray18_);
-
-  }
-  else if (itercount >= maxiter) {
-
-	 if (prnt > 0) {
-		mexPrintf("\nExiting: Maximum number of iterations "
-					 "has been exceeded\n");
-		mexPrintf("         - increase MaxIter option.\n");
-		mexPrintf("         Current function value: %f \n\n",
-					 mxGetScalar(*fval));
+		mlfAssign(exitflag, mxCreateScalarDouble(0));
 	 }
+  else
+	 {
+		if (prnt > 1)
+		  {
+			 const char* format = 
+				"\nOptimization terminated successfully:\n"
+				" the current x satisfies the termination criteria using "
+				"OPTIONS.TolX of %e \n"
+				" and F(X) satisfies the convergence criteria using "
+				"OPTIONS.TolFun of %e \n";
 
-	 // exitflag = 0; 
-	 mlfAssign(exitflag, _mxarray18_);
+			 mexPrintf(format, tolx, tolf);
+		  }
 
-    // else
-  } else {
-
-	 if (prnt > 1) {
-
-		const char* format = 
-		  "\nOptimization terminated successfully:\n"
-		  " the current x satisfies the termination criteria using "
-		  "OPTIONS.TolX of %e \n"
-		  " and F(X) satisfies the convergence criteria using "
-		  "OPTIONS.TolFun of %e \n";
-
-		mexPrintf(format, tolx, tolf);
-	 }
-
-
-	 // exitflag = 1;
-	 mlfAssign(exitflag, _mxarray11_);
-
-
-    // end
+		mlfAssign(exitflag, mxCreateScalarDouble(1.0));
   }
 
   mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
   mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
   mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
 
-  mxDestroyArray(ans_mx);
   mxDestroyArray(j_mx);
-  mxDestroyArray(formatsave_mx);
-//    mxDestroyArray(varargin);
-//    mxDestroyArray(funfcn_mx);
 
   return xx.makeMxArray();
 }
@@ -1265,48 +1179,53 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * varargin) {
 
 DOTRACE("MdoSimplex");
-
-    mexLocalFunctionTable save_local_function_table_ =
-		mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
+ 
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-	 if (debugFlags_mx && mxIsStruct(debugFlags_mx))
-		{
-		  mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
+  if (debugFlags_mx && mxIsStruct(debugFlags_mx))
+	 {
+		mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
 
-		  if (debugFlag)
-			 {
-				if (mxGetScalar(debugFlag) == -1) {
-				  ofstream ofs("profdata.out");
-				  Util::Prof::printAllProfData(ofs);
-				  return mxCreateScalarDouble(-1.0);
-				}
-
-				if (mxGetScalar(debugFlag) == -2) {
-				  Util::Prof::resetAllProfData();
-				  return mxCreateScalarDouble(-2.0);
-				}
+		if (debugFlag)
+		  {
+			 if (mxGetScalar(debugFlag) == -1) {
+				ofstream ofs("profdata.out");
+				Util::Prof::printAllProfData(ofs);
+				return mxCreateScalarDouble(-1.0);
 			 }
-		}
+
+			 if (mxGetScalar(debugFlag) == -2) {
+				Util::Prof::resetAllProfData();
+				return mxCreateScalarDouble(-2.0);
+			 }
+		  }
+	 }
 #endif
 
-    // numModelParams = prod(size(x));
-	 const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
+  // numModelParams = prod(size(x));
+  const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
 
-	 FuncEvaluator fevaluator(funfcn_mx, varargin);
+  // Convert to inline function as needed.
+  // XXX Since this requires "object-oriented" programming, we can't keep this
+  // and still use the MATLAB compiler
+  // %funfcn = fcnchk(funfcn,length(varargin));
 
-	 mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
-												fevaluator,
-												x_in,
-												extractPrinttype(printtype_mx),
-												mxGetScalar(tolx_mx),
-												mxGetScalar(tolf_mx),
-												numModelParams,
-												extractMaxIters(maxfun_mx, numModelParams),
-												extractMaxIters(maxiter_mx, numModelParams)
-												);
+  FuncEvaluator objective(funfcn_mx, varargin);
 
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
+  mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
+											 objective,
+											 Mtx(x_in),
+											 extractPrinttype(printtype_mx),
+											 mxGetScalar(tolx_mx),
+											 mxGetScalar(tolf_mx),
+											 numModelParams,
+											 extractMaxIters(maxfun_mx, numModelParams),
+											 extractMaxIters(maxiter_mx, numModelParams)
+											 );
 
-	 return result;
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return result;
 }
