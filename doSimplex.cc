@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 15:42:07 2001
+// written: Thu Apr 26 22:59:18 2001
 // $Id$
 //
 //
@@ -104,8 +104,13 @@ namespace {
 
 void InitializeModule_doSimplex(void) {
   mexBuf = new MexBuf;
+#ifdef MIPS_PRO
+  cout = mexBuf;
+  cerr = mexBuf;
+#else
   cout.rdbuf(mexBuf);
   cerr.rdbuf(mexBuf);
+#endif
 }
 
 void TerminateModule_doSimplex(void) {

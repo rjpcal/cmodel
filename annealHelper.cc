@@ -34,8 +34,13 @@ namespace {
 
 void InitializeModule_annealVisitParameters(void) {
   mexBuf = new MexBuf;
+#ifdef MIPS_PRO
+  cout = mexBuf;
+  cerr = mexBuf;
+#else
   cout.rdbuf(mexBuf);
   cerr.rdbuf(mexBuf);
+#endif
 
   _mxarray20_ = mclInitializeDouble(0.0);
   _mxarray21_ = mclInitializeDouble(1.0);

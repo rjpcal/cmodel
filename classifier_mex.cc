@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Apr 26 18:49:46 2001
+// written: Thu Apr 26 22:59:36 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -51,8 +51,13 @@ void InitializeModule_classifier()
 {
 DOTRACE("InitializeModule_classifier");
   mexBuf = new MexBuf;
+#ifdef MIPS_PRO
+  cout = mexBuf;
+  cerr = mexBuf;
+#else
   cout.rdbuf(mexBuf);
   cerr.rdbuf(mexBuf);
+#endif
 
 #ifdef LOCAL_DEBUG
   mexPrintf("loading 'classifier' mex file\n");
