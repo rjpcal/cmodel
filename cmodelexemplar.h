@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Feb 20 18:08:11 2002
+// written: Thu Jun  6 16:41:06 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -44,9 +44,11 @@ public:
                                       const Mtx& modelParams,
                                       const MxWrapper& extraArgs);
 
-protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
 
+  TransferFunction transferFunction() const { return itsTransferFunc; }
+
+protected:
   const Mtx& training1() const { return itsTraining1; }
   const Mtx& training2() const { return itsTraining2; }
 
