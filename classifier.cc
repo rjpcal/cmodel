@@ -450,12 +450,7 @@ DOTRACE("Classifier::handleRequest");
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
-      MxWrapper annealArgs(extraArgs.getField("annealOpts"));
-
-      // FIXME this is ugly
-      mxArray* args = annealArgs.release();
-      AnnealOpts opts(args);
-      mxDestroyArray(args);
+      AnnealOpts opts(extraArgs.getField("annealOpts"));
 
       AnnealingOptimizer ar(objective, opts);
 
