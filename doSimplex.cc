@@ -96,6 +96,23 @@ bool withinTolx(mxArray* simplex_mx, const double tolx)
   return true;
 }
 
+int extractMaxIters(const mxArray* arr, int numModelParams)
+{
+  if (mxIsChar(arr))
+	 {
+		if (Mtx::extractString(arr) == "200*numberofvariables")
+		  {
+			 return 200*numModelParams;
+		  }
+		else
+		  {
+			 mexErrMsgTxt("Option must be an integer value "
+							  "if not the default.");
+		  }
+	 }
+
+  return int(mxGetScalar(arr));
+}
 
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
@@ -591,11 +608,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 										 mxArray * printtype,
 										 mxArray * tolx_mx,
 										 mxArray * tolf_mx,
-										 mxArray * maxfun_mx,
-										 mxArray * maxiter_mx,
+										 const int numModelParams,
+										 const int maxfun,
+										 const int maxiter,
 										 mxArray * debugFlags_mx,
 										 mxArray * varargin)
 {
+
+// HOME
 
     mxArray * x = mclGetUninitializedArray();
     mxArray * convmsg1 = mclGetUninitializedArray();
@@ -635,8 +655,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mclCopyArray(&printtype);
     mclCopyArray(&tolx_mx);
     mclCopyArray(&tolf_mx);
-    mclCopyArray(&maxfun_mx);
-    mclCopyArray(&maxiter_mx);
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
@@ -646,52 +664,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 	 FuncEvaluator fevaluator(funfcn_mx, varargin);
 
-    // numModelParams = prod(size(x));
-	 const int numModelParams = mxGetM(x) * mxGetN(x);
+//  	 const int numModelParams = mxGetM(x) * mxGetN(x);
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
-
-	 int maxfun = 0;
-
-    // In case the defaults were gathered from calling: optimset('simplex'):
-    if (mxIsChar(maxfun_mx))
-		{
-		  if (Mtx::extractString(maxfun_mx) == "200*numberofvariables")
-			 {
-				maxfun = 200*numModelParams;
-			 }
-		  else
-			 {
-				mexErrMsgTxt("Option 'MaxFunEvals' must be an integer value "
-								 "if not the default.");
-			 }
-		}
-	 else
-		{
-		  maxfun = int(mxGetScalar(maxfun_mx));
-		}
-
-	 int maxiter = 0;
-
-    // if ischar(maxiter)
-    if (mxIsChar(maxiter_mx))
-		{
-        if (Mtx::extractString(maxiter_mx) == "200*numberofvariables")
-			 {
-				maxiter = 200*numModelParams;
-			 }
-		  else
-			 {
-            // error('')
-				mexErrMsgTxt("Option 'MaxIter' must be an integer value "
-								 "if not the default.");
-        }
-    }
-	 else
-		{
-		  maxiter = int(mxGetScalar(maxiter_mx));
-		}
 
     // 
     // switch printtype
@@ -976,20 +952,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		DOTRACE("Main algorithm");
 
 		{DOTRACE("Main loop condition"); // 0.5%
-//  		mxArray * a_ = mclInitialize(
-//  											  mclLt(
-//  													  mxCreateScalarDouble(func_evals),
-//  													  mclVa(maxfun_mx, "maxfun")));
 
-		bool okEvals = (func_evals < maxfun);
-
-		if (okEvals
-			 && mxGetScalar(itercount) < mxGetScalar(maxiter_mx)) {
-//  		  mxDestroyArray(a_);
-		} else {
-//  		  mxDestroyArray(a_);
-		  break;
-		}
+		if ((func_evals < maxfun) && mxGetScalar(itercount) < maxiter)
+		  {
+		  }
+		else
+		  {
+			 break;
+		  }
 		}
 
 		{DOTRACE("check if done");
@@ -1490,7 +1460,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mlfAssign(fval, mlfMin(NULL, mclVv(funcVals, "funcVals"), NULL, NULL));
 
     // if func_evals >= maxfun 
-    if (mclGeBool(mxCreateScalarDouble(func_evals), mclVa(maxfun_mx, "maxfun"))) {
+    if (func_evals >= maxfun) {
 
         // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
@@ -1518,8 +1488,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
         mlfAssign(exitflag, _mxarray18_);
 
     // elseif itercount >= maxiter 
-    } else if (mclGeBool(
-                 mclVv(itercount, "itercount"), mclVa(maxiter_mx, "maxiter"))) {
+    }
+	 else if (mxGetScalar(itercount) >= maxiter) {
 
         // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
@@ -1622,8 +1592,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
-    mxDestroyArray(maxiter_mx);
-    mxDestroyArray(maxfun_mx);
     mxDestroyArray(tolf_mx);
     mxDestroyArray(tolx_mx);
     mxDestroyArray(printtype);
@@ -1661,8 +1629,6 @@ static mxArray * MdoSimplex(mxArray * * fval,
 
 DOTRACE("MdoSimplex");
 
-// HOME
-
     mexLocalFunctionTable save_local_function_table_ =
 		mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
 
@@ -1687,14 +1653,18 @@ DOTRACE("MdoSimplex");
 		}
 #endif
 
+    // numModelParams = prod(size(x));
+	 const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
+
 	 mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
 												funfcn_mx,
 												x_in,
 												printtype,
 												tolx_mx,
 												tolf_mx,
-												maxfun_mx,
-												maxiter_mx,
+												numModelParams,
+												extractMaxIters(maxfun_mx, numModelParams),
+												extractMaxIters(maxiter_mx, numModelParams),
 												debugFlags_mx,
 												varargin);
 
