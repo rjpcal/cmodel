@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Fri Apr  6 10:51:42 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,11 +17,9 @@
 
 #include "error.h"
 #include "num.h"
-#include "mtx.h"
 #include "strings.h"
-#include "trace.h"
 
-#include "util/pointers.h"
+#include "trace.h"
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -31,7 +29,8 @@
 
 Classifier::Classifier(const Mtx& objParams,
 							  const Mtx& observedIncidence) :
-  itsObjParams(objParams),
+  itsObjCategories(objParams.columns(0, 1)),
+  itsObjects(objParams.columns(1, DIM_OBJ_PARAMS)),
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
   itsDiffEvidence(itsNumAllExemplars,1),
@@ -164,12 +163,11 @@ double Classifier::deviance(Slice& modelParams) {
 }
 
 int Classifier::exemplarCategory(int i) const {
-  return int(itsObjParams.at(i));
+  return int(itsObjCategories.at(i));
 }
 
 Slice Classifier::exemplar(int i) const {
-  // Skip the first column which contains category info
-  return itsObjParams.row(i).rightmost(DIM_OBJ_PARAMS);
+  return itsObjects.row(i);
 }
 
 static const char vcid_classifier_cc[] = "$Header$";

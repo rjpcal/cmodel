@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 10:27:21 2001
+// written: Fri Apr  6 10:51:44 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,8 @@
 
 class Classifier {
 private:
-  const Mtx itsObjParams;
+  const Mtx itsObjCategories;
+  const Mtx itsObjects;
   int itsNumAllExemplars;
   const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
