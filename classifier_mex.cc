@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Mar 26 08:49:05 2001
+// written: Tue Mar 27 07:23:29 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,23 +29,38 @@
 #include "mtx.h"
 #include "rutil.h"
 #include "strings.h"
-#include "trace.h"
-
 #include "util/pointers.h"
+
+#include "trace.h"
+#define LOCAL_DEBUG
 
 #include <fstream.h>
 #include "libmatlb.h"
+
+namespace {
+  shared_ptr<CModelCssm>* recentModel = 0;
+  Mtx* recentObjParams = 0;
+  Mtx* recentIncidence = 0;
+  int recentNumStored = -1;
+}
 
 void InitializeModule_classifier() {
 #ifdef LOCAL_DEBUG
   mexPrintf("loading 'classifier' mex file\n");
 #endif
+  recentModel = new shared_ptr<CModelCssm>(0);
+  recentObjParams = new Mtx(0,0);
+  recentIncidence = new Mtx(0,0);
 }
 
 void TerminateModule_classifier() {
 #ifdef LOCAL_DEBUG
   mexPrintf("unloading 'classifier' mex file\n");
 #endif
+
+  delete recentIncidence;
+  delete recentObjParams;
+  delete recentModel;
 }
 
 _mexLocalFunctionTable _local_function_table_classifier
@@ -70,10 +85,52 @@ shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
 DOTRACE("makeClassifier");
   if (whichType == "cssm")
 	 {
+//  		static shared_ptr<CModelCssm> recentModel(0);
+//  		static Mtx recentObjParams(0,0);
+//  		static Mtx recentIncidence(0,0);
+//  		static int recentNumStored = -1;
+
 		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
+
+#if 0
+
+		if (numStoredExemplars == recentNumStored)
+		  { DOTRACE("same num"); }
+		if (objParams == *recentObjParams)
+		  { DOTRACE("same params"); }
+		if (observedIncidence == *recentIncidence)
+		  { DOTRACE("same inc"); }
+		else
+		  { observedIncidence.print(); recentIncidence->print(); }
+
+		if ( (numStoredExemplars == recentNumStored) &&
+			  (objParams == *recentObjParams) &&
+			  (observedIncidence == *recentIncidence) )
+		  {
+			 DOTRACE("use old");
+		  }
+		else
+		  {
+			 DOTRACE("make new");
+ recentObjParams->makeUnique();			 *recentObjParams = objParams; recentObjParams->makeUnique();
+ recentIncidence->makeUnique();			 *recentIncidence = observedIncidence; recentIncidence->makeUnique();
+			 recentNumStored = numStoredExemplars;
+
+			 recentObjParams->print();
+			 recentIncidence->print();
+
+          recentModel->reset(
+              new CModelCssm(objParams, observedIncidence,
+                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+        }
+
+		return *recentModel;
+#else
 		return shared_ptr<Classifier>(
-		  new CModelCssm(objParams, observedIncidence,
-							  CModelExemplar::EXP_DECAY, numStoredExemplars));
+              new CModelCssm(objParams, observedIncidence,
+                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+#endif
+
 	 }
   else if (whichType == "gcm")
 	 {
