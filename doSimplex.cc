@@ -114,6 +114,34 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
   return int(mxGetScalar(arr));
 }
 
+int extractPrinttype(const mxArray* printtype_mx)
+{
+  fixed_string printtype = Mtx::extractString(printtype_mx);
+
+  if (printtype == "notify")
+	 {
+		return 1;
+	 }
+  else if (printtype == "none" || printtype == "off")
+	 {
+		return 0;
+	 }
+  else if (printtype == "iter")
+	 {
+		return 3;
+	 }
+  else if (printtype == "final")
+	 {
+		return 2;
+	 }
+  else if (printtype == "simplex")
+	 {
+		return 4;
+	 }
+
+  return 1;
+}
+
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
                                 'l', 'e', ':', ' ', 'd', 'o', 'S', 'i', 'm',
@@ -605,7 +633,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 										 int nargout_,
 										 mxArray * funfcn_mx,
 										 mxArray * x_in,
-										 mxArray * printtype,
+										 const int prnt,
 										 const double tolx,
 										 const double tolf,
 										 const int numModelParams,
@@ -647,12 +675,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxArray * chi = mclGetUninitializedArray();
     mxArray * rho = mclGetUninitializedArray();
     mxArray * header = mclGetUninitializedArray();
-    mxArray * prnt = mclGetUninitializedArray();
     mxArray * ans = mclGetUninitializedArray();
 
     mclCopyArray(&funfcn_mx);
     mclCopyInputArg(&x, x_in);
-    mclCopyArray(&printtype);
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
@@ -661,51 +687,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
-
-    // 
-    // switch printtype
-    {
-        mxArray * v_ = mclInitialize(mclVa(printtype, "printtype"));
-        if (mclSwitchCompare(v_, _mxarray9_)) {
-
-            // case 'notify'
-            // prnt = 1;
-            mlfAssign(&prnt, _mxarray11_);
-
-        // case {'none','off'}
-        } else if (mclSwitchCompare(v_, _mxarray12_)) {
-
-            // prnt = 0;
-            mlfAssign(&prnt, _mxarray18_);
-
-        // case 'iter'
-        } else if (mclSwitchCompare(v_, _mxarray19_)) {
-
-            // prnt = 3;
-            mlfAssign(&prnt, _mxarray21_);
-
-        // case 'final'
-        } else if (mclSwitchCompare(v_, _mxarray22_)) {
-
-            // prnt = 2;
-            mlfAssign(&prnt, _mxarray24_);
-
-        // case 'simplex'
-        } else if (mclSwitchCompare(v_, _mxarray25_)) {
-
-            // prnt = 4;
-            mlfAssign(&prnt, _mxarray27_);
-
-        // otherwise
-        } else {
-
-            // prnt = 1;
-            mlfAssign(&prnt, _mxarray11_);
-
-        // end
-        }
-        mxDestroyArray(v_);
-    }
 
     // 
     // header = ' Iteration   Func-count     min f(x)         Procedure';
@@ -870,8 +851,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 	 int func_evals = numModelParams+1;
 
-    // if prnt == 3
-    if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
+    if (prnt == 3) {
 
         // disp(' ')
         mlfDisp(_mxarray36_);
@@ -893,8 +873,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
             mclVv(how, "how"),
             NULL));
 
-    // elseif prnt == 4
-    } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
+    } else if (prnt == 4) {
 
         // clc
         mlfClc();
@@ -1373,8 +1352,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
       mlfAssign(
         &itercount, mclPlus(mclVv(itercount, "itercount"), _mxarray11_));
 
-      // if prnt == 3
-      if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
+      if (prnt == 3) {
 
           // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
           mlfDisp(
@@ -1390,8 +1368,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
               mclVv(how, "how"),
               NULL));
 
-      // elseif prnt == 4
-      } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
+      } else if (prnt == 4) {
 
           // disp(' ')
           mlfDisp(_mxarray36_);
@@ -1423,8 +1400,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
         theSimplex, mlfCreateColonIndex(), _mxarray11_),
       mlfCreateColonIndex());
 
-    // if prnt == 4,
-    if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
+    if (prnt == 4) {
 
         // % reset format
         // set(0,{'format','formatspacing'},formatsave);
@@ -1455,8 +1431,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     // if func_evals >= maxfun 
     if (func_evals >= maxfun) {
 
-        // if prnt > 0
-        if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
+        if (prnt > 0) {
 
             // disp(' ')
             mlfDisp(_mxarray36_);
@@ -1484,8 +1459,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     }
 	 else if (mxGetScalar(itercount) >= maxiter) {
 
-        // if prnt > 0
-        if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
+        if (prnt > 0) {
 
             // disp(' ')
             mlfDisp(_mxarray36_);
@@ -1512,8 +1486,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     // else
     } else {
 
-        // if prnt > 1
-        if (mclGtBool(mclVv(prnt, "prnt"), _mxarray11_)) {
+        if (prnt > 1) {
 
             // convmsg1 = sprintf([ ...
             mlfAssign(
@@ -1553,7 +1526,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
     mxDestroyArray(numModelParams_mx);
     mxDestroyArray(ans);
-    mxDestroyArray(prnt);
     mxDestroyArray(header);
     mxDestroyArray(rho);
     mxDestroyArray(chi);
@@ -1585,7 +1557,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
-    mxDestroyArray(printtype);
     mxDestroyArray(funfcn_mx);
 
     return x;
@@ -1610,7 +1581,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             int nargout_,
                             mxArray * funfcn_mx,
                             mxArray * x_in,
-                            mxArray * printtype,
+                            mxArray * printtype_mx,
                             mxArray * tolx_mx,
                             mxArray * tolf_mx,
                             mxArray * maxfun_mx,
@@ -1650,7 +1621,7 @@ DOTRACE("MdoSimplex");
 	 mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
 												funfcn_mx,
 												x_in,
-												printtype,
+												extractPrinttype(printtype_mx),
 												mxGetScalar(tolx_mx),
 												mxGetScalar(tolf_mx),
 												numModelParams,
