@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Mon Feb  4 18:06:23 2002
+// written: Thu Feb  7 16:23:05 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 #include "cmodelspc.h"
 
-#include "minkbinder.h"
+#include "eucbinder.h"
 
 #include "util/error.h"
 #include "util/strings.h"
@@ -30,6 +30,8 @@ namespace
   void clampRows(Mtx& src, int firstrow, int nrows,
                  const Mtx& hilo)
   {
+    DOTRACE("<cmodelspc.cc>::clampRows");
+
     for (int c = 0; c < src.ncols(); ++c)
       {
         double clo = hilo.at(0, c);
@@ -46,6 +48,8 @@ namespace
   Mtx getStoredExemplars(Slice& allModelParams, int nstored,
                          const Mtx& hilo0, const Mtx& hilo1)
   {
+    DOTRACE("<cmodelspc.cc>::getStoredExemplars");
+
     Slice otherParams =
       allModelParams.rightmost(allModelParams.nelems()-
                                (Classifier::DIM_OBJ_PARAMS+2));
@@ -65,6 +69,7 @@ namespace
 
   Mtx getHiLo(const Mtx& src)
   {
+    DOTRACE("<cmodelspc.cc>::getHiLo");
     Mtx result(2, src.ncols());
 
     for (int i = 0; i < src.ncols(); ++i)
@@ -140,33 +145,39 @@ DOTRACE("CModelSPC::computeDiffEv");
                                            itsHiLo0,
                                            itsHiLo1);
 
+  {DOTRACE("<cmodelspc.cc>::loop");
+
   // Loop over the test objects
   for (int r = 0; r < objects.mrows(); ++r)
     {
-      MinkowskiBinder mbinder(attWeights.begin(), objects.rowIter(r),
-                              2.0, 0.5);
+      EuclideanBinder<DIM_OBJ_PARAMS>
+        ebinder(attWeights.begin(), objects.rowIter(r));
 
       // compute distances between test object and stored exemplars, looking
       // for the nearest exemplar from each category
-      Mtx dists(storedExemplars.mrows(), 1);
 
       double mindist0 = std::numeric_limits<double>::max();
       double mindist1 = std::numeric_limits<double>::max();
 
-      for (int rr = 0; rr < itsNumStoredExemplars; ++rr)
+      {DOTRACE("<cmodelspc.cc>::minkDist2");
+
+      for (int rr = 0, rr2 = itsNumStoredExemplars;
+           rr < itsNumStoredExemplars;
+           ++rr, ++rr2)
         {
-          double dist0 = mbinder.minkDist2(storedExemplars.rowIter(rr));
-          double dist1 = mbinder.minkDist2(storedExemplars.rowIter
-                                           (rr+itsNumStoredExemplars));
+          double dist0 = ebinder.eucDist(storedExemplars.rowIter(rr));
+          double dist1 = ebinder.eucDist(storedExemplars.rowIter(rr2));
 
           if (dist0 < mindist0) mindist0 = dist0;
           if (dist1 < mindist1) mindist1 = dist1;
         }
+      }
 
       // the evidence is the difference of the distances to the nearest
       // exemplars of each category
       diffEvOut.at(r) = (mindist1 - mindist0);
     }
+  }
 }
 
 double CModelSPC::computeSigmaNoise(double rawSigma) const
