@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar  8 11:54:49 2001
+// written: Thu Mar  8 16:09:35 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,71 +19,45 @@
 
 class Rat;
 
+class fixed_string;
+template <class T> class shared_ptr;
+
 class Classifier {
-public:
-  static void forwardProbit(double* diffEvidence,
-									 int num_points,
-									 double thresh_,
-									 double sigmaNoise_,
-									 double* ppOut);
-
-  static double loglikelihood(const double* predictedProbability1,
-										int numPoints,
-										const double* observedIncidence1,
-										const double* observedIncidence2);
-};
-
-class ModelCssm : public Classifier {
 private:
-  const Rat& itsObjParams;
+  int itsNumAllExemplars;
   const Rat& itsObservedIncidence;
-  const int itsNumStoredExemplars;
-  const int itsNum1;
-  const int itsNum2;
-  const int itsNumTrainingExemplars;
-  const int itsNumAllExemplars;
-
-  const int itsDimObjParams;
-
   double* const itsDiffEvidence;
+  double* const itsPredictedProbability;
 
-  typedef const double* constDblPtr;
+  void forwardProbit(double thresh, double sigmaNoise) const;
+  double loglikelihood();
 
-  constDblPtr* const itsCat1;
-  constDblPtr* const itsCat2;
-
-  double* itsPredictedProbability;
-
-  // Count the category training exemplars
-  int countCategory(const Rat& params, int category);
-
-  void reset()
+  void resetDiffEv()
   {
     for (int i = 0; i < itsNumAllExemplars; ++i)
       itsDiffEvidence[i] = 0.0;
   }
 
-  // Scales the weights in place; weights is an input/output argument
-  void scaleWeights(double* weights, int numRawWeights);
+  // Must be overridden by subclasses
+  virtual void computeDiffEv(Rat& modelParams) = 0;
+  virtual double sigmaScalingFactor() const = 0;
 
-  void computeSimilarity(const double* attWeights,
-								 const double* storedExemplar1,
-								 const double* storedExemplar2,
-								 double minkPower,
-								 double minkPowerInv);
+protected:
+  double& diffEvidence(int i) { return itsDiffEvidence[i]; }
+  int numAllExemplars() const { return itsNumAllExemplars; }
 
-  void computeSimilarity2(const double* attWeights,
-								  const double* storedExemplar1,
-								  const double* storedExemplar2);
+  static const int DIM_OBJ_PARAMS = 4;
 
 public:
-  ModelCssm(const Rat& objParams,
-				const Rat& observedIncidence,
-				int numStoredExemplars);
+  Classifier(const Rat& objParams, const Rat& observedIncidence);
+  virtual ~Classifier();
 
-  ~ModelCssm();
+  static shared_ptr<Classifier> make(const fixed_string& whichType,
+												 const Rat& objParams,
+												 const Rat& observedIncidence,
+												 int numStoredExemplars);
 
-  double loglikelihoodFor(Rat& modelParams);
+  double loglikelihoodFor(Rat& modelParams);  
 };
 
 static const char vcid_classifier_h[] = "$Header$";
