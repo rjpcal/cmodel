@@ -64,21 +64,8 @@ DOTRACE("CModelCssm::loadModelParams");
   		row2 /= row2.sum();
 	 }
 
-  {for (int n = 0; n < itsStored1.mrows(); ++n)
-	 {
-		Slice result1(itsStored1.row(n));
-  		training1().leftMultAndAssign(scaledWeights1.row(n),
-												result1);
-	 }
-  }
-
-  {for (int n = 0; n < itsStored2.mrows(); ++n)
-	 {
-		Slice result2(itsStored2.row(n));
-  		training2().leftMultAndAssign(scaledWeights2.row(n),
-												result2);
-	 }
-  }
+  itsStored1.assign_MMmul(scaledWeights1, training1());
+  itsStored2.assign_MMmul(scaledWeights2, training2());
 }
 
 const Mtx& CModelCssm::getStoredExemplars(Category cat)
