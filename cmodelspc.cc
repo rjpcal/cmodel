@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Mon Mar  4 12:05:21 2002
+// written: Mon Mar  4 17:44:23 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -139,10 +139,10 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   attWeights.apply(std::abs);
 
-  Mtx storedExemplars = getStoredExemplars(modelParams,
-                                           itsNumStoredExemplars,
-                                           itsHiLo0,
-                                           itsHiLo1);
+  const Mtx storedExemplars = getStoredExemplars(modelParams,
+                                                 itsNumStoredExemplars,
+                                                 itsHiLo0,
+                                                 itsHiLo1);
 
   {DOTRACE("<cmodelspc.cc>::loop");
 
@@ -150,7 +150,7 @@ DOTRACE("CModelSPC::computeDiffEv");
   for (int r = 0; r < objects.mrows(); ++r)
     {
       EuclideanBinder<DIM_OBJ_PARAMS>
-        ebinder(attWeights.columnIter(0), objects.rowIter(r));
+        ebinder(MtxConstIter(attWeights.columnIter(0)), objects.rowIter(r));
 
       // compute distances between test object and stored exemplars, looking
       // for the nearest exemplar from each category
