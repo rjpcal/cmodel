@@ -108,11 +108,7 @@ private:
 	 return FuncPoint(x, itsObjective.evaluate(x));
   }
 
-  void putInSimplex(const FuncPoint& p, int pointNumber)
-  {
-	 itsSimplex.column(pointNumber) = p.x.column(0);
-	 itsFvals.at(0, pointNumber) = p.f;
-  }
+  void putInSimplex(const FuncPoint& p, int pointNumber);
 
   void putInSimplex(const Mtx& params, int simplexPoint)
   {
