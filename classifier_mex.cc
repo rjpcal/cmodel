@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 26 09:54:04 2002
+// written: Thu Jun  6 16:54:58 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -50,16 +50,12 @@ namespace
   public:
     MyMexPkg(ExitFcn f) :
       MexPkg(MEXFUNCNAME, f),
-      recentNumStored(-1),
-      recentModel(0),
-      recentObjParams(0,0)
+      recentModel(0)
     {}
 
     virtual ~MyMexPkg() {}
 
-    int recentNumStored;
     shared_ptr<CModelCssm> recentModel;
-    Mtx recentObjParams;
   };
 
   MyMexPkg* mexPkg = 0;
@@ -70,14 +66,20 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
                                       const mxArray* extraArgs_mx)
 {
   DOTRACE("makeClassifier");
-  if (whichType == "cssm")
+  if (whichType == "cssm" || whichType == "rxmlin")
     {
+      CModelExemplar::TransferFunction tfunc =
+        whichType == "cssm"
+        ? CModelExemplar::EXP_DECAY
+        : CModelExemplar::LINEAR_DECAY;
 
       int numStoredExemplars =
         Mx::getIntField(extraArgs_mx, "numStoredExemplars");
 
-      if ( (numStoredExemplars == mexPkg->recentNumStored) &&
-           (objParams == mexPkg->recentObjParams) )
+      if ( mexPkg->recentModel.get() != 0 &&
+           numStoredExemplars == mexPkg->recentModel->numStoredExemplars() &&
+           objParams == mexPkg->recentModel->objParams() &&
+           tfunc == mexPkg->recentModel->transferFunction() )
         {
           DOTRACE("use old");
 
@@ -87,15 +89,14 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
         {
           DOTRACE("make new");
 
-          mexPkg->recentObjParams = objParams;
-          mexPkg->recentObjParams.makeUnique();
-
-          mexPkg->recentNumStored = numStoredExemplars;
+          // To avoid relying on transient matlab storage:
+          Mtx uniqObjParams = objParams;
+          uniqObjParams.makeUnique();
 
           mexPkg->recentModel.reset
-            (new CModelCssm(mexPkg->recentObjParams,
-                            CModelExemplar::EXP_DECAY,
-                            mexPkg->recentNumStored));
+            (new CModelCssm(uniqObjParams,
+                            tfunc,
+                            numStoredExemplars));
 
           return mexPkg->recentModel;
         }
