@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Jul 31 16:16:39 2002
+// written: Wed Jul 31 17:43:39 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -227,9 +227,26 @@ DOTRACE("Classifier::deviance");
   return -2 * (llc - llf);
 }
 
-Classifier::RequestResult Classifier::handleRequest(fstring action,
-                                                    const Mtx& allModelParams,
-                                                    const MxWrapper& extraArgs)
+namespace
+{
+  Mtx getTestObjects(const MxWrapper& extraArgs)
+  {
+    Mtx result = extraArgs.getStructField("testObjects").getMtx();
+
+    if (result.ncols() != Classifier::DIM_OBJ_PARAMS)
+      {
+        throw Util::Error("wrong number of columns in 'testObjects' "
+                          "(should be equal to DIM_OBJ_PARAMS)");
+      }
+
+    return result;
+  }
+}
+
+Classifier::RequestResult
+Classifier::handleRequest(fstring action,
+                          const Mtx& allModelParams,
+                          const MxWrapper& extraArgs)
 {
 DOTRACE("Classifier::handleRequest");
 
@@ -250,19 +267,13 @@ DOTRACE("Classifier::handleRequest");
   //
   //---------------------------------------------------------------------
 
-  Mtx testObjects = extraArgs.getStructField("testObjects").getMtx();
-
-  if (testObjects.ncols() != DIM_OBJ_PARAMS)
-    {
-      throw Util::Error("wrong number of columns in 'testObjects' "
-                        "(should be equal to DIM_OBJ_PARAMS)");
-    }
-
-  Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
-
   if ( action == "ll" || action == "llc" )
     {
       DOTRACE("Classifier::handleRequest-llc");
+
+      const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
+      const Mtx testObjects = getTestObjects(extraArgs);
 
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -279,6 +290,8 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llf");
 
+      const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -291,6 +304,10 @@ DOTRACE("Classifier::handleRequest");
   if ( action == "dev" )
     {
       DOTRACE("Classifier::handleRequest-dev");
+
+      const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
+      const Mtx testObjects = getTestObjects(extraArgs);
 
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -307,6 +324,8 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-classify");
 
+      const Mtx testObjects = getTestObjects(extraArgs);
+
       Mtx result(testObjects.mrows(), allModelParams.ncols());
 
       for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -321,6 +340,10 @@ DOTRACE("Classifier::handleRequest");
   if ( action == "simplex" )
     {
       DOTRACE("Classifier::handleRequest-simplex");
+
+      const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
+      const Mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
@@ -349,6 +372,10 @@ DOTRACE("Classifier::handleRequest");
   if ( action == "anneal" )
     {
       DOTRACE("Classifier::handleRequest-anneal");
+
+      const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
+      const Mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
