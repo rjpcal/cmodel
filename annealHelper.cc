@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 09:55:02 2002
+// written: Fri Feb 15 10:06:45 2002
 // $Id$
 //
 //
@@ -152,86 +152,53 @@ DOTRACE("makeTestModels");
 //
 //---------------------------------------------------------------------
 
-Mtx doFuncEvals(bool canUseMatrix,
-                const Mtx& models,
-                mxArray* func,
-                mxArray* varargin_mx)
+Mtx doParallelFuncEvals(const Mtx& models,
+                        mxArray* func,
+                        mxArray* varargin_mx)
 {
-DOTRACE("doFuncEvals");
+DOTRACE("doParallelFuncEvals");
 
-  mxArray* costs_mx = mclGetUninitializedArray();
-  mxArray* models_mx = mclGetUninitializedArray();
-  mlfAssign(&models_mx, models.makeMxArray());
+  mxArray* costs_mx = 0;
+  mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
   mclCopyArray(&func);
   mclCopyArray(&varargin_mx);
 
-  if (canUseMatrix)
-    {
-      DOTRACE("eval w/ matrix");
-      // costs = feval(func, models, varargin{:});
+  // costs = feval(func, models, varargin{:});
 #if 0
-      mlfAssign(&costs_mx,
-                mlfFeval(mclValueVarargout(),
-                         func,
-                         models_mx,
-                         mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
-                         NULL));
-
+  mlfAssign(&costs_mx,
+            mlfFeval(mclValueVarargout(),
+                     func,
+                     models_mx,
+                     mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
+                     NULL));
 #else
 
-      mxArray* plhs[1] = { 0 };
+  mxArray* plhs[1] = { 0 };
 
-      const int MAX_NRHS = 32;
-      mxArray* prhs[MAX_NRHS];
+  const int MAX_NRHS = 32;
+  mxArray* prhs[MAX_NRHS];
 
-      prhs[0] = models_mx;
-      // need this? seems like no. prhs[0] = mxDuplicateArray(models_mx);
+  prhs[0] = models_mx;
+  // need this? seems like no. prhs[0] = mxDuplicateArray(models_mx);
 
-      int nrhs = 1;
+  int nrhs = 1;
 
-      const int nvararg = mxGetNumberOfElements(varargin_mx);
+  const int nvararg = mxGetNumberOfElements(varargin_mx);
 
-      for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
-        {
-          DebugEvalNL(i);
-          prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
-        }
-
-        fstring cmd_name = MxWrapper::extractString(func);
-
-        int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
-
-      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
-
-      mlfAssign(&costs_mx, plhs[0]);
-#endif
-    }
-  else
+  for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
     {
-      DOTRACE("eval w/o matrix");
-      // NM = size(models, 2);
-      int NM = mxGetN(models_mx);
-
-      // costs = zeros(NM, 1);
-      mlfAssign(&costs_mx, mxCreateDoubleMatrix(NM, 1, mxREAL));
-
-      // for e = 1:NM
-      for (int e = 0; e < NM; ++e)
-        {
-          //costs(e) = feval(func, models(:,e), varargin{:});
-          mclIntArrayAssign1(&costs_mx,
-                             mlfFeval(mclValueVarargout(),
-                                      func,
-                                      mclArrayRef2(models_mx,
-                                                   mlfCreateColonIndex(),
-                                                   mlfScalar(e+1)),
-                                      mlfIndexRef(varargin_mx,
-                                                  "{?}",
-                                                  mlfCreateColonIndex()),
-                                      NULL),
-                             e+1);
-        }
+      DebugEvalNL(i);
+      prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
     }
+
+  fstring cmd_name = MxWrapper::extractString(func);
+
+  int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
+
+  if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+
+  mlfAssign(&costs_mx, plhs[0]);
+#endif
 
   mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
 
@@ -244,6 +211,58 @@ DOTRACE("doFuncEvals");
   mxDestroyArray(costs_mx);
 
   return costs;
+}
+
+Mtx doSerialFuncEvals(const Mtx& models,
+                      mxArray* func,
+                      mxArray* varargin_mx)
+{
+DOTRACE("doSerialFuncEvals");
+
+  mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
+  mclCopyArray(&func);
+  mclCopyArray(&varargin_mx);
+
+  const int NM = models.ncols();
+
+  Mtx costs(NM, 1);
+
+  for (int e = 0; e < NM; ++e)
+    {
+      //costs(e) = feval(func, models(:,e), varargin{:});
+      mxArray* result = mlfFeval(mclValueVarargout(),
+                                 func,
+                                 mclArrayRef2(models_mx,
+                                              mlfCreateColonIndex(),
+                                              mlfScalar(e+1)),
+                                 mlfIndexRef(varargin_mx,
+                                             "{?}",
+                                             mlfCreateColonIndex()),
+                                 NULL);
+
+      costs.at(e) = mxGetScalar(result);
+
+      mxDestroyArray(result);
+    }
+
+  mxDestroyArray(varargin_mx);
+  mxDestroyArray(func);
+  mxDestroyArray(models_mx);
+
+  return costs;
+}
+
+Mtx doFuncEvals(bool canUseMatrix,
+                const Mtx& models,
+                mxArray* func,
+                mxArray* varargin_mx)
+{
+  if (canUseMatrix)
+    {
+      return doParallelFuncEvals(models, func, varargin_mx);
+    }
+
+  return doSerialFuncEvals(models, func, varargin_mx);
 }
 
 //---------------------------------------------------------------------
