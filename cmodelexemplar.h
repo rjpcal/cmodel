@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Apr  6 16:44:00 2001
+// written: Tue Apr 10 14:44:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -32,6 +32,13 @@ public:
 					  TransferFunction transferFunc);
 
   virtual ~CModelExemplar();
+
+  // Handles the request via chain-of-responsibility. Subclasses must
+  // be sure to call the superclass version before attempting to
+  // process the request.
+  virtual RequestResult handleRequest(fixed_string action,
+												  const Mtx& modelParams,
+												  mxArray* extraArgs_mx);
 
 protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
