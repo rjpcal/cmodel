@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Feb 19 11:01:05 2002
+// written: Tue Feb 19 11:15:42 2002
 // $Id$
 //
 //
@@ -23,8 +23,6 @@
 #ifndef DOSIMPLEX_CC_DEFINED
 #define DOSIMPLEX_CC_DEFINED
 
-#include "doSimplex.h"
-
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mx.h"
@@ -35,7 +33,6 @@
 #include "util/strings.h"
 
 #include <iostream.h>
-#include <iomanip.h>
 #include <libmatlbm.h>
 
 #define LOCAL_PROF
@@ -69,7 +66,7 @@ namespace
 
 void InitializeModule_doSimplex(void)
 {
-  mexPrintf("loading doSimplex mex file\n");
+  mexPrintf("loading 'doSimplex' mex file\n");
 
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
@@ -83,7 +80,7 @@ void InitializeModule_doSimplex(void)
 
 void TerminateModule_doSimplex(void)
 {
-  mexPrintf("unloading doSimplex mex file\n");
+  mexPrintf("unloading 'doSimplex' mex file\n");
 
   Util::Prof::printAtExit(false);
 
@@ -255,6 +252,31 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
       else
         mxDestroyArray(mplhs[i]);
     }
+}
+
+#ifndef MLF_V2
+#define MLF_V2 1
+#endif
+
+static mexFunctionTableEntry function_table[1]
+  = { { "doSimplex", mlxDoSimplex, -9, 4, (_mexLocalFunctionTable*)0 } };
+
+static _mexInitTermTableEntry init_term_table[1]
+  = { { InitializeModule_doSimplex, TerminateModule_doSimplex } };
+
+static _mex_information _mex_info
+  = { 1, 1, function_table, 0, NULL, 0, NULL, 1, init_term_table };
+
+/*
+ * The function "mexLibrary" is a Compiler-generated mex wrapper, suitable for
+ * building a MEX-function. It initializes any persistent variables as well as
+ * a function table for use by the feval function. It then calls the function
+ * "mlxDoSimplex". Finally, it clears the feval table and exits.
+ */
+extern "C"
+mex_information mexLibrary(void)
+{
+  return &_mex_info;
 }
 
 static const char vcid_doSimplex_cc[] = "$Header$";
