@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////
 //
-// modelcssm.cc
+// cmodelcssm.cc
 //
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
@@ -10,10 +10,10 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifndef MODELCSSM_CC_DEFINED
-#define MODELCSSM_CC_DEFINED
+#ifndef CMODELCSSM_CC_DEFINED
+#define CMODELCSSM_CC_DEFINED
 
-#include "modelcssm.h"
+#include "cmodelcssm.h"
 
 #include "error.h"
 #include "num.h"
@@ -138,5 +138,5 @@ const double* CModelCssm::findStoredExemplar(Category cat, int n)
   return 0; // can't happen, but placate the compiler
 }
 
-static const char vcid_modelcssm_cc[] = "$Header$";
-#endif // !MODELCSSM_CC_DEFINED
+static const char vcid_cmodelcssm_cc[] = "$Header$";
+#endif // !CMODELCSSM_CC_DEFINED
