@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Apr 10 15:01:34 2001
+// written: Mon Apr 16 11:49:07 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -77,17 +77,6 @@ static mexFunctionTableEntry classifierFunctionTable[1] = {
 
 _mexLocalFunctionTable _local_function_table_classifier
   = { 1, classifierFunctionTable };
-
-namespace Local {
-  fixed_string getString(const mxArray* arr)
-  {
-	 fixed_string str(mxGetM(arr) * mxGetN(arr) * sizeof(mxChar));
-
-	 mxGetString(arr, str.data(), str.length() + 1);
-
-	 return str;
-  }
-}
 
 shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
 												  const Mtx& objParams,
@@ -194,9 +183,9 @@ DOTRACE("Mclassifier");
 
   try {
 
-	 fixed_string modelName = Local::getString(modelName_mx);
+	 fixed_string modelName = Mtx::extractString(modelName_mx);
 
-	 fixed_string actionRequest = Local::getString(actionRequest_mx);
+	 fixed_string actionRequest = Mtx::extractString(actionRequest_mx);
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
 	 if (extraArgs_mx && mxIsStruct(extraArgs_mx))
