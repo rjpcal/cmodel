@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:21:19 2002
+// written: Mon Feb 18 17:30:58 2002
 // $Id$
 //
 //
@@ -389,6 +389,12 @@ public:
     if (bounds.ncols() != 2)
       {
         mexErrMsgTxt("'bounds' must have two columns (lo and hi bound)");
+      }
+
+    for (int r = 0; r < bounds.mrows(); ++r)
+      {
+        if (bounds.at(r,0) > bounds.at(r,1))
+          mexErrMsgTxt("invalid 'bounds' (lo value was greater than hi)");
       }
   }
 
