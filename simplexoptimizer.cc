@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Tue Feb 19 15:03:20 2002
+// written: Wed Feb 20 18:13:20 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -85,7 +85,7 @@ void SimplexOptimizer::printIter()
       std::cerr << std::setw(6) << itsIterCount
                 << std::setw(13) << funcCount()
                 << std::setw(17) << std::setprecision(6)
-		<< double(itsFvals.at(0,0))
+                << double(itsFvals.at(0,0))
                 << "         " << iterTypeString(itsCurIter) << '\n';
     }
 }
@@ -154,6 +154,42 @@ DOTRACE("SimplexOptimizer::optimize");
             << "OPTIONS.TolFun of " << itsTolf << '\n';
 
   return 1;
+}
+
+bool SimplexOptimizer::tooManyFevals()
+{
+  if (funcCount() < itsMaxFevals)
+    return false;
+
+  if (itsPrnt != NONE)
+    {
+      std::cerr << "\nExiting: Maximum number of function evaluations "
+                << "has been exceeded\n"
+                << "         - increase MaxFunEvals option.\n"
+                << "         Current function value: "
+                << bestFval()
+                << "\n\n";
+    }
+
+  return true;
+}
+
+bool SimplexOptimizer::tooManyIters()
+{
+  if (itsIterCount < itsMaxIters)
+    return false;
+
+  if (itsPrnt != NONE)
+    {
+      std::cerr << "\nExiting: Maximum number of iterations "
+                << "has been exceeded\n"
+                << "         - increase MaxIter option.\n"
+                << "         Current function value: "
+                << bestFval()
+                << "\n\n";
+    }
+
+  return true;
 }
 
 void SimplexOptimizer::doOneIter()
@@ -233,6 +269,11 @@ DOTRACE("SimplexOptimizer::doOneIter");
   printSimplex();
 }
 
+void SimplexOptimizer::printHeader()
+{
+  if (itsPrnt == ITER)
+    std::cerr << "\n Iteration   Func-count     min f(x)         Procedure\n";
+}
 
 static const char vcid_simplexoptimizer_cc[] = "$Header$";
 #endif // !SIMPLEXOPTIMIZER_CC_DEFINED
