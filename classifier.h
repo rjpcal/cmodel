@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Jun  6 16:37:13 2002
+// written: Thu Aug  1 09:48:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,7 +29,15 @@ public:
   Classifier(const Mtx& objParams);
   virtual ~Classifier();
 
-  // Returns the classification probability for each of 'testObjects'
+  /// Returns the number of model params needed by this model.
+  /** Subclasses can override to increase the number needed by base
+      classes. */
+  virtual int numModelParams() const;
+
+  /// Returns an Nx2 matrix of lower and upper bounds on the model params.
+  Mtx modelParamsBounds() const;
+
+  /// Returns the classification probability for each of 'testObjects'
   Mtx classifyObjects(Slice& modelParams, const Mtx& testObjects);
 
   double currentLogL(Slice& modelParams,
@@ -55,9 +63,9 @@ public:
     MxWrapper result;
   };
 
-  // Handles the request via chain-of-responsibility. Subclasses must
-  // be sure to call the superclass version before attempting to
-  // process the request.
+  /// Handles the request via chain-of-responsibility.
+  /** Subclasses must be sure to call the superclass version before
+      attempting to process the request. */
   virtual RequestResult handleRequest(fstring action,
                                       const Mtx& modelParams,
                                       const MxWrapper& extraArgs);
@@ -71,12 +79,17 @@ protected:
 
   Mtx objectsOfCategory(int category) const;
 
-  // Must be overridden by subclasses
+  /// Must be overridden by subclasses
   virtual void computeDiffEv(const Mtx& objects,
                              Slice& modelParams, Mtx& diffEvOut) = 0;
 
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
+  /// Each class fills in the bounds for its params.
+  /** Subclasses must call the base class version first. The return value
+      should be the number of params that were filled, so that the caller
+      can adjust "startRow" accordingly. */
+  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
 
 private:
   const Mtx itsObjParams; // col 0 --> categories, cols 1-4 --> objects

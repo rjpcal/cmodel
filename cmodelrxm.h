@@ -26,9 +26,14 @@ public:
 
   virtual ~CModelRxm();
 
+  virtual int numModelParams() const;
+
   virtual void loadModelParams(Slice& modelParams);
 
   virtual const Mtx& getStoredExemplars(Category cat);
+
+protected:
+  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
 
 private:
   Mtx itsStored1;

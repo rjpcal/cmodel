@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Jul 31 17:43:39 2002
+// written: Thu Aug  1 10:54:35 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,6 +25,7 @@
 #include "util/strings.h"
 
 #include <libmatlb.h>
+#include <limits>
 
 #include "util/trace.h"
 #include "util/debug.h"
@@ -54,8 +55,24 @@ public:
 //
 ///////////////////////////////////////////////////////////////////////
 
+namespace
+{
+  // Just check that objParams has the right size
+  const Mtx& testSize(const Mtx& objParams)
+  {
+    DOTRACE("<classifier.cc>::testSize");
+    if (objParams.ncols() != Classifier::DIM_OBJ_PARAMS+1)
+      throw Util::Error(fstring("objParams must have "
+                                "DIM_OBJ_PARAMS+1 columns "
+                                "(expected ", Classifier::DIM_OBJ_PARAMS+1,
+                                ", got ", objParams.ncols(), ")"));
+
+    return objParams;
+  }
+}
+
 Classifier::Classifier(const Mtx& objParams) :
-  itsObjParams(objParams),
+  itsObjParams(testSize(objParams)),
   itsObjCategories(objParams(col_range_n(0, 1))),
   itsObjects(objParams(col_range_n(1, DIM_OBJ_PARAMS))),
   itsNumAllExemplars(objParams.mrows()),
@@ -69,6 +86,34 @@ DOTRACE("Classifier::Classifier");
 Classifier::~Classifier()
 {
 DOTRACE("Classifier::~Classifier");
+}
+
+int Classifier::numModelParams() const
+{
+DOTRACE("Classifier::numModelParams");
+
+  return DIM_OBJ_PARAMS // one attentional weight per obj param
+    + 1 // plus one param for the threshold
+    + 1; // plus one param for the std deviation of the noise
+}
+
+Mtx Classifier::modelParamsBounds() const
+{
+DOTRACE("Classifier::modelParamsBounds");
+
+  Mtx bounds(numModelParams(), 2);
+
+  const int row = fillModelParamsBounds(bounds, 0);
+
+  if (row != numModelParams())
+    {
+      throw Util::Error(fstring("not all rows were filled "
+                                "in modelParamsBounds() "
+                                "(expected ", numModelParams(),
+                                ", got ", row, ")"));
+    }
+
+  return bounds;
 }
 
 Mtx Classifier::forwardProbit(const Mtx& diffEv,
@@ -267,6 +312,13 @@ DOTRACE("Classifier::handleRequest");
   //
   //---------------------------------------------------------------------
 
+  if ( action == "bounds" )
+    {
+      DOTRACE("Classifier::handleRequest-bounds");
+
+      return modelParamsBounds();
+    }
+
   if ( action == "ll" || action == "llc" )
     {
       DOTRACE("Classifier::handleRequest-llc");
@@ -418,7 +470,11 @@ Mtx Classifier::objectsOfCategory(int category) const
 {
 DOTRACE("Classifier::objectsOfCategory");
 
-  int nobjs = countCategory(category);
+  const int nobjs = countCategory(category);
+
+  if (nobjs == 0)
+    throw Util::Error(fstring("no objects found in category ", category));
+
   Mtx result(nobjs, DIM_OBJ_PARAMS);
 
   int r = 0;
@@ -441,6 +497,23 @@ Slice Classifier::exemplar(int i) const
 {
 DOTRACE("Classifier::exemplar");
   return itsObjects.row(i);
+}
+
+int Classifier::fillModelParamsBounds(Mtx& bounds, int startRow) const
+{
+DOTRACE("Classifier::fillModelParamsBounds");
+
+  const double minus_inf = -std::numeric_limits<double>::max();
+  const double plus_inf = std::numeric_limits<double>::max();
+
+  // All lower bounds are "minus infinity"
+  // All upper bounds are "plus infinity"
+  bounds.sub(row_range_n(0, DIM_OBJ_PARAMS+2),
+             col_range_n(0,1)).setAll(minus_inf);
+  bounds.sub(row_range_n(0, DIM_OBJ_PARAMS+2),
+             col_range_n(1,1)).setAll(plus_inf);
+
+  return DIM_OBJ_PARAMS+2;
 }
 
 static const char vcid_classifier_cc[] = "$Header$";
