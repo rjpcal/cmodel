@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Aug  1 09:57:33 2002
+// written: Thu Aug  1 10:09:16 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -84,13 +84,13 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
            objParams == mexPkg->recentCssm->objParams() &&
            tfunc == mexPkg->recentCssm->transferFunction() )
         {
-          DOTRACE("use old cssm");
+          DOTRACE("<classifier_mex.cc>::makeClassifier-use old cssm");
 
           return mexPkg->recentCssm;
         }
       else
         {
-          DOTRACE("make new cssm");
+          DOTRACE("<classifier_mex.cc>::makeClassifier-make new cssm");
 
           // To avoid relying on transient matlab storage:
           Mtx uniqObjParams = objParams;
@@ -119,13 +119,13 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
            objParams == mexPkg->recentRxm->objParams() &&
            tfunc == mexPkg->recentRxm->transferFunction() )
         {
-          DOTRACE("use old rxm");
+          DOTRACE("<classifier_mex.cc>::makeClassifier-use old rxm");
 
           return mexPkg->recentRxm;
         }
       else
         {
-          DOTRACE("make new rxm");
+          DOTRACE("<classifier_mex.cc>::makeClassifier-make new rxm");
 
           // To avoid relying on transient matlab storage:
           Mtx uniqObjParams = objParams;
