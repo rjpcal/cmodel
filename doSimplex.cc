@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 06:54:20 2001
+// written: Wed Apr 18 12:56:50 2001
 // $Id$
 //
 //
@@ -31,6 +31,7 @@
 #include "strings.h"
 
 #include <fstream.h>
+#include <iomanip.h>
 #include "libmatlbm.h"
 
 #define LOCAL_PROF
@@ -94,10 +95,39 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
   return int(mxGetScalar(arr));
 }
 
+class MexBuf : public streambuf
+{
+public:
+  MexBuf() : streambuf() { setbuf(0,0); }
+
+  virtual int overflow(int c)
+  {
+	 if (c != EOF)
+		mexPrintf("%c", c);
+	 return c;
+  }
+
+  virtual streamsize xsputn(const char* s, const streamsize n)
+  {
+	 streamsize c = n;
+	 while (*s && c--)
+		mexPrintf("%c", *s++);
+  	 return n;
+  }
+};
+
+namespace {
+  MexBuf* mexBuf = 0;
+}
+
 void InitializeModule_doSimplex(void) {
+  mexBuf = new MexBuf;
+  cout.rdbuf(mexBuf);
+  cerr.rdbuf(mexBuf);
 }
 
 void TerminateModule_doSimplex(void) {
+  delete mexBuf;
 }
 
 static mxArray * MdoSimplex(mxArray * * fval,
@@ -437,11 +467,12 @@ private:
 		return false;
 
 	 if (itsPrnt != NONE) {
-		mexPrintf("\nExiting: Maximum number of function evaluations "
-					 "has been exceeded\n");
-		mexPrintf("         - increase MaxFunEvals option.\n");
-		mexPrintf("         Current function value: %f \n\n",
-					 bestFval());
+		cerr << "\nExiting: Maximum number of function evaluations "
+			  << "has been exceeded\n"
+			  << "         - increase MaxFunEvals option.\n"
+			  << "         Current function value: "
+			  << bestFval()
+			  << "\n\n";
 	 }
 
 	 return true;
@@ -453,11 +484,12 @@ private:
 		return false;
 
 	 if (itsPrnt != NONE) {
-		mexPrintf("\nExiting: Maximum number of iterations "
-					 "has been exceeded\n");
-		mexPrintf("         - increase MaxIter option.\n");
-		mexPrintf("         Current function value: %f \n\n",
-					 bestFval());
+		cerr << "\nExiting: Maximum number of iterations "
+			  << "has been exceeded\n"
+			  << "         - increase MaxIter option.\n"
+			  << "         Current function value: "
+			  << bestFval()
+			  << "\n\n";
 	 }	 
 
 	 return true;
@@ -468,7 +500,7 @@ private:
   void printHeader()
   {
 	 if (itsPrnt == ITER)
-		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
+		cerr << "\n Iteration   Func-count     min f(x)         Procedure\n";
   }
 
   static const char* iterTypeString(IterType how)
@@ -503,9 +535,10 @@ private:
   {
 	 if (itsPrnt == ITER)
 		{
-		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
-		  mexPrintf("%s\n", iterTypeString(itsCurIter));
+		  cerr << setw(6) << itsIterCount
+				 << setw(13) << funcCount()
+				 << setw(17) << setprecision(6) << itsFvals.at(0,0)
+				 << "         " << iterTypeString(itsCurIter) << '\n';
 		}
   }
 
@@ -513,10 +546,10 @@ private:
   {
 	 if (itsPrnt == SIMPLEX)
 		{
-		  mexPrintf("\n%s\n", iterTypeString(itsCurIter));
+		  cerr << '\n' << iterTypeString(itsCurIter) << '\n';
 		  itsSimplex.print("simplex");
 		  itsFvals.print("fvals");
-		  mexPrintf("funcEvals: %d\n", funcCount());
+		  cerr << "funcEvals: " << funcCount() << '\n';
 		}
   }
 
@@ -610,14 +643,11 @@ int SimplexOptimizer::optimize()
 		doOneIter();
 	 } // end main algorithm loop
 
-  const char* format = 
-	 "\nOptimization terminated successfully:\n"
-	 " the current x satisfies the termination criteria using "
-	 "OPTIONS.TolX of %e \n"
-	 " and F(X) satisfies the convergence criteria using "
-	 "OPTIONS.TolFun of %e \n";
-
-  mexPrintf(format, itsTolx, itsTolf);
+  cerr << "\nOptimization terminated successfully:\n"
+		 << " the current x satisfies the termination criteria using "
+		 << "OPTIONS.TolX of " << itsTolx << '\n'
+		 << " and F(X) satisfies the convergence criteria using "
+		 << "OPTIONS.TolFun of " << itsTolf << '\n';
 
   return 1;
 }
