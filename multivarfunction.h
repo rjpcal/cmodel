@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:45:02 2001
-// written: Thu Feb 14 11:56:24 2002
+// written: Mon Feb 18 18:00:57 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -32,8 +32,8 @@ public:
 
   double evaluate(const Mtx& x)
   {
-         ++itsEvalCount;
-         return doEvaluate(x);
+    ++itsEvalCount;
+    return doEvaluate(x);
   }
 };
 
