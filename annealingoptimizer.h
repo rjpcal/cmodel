@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:33 2002
-// written: Wed Feb 20 18:07:10 2002
+// written: Tue Sep 28 13:08:06 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -33,7 +33,7 @@ private:
   Mtx makeCoolingSchedule(int scale);
 
 public:
-  AnnealOpts(mxArray* arr);
+  AnnealOpts(const mxArray* arr);
 
   const Mtx bounds;
   const Mtx deltas;

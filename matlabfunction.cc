@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:10:06 2002
-// written: Wed Jul 31 15:08:46 2002
+// written: Tue Sep 28 13:14:28 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,12 +21,14 @@
 
 #include "util/error.h"
 
-#include <libmatlb.h>
+#include <matrix.h>
+#include <mex.h>
 
 #include "util/trace.h"
 
 MatlabFunction::MatlabFunction(const fstring& funcName,
-                               int nvararg, mxArray** pvararg,
+                               int nvararg,
+                               const mxArray** pvararg,
                                bool canUseMatrix)
   :
   itsFuncName(funcName),
@@ -39,8 +41,7 @@ MatlabFunction::MatlabFunction(const fstring& funcName,
 
   for (int i = 0; i < itsNvararg; ++i)
     {
-      itsPrhs[i+1] = 0;
-      mlfAssign(&itsPrhs[i+1], mxDuplicateArray(itsPvararg[i]));
+      itsPrhs[i+1] = mxDuplicateArray(itsPvararg[i]);
     }
 }
 

@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:07:28 2002
-// written: Wed Jul 31 15:09:03 2002
+// written: Tue Sep 28 13:12:39 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -36,19 +36,19 @@ typedef struct mxArray_tag mxArray;
 class MatlabFunction : public MultivarFunction
 {
 private:
-  const fstring itsFuncName;
-  const int itsNvararg;
-  mxArray** const itsPvararg;
-  const bool itsCanUseMatrix;
-
-  mxArray** itsPrhs;
+  const fstring         itsFuncName;
+  const int             itsNvararg;
+  const mxArray** const itsPvararg;
+  const bool            itsCanUseMatrix;
+  mxArray**             itsPrhs;
 
   Mtx evaluateParallel(const Mtx& models) const;
   Mtx evaluateSerial(const Mtx& models) const;
 
 public:
   MatlabFunction(const fstring& funcName,
-                 int nvararg, mxArray** pvararg,
+                 int nvararg,
+                 const mxArray** pvararg,
                  bool canUseMatrix = false);
 
   virtual ~MatlabFunction();

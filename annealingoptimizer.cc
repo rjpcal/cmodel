@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Wed Jul 31 15:06:09 2002
+// written: Tue Sep 28 13:08:01 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,31 +21,36 @@
 #include "mx/mx.h"
 
 #include "util/error.h"
+#include "util/rand.h"
 
 #include <algorithm>
 #include <iomanip>
 #include <iostream>
-#include <libmatlb.h>
+
+#include <matrix.h>
 
 #include "util/trace.h"
 
 namespace
 {
+  static Util::Urand generator;
+
   double matlabRand()
   {
-    mxArray* arr = mlfNRand(1, NULL);
-    double result = Mx::getDouble(arr);
-    mxDestroyArray(arr);
-    return result;
+    return generator.fdrawRange(0.0, 1.0);
   }
 
   Mtx matlabRand(int mrows, int ncols)
   {
-    mxArray* arr = mlfRand(mxCreateScalarDouble(mrows),
-                           mxCreateScalarDouble(ncols), NULL);
+    Mtx result(mrows, ncols, Mtx::NO_INIT);
 
-    Mtx result(arr, Mtx::COPY);
-    mxDestroyArray(arr);
+    for (Mtx::iterator itr = result.begin_nc(), stop = result.end_nc();
+         itr != stop;
+         ++itr)
+      {
+        *itr = generator.fdrawRange(0.0, 1.0);
+      }
+
     return result;
   }
 }
@@ -79,7 +84,7 @@ Mtx AnnealOpts::makeCoolingSchedule(int scale)
   return result;
 }
 
-AnnealOpts::AnnealOpts(mxArray* arr) :
+AnnealOpts::AnnealOpts(const mxArray* arr) :
   bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
   deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
   centers(Mx::getField(arr, "centers"), Mtx::COPY),
