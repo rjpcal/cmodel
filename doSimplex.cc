@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Feb 19 09:54:04 2002
+// written: Tue Feb 19 10:27:49 2002
 // $Id$
 //
 //
@@ -27,7 +27,7 @@
 
 #include "mexbuf.h"
 #include "mtx.h"
-#include "mxwrapper.h"
+#include "mx.h"
 #include "matlabfunction.h"
 #include "simplexoptimizer.h"
 
@@ -45,7 +45,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 {
   if (mxIsChar(arr))
     {
-      if (MxWrapper::extractString(arr) == "200*numberofvariables")
+      if (Mx::getString(arr) == "200*numberofvariables")
         {
           return 200*numModelParams;
         }
@@ -149,14 +149,14 @@ DOTRACE("MdoSimplex");
       // numModelParams = prod(size(x));
       const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
 
-      MatlabFunction objective(MxWrapper::extractString(funfcn_mx),
+      MatlabFunction objective(Mx::getString(funfcn_mx),
                                nvararg,
                                pvararg,
                                false);
 
       SimplexOptimizer opt(objective,
                            Mtx(x_in),
-                           MxWrapper::extractString(printtype_mx),
+                           Mx::getString(printtype_mx),
                            numModelParams,
                            extractMaxIters(maxfun_mx, numModelParams),
                            extractMaxIters(maxiter_mx, numModelParams),

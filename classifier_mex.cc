@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 18 10:32:33 2002
+// written: Tue Feb 19 10:29:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@
 
 #include "mexbuf.h"
 #include "mtx.h"
-#include "mxwrapper.h"
+#include "mx.h"
 #include "rutil.h"
 
 #include "util/error.h"
@@ -215,9 +215,9 @@ static mxArray* Mclassifier(int /* nargout_ */,
 
   try
     {
-      fstring modelName = MxWrapper::extractString(modelName_mx);
+      fstring modelName = Mx::getString(modelName_mx);
 
-      fstring actionRequest = MxWrapper::extractString(actionRequest_mx);
+      fstring actionRequest = Mx::getString(actionRequest_mx);
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
       if (extraArgs_mx && mxIsStruct(extraArgs_mx))
@@ -226,15 +226,17 @@ static mxArray* Mclassifier(int /* nargout_ */,
 
           if (debugFlag)
             {
-              if (mxGetScalar(debugFlag) == -1) {
-                Util::Prof::printAllProfData(cerr);
-                return mxCreateScalarDouble(-1.0);
-              }
+              if (mxGetScalar(debugFlag) == -1)
+                {
+                  Util::Prof::printAllProfData(cerr);
+                  return mxCreateScalarDouble(-1.0);
+                }
 
-              if (mxGetScalar(debugFlag) == -2) {
-                Util::Prof::resetAllProfData();
-                return mxCreateScalarDouble(-2.0);
-              }
+              if (mxGetScalar(debugFlag) == -2)
+                {
+                  Util::Prof::resetAllProfData();
+                  return mxCreateScalarDouble(-2.0);
+                }
             }
         }
 #endif
@@ -252,8 +254,7 @@ static mxArray* Mclassifier(int /* nargout_ */,
       // This Mtx will copy the data leaving the original mxArray untouched
       Mtx allModelParams(modelParams_mx);
 
-      const Mtx objParams(MxWrapper::extractStructField(extraArgs_mx,
-                                                        "objParams"));
+      const Mtx objParams(Mx::getField(extraArgs_mx, "objParams"));
 
       shared_ptr<Classifier> model =
         makeClassifier(modelName, objParams, extraArgs_mx);
@@ -401,9 +402,8 @@ mex_information mexLibrary()
 {
   DOTRACE("mexLibrary");
 
-  static _mexInitTermTableEntry init_term_table[1] = {
-    { InitializeModule_classifier, TerminateModule_classifier },
-  };
+  static _mexInitTermTableEntry init_term_table[1] =
+    { { InitializeModule_classifier, TerminateModule_classifier }, };
 
   static _mex_information _mex_info
     = { 1, 1, classifierFunctionTable, 0, NULL, 0, NULL, 1, init_term_table };
