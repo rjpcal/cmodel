@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 12:12:56 2001
+// written: Fri Apr  6 16:52:57 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -51,7 +51,8 @@ private:
   Mtx itsDiffEvidence;
   double itsCachedLogL_1_2;
 
-  Mtx forwardProbit(double thresh, double sigmaNoise) const;
+  static Mtx forwardProbit(const Mtx& diffEv,
+									double thresh, double sigmaNoise);
 
   double computeLogL(const Mtx& predictedProbability);
 

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Apr  6 10:51:42 2001
+// written: Fri Apr  6 17:56:52 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -20,6 +20,7 @@
 #include "strings.h"
 
 #include "trace.h"
+#include "debug.h"
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -40,25 +41,24 @@ Classifier::Classifier(const Mtx& objParams,
 Classifier::~Classifier()
 {}
 
-Mtx Classifier::forwardProbit(double thresh, double sigmaNoise) const
+Mtx Classifier::forwardProbit(const Mtx& diffEv,
+										double thresh, double sigmaNoise)
 {
 DOTRACE("Classifier::forwardProbit");
 
   const double divisor = (1.0 / Num::SQRT_2) * (1.0 / sigmaNoise);
 
-  MtxConstIter diffev = itsDiffEvidence.colIter(0);
+  MtxConstIter diffev = diffEv.colIter(0);
 
-  Mtx pp(numAllExemplars(), 1);
+  Mtx pp(diffEv.mrows(), 1);
   MtxIter ppiter = pp.colIter(0);
+
+  // alpha = (thresh - diffEvidence) / sigmaNoise
+  //
+  // pp = 0.5 * erfc(alpha / sqrt(2))
 
   for (; ppiter.hasMore(); ++diffev, ++ppiter) {
 	 double alpha_val = thresh - *diffev;
-
-	 //
-	 // alpha = (thresh - diffEvidence) / sigmaNoise
-	 //
-	 // p = 0.5 * erfc(alpha / sqrt(2))
-	 //
 
 	 *ppiter = 0.5*Num::erfc(alpha_val * divisor);
   }
@@ -126,6 +126,8 @@ Mtx Classifier::classifyObjects(Slice& modelParams, const Mtx& objects)
 {
 DOTRACE("Classifier::classifyObjects");
 
+  itsDiffEvidence.resize(objects.mrows(), 1);
+
   computeDiffEv(objects, modelParams, itsDiffEvidence);
 
   //---------------------------------------------------------------------
@@ -138,10 +140,11 @@ DOTRACE("Classifier::classifyObjects");
   // attentional weights
   const double thresh = modelParams[DIM_OBJ_PARAMS];
 
-  const double sigmaNoise = computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]);
+  const double sigmaNoise = (modelParams.nelems() > DIM_OBJ_PARAMS+1) ?
+	 computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]) : 1.0;
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
-  return forwardProbit(thresh, sigmaNoise);
+  return forwardProbit(itsDiffEvidence, thresh, sigmaNoise);
 }
 
 double Classifier::currentLogL(Slice& modelParams)
