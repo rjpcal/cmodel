@@ -13,7 +13,6 @@
 #include "libmatlbm.h"
 
 
-
 static mxArray * _mxarray20_;
 static mxArray * _mxarray21_;
 static mxArray * _mxarray22_;
@@ -53,23 +52,19 @@ static mxArray * makeTestModels(mxArray * x,
 										  mxArray * deltas,
 										  mxArray * bounds);
 
-static mxArray * MdoFuncEvals(int nargout_,
-										mxArray * canUseMatrix,
-										mxArray * models,
-										mxArray * func,
-										mxArray * varargin);
+static mxArray * doFuncEvals(mxArray * canUseMatrix,
+									  mxArray * models,
+									  mxArray * func,
+									  mxArray * varargin);
 
-static mxArray * MsampleFromPdf(int nargout_,
-										  mxArray * temp,
-										  mxArray * costs);
+static mxArray * sampleFromPdf(mxArray * temp,
+										 mxArray * costs);
 
-static mxArray * MmakePDF(int nargout_,
-								  mxArray * temp,
-								  mxArray * costs);
+static mxArray * makePDF(mxArray * temp,
+								 mxArray * costs);
 
-static mxArray * Meprob(int nargout_,
-								mxArray * temp,
-								mxArray * costs);
+static mxArray * eprob(mxArray * temp,
+							  mxArray * costs);
 
 static mexFunctionTableEntry local_function_table_[5]
   = { { "makeTestModels",
@@ -215,8 +210,12 @@ void mlxAnnealVisitParameters(int nlhs,
  */
 /*
  * function S = visitAllParameters(...
+     * bestModel, valueScalingRange, deltas, bounds, ...
+     * canUseMatrix, FUN, ...
+     * temp, ...
+     * varargin)
  */
-// XXX
+
 static mxArray * MannealVisitParameters(int nargout_,
                                         mxArray * bestModel,
                                         mxArray * valueScalingRange,
@@ -259,10 +258,6 @@ static mxArray * MannealVisitParameters(int nargout_,
     mclCopyArray(&varargin);
 
     /*
-     * bestModel, valueScalingRange, deltas, bounds, ...
-     * canUseMatrix, FUN, ...
-     * temp, ...
-     * varargin)
      * 
      * S.nevals = 0;
      */
@@ -286,25 +281,23 @@ static mxArray * MannealVisitParameters(int nargout_,
             /*
              * 
              * modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
+             * deltas, bounds);
              */
             mlfAssign(
               &modelmatrix,
-//                MmakeTestModels(
-//  										1,
               makeTestModels(
-										x,
-										bestModel,
-										valueScalingRange,
-										deltas,
-										bounds));
+									  x,
+									  bestModel,
+									  valueScalingRange,
+									  deltas,
+									  bounds));
             /*
-             * deltas, bounds);
              * 
              * costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
              */
             mlfAssign(
               &costs,
-				  MdoFuncEvals(1,
+				  doFuncEvals(
                 canUseMatrix,
                 modelmatrix,
                 FUN,
@@ -332,7 +325,7 @@ static mxArray * MannealVisitParameters(int nargout_,
              */
             mlfAssign(
               &s,
-              MsampleFromPdf(1,
+              sampleFromPdf(
                 temp, costs));
             /*
              * 
@@ -378,10 +371,6 @@ static mxArray * MannealVisitParameters(int nargout_,
     mxDestroyArray(bestModel);
     mclSetCurrentLocalFunctionTable(save_local_function_table_);
     return S;
-    /*
-     * 
-     * 
-     */
 }
 
 /*
@@ -459,7 +448,7 @@ static mxArray * makeTestModels(mxArray * x,
 }
 
 /*
- * The function "MdoFuncEvals" is the implementation
+ * The function "doFuncEvals" is the implementation
  * version of the "annealVisitParameters/doFuncEvals" M-function from file
  * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
  * (lines 35-48). It contains the actual compiled code for that M-function. It
@@ -469,11 +458,10 @@ static mxArray * makeTestModels(mxArray * x,
 /*
  * function costs = doFuncEvals(canUseMatrix, models, func, varargin)
  */
-static mxArray * MdoFuncEvals(int nargout_,
-                                                    mxArray * canUseMatrix,
-                                                    mxArray * models,
-                                                    mxArray * func,
-                                                    mxArray * varargin) {
+static mxArray * doFuncEvals(mxArray * canUseMatrix,
+									  mxArray * models,
+									  mxArray * func,
+									  mxArray * varargin) {
     mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
                                                          &_local_function_table_annealVisitParameters);
     mxArray * costs = mclGetUninitializedArray();
@@ -556,7 +544,7 @@ static mxArray * MdoFuncEvals(int nargout_,
      */
     }
     mclValidateOutput(
-      costs, 1, nargout_, "costs", "annealVisitParameters/doFuncEvals");
+      costs, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
     mxDestroyArray(NM);
     mxDestroyArray(e);
     mxDestroyArray(varargin);
@@ -572,7 +560,7 @@ static mxArray * MdoFuncEvals(int nargout_,
 }
 
 /*
- * The function "MsampleFromPdf" is the implementation
+ * The function "sampleFromPdf" is the implementation
  * version of the "annealVisitParameters/sampleFromPdf" M-function from file
  * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
  * (lines 48-55). It contains the actual compiled code for that M-function. It
@@ -582,9 +570,8 @@ static mxArray * MdoFuncEvals(int nargout_,
 /*
  * function s = sampleFromPdf(temp, costs)
  */
-static mxArray * MsampleFromPdf(int nargout_,
-                                                      mxArray * temp,
-                                                      mxArray * costs) {
+static mxArray * sampleFromPdf(mxArray * temp,
+										 mxArray * costs) {
     mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
                                                          &_local_function_table_annealVisitParameters);
     mxArray * s = mclGetUninitializedArray();
@@ -592,13 +579,12 @@ static mxArray * MsampleFromPdf(int nargout_,
     mxArray * dist = mclGetUninitializedArray();
     mclCopyArray(&temp);
     mclCopyArray(&costs);
+
     /*
      * dist = makePDF(temp, costs);
      */
-    mlfAssign(
-      &dist,
-      MmakePDF(1,
-        temp, costs));
+    mlfAssign(&dist, makePDF(temp, costs));
+
     /*
      * cutoff = rand;
      */
@@ -619,7 +605,7 @@ static mxArray * MsampleFromPdf(int nargout_,
      */
     mlfAssign(&s, mclIntArrayRef1(s, 1));
     mclValidateOutput(
-      s, 1, nargout_, "s", "annealVisitParameters/sampleFromPdf");
+      s, 1, 1, "s", "annealVisitParameters/sampleFromPdf");
     mxDestroyArray(dist);
     mxDestroyArray(cutoff);
     mxDestroyArray(costs);
@@ -633,7 +619,7 @@ static mxArray * MsampleFromPdf(int nargout_,
 }
 
 /*
- * The function "MmakePDF" is the implementation version
+ * The function "makePDF" is the implementation version
  * of the "annealVisitParameters/makePDF" M-function from file
  * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
  * (lines 55-72). It contains the actual compiled code for that M-function. It
@@ -643,9 +629,8 @@ static mxArray * MsampleFromPdf(int nargout_,
 /*
  * function pdf = makePDF(temp, costs)
  */
-static mxArray * MmakePDF(int nargout_,
-                                                mxArray * temp,
-                                                mxArray * costs) {
+static mxArray * makePDF(mxArray * temp,
+								 mxArray * costs) {
     mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
                                                          &_local_function_table_annealVisitParameters);
     mxArray * pdf = mclGetUninitializedArray();
@@ -655,6 +640,7 @@ static mxArray * MmakePDF(int nargout_,
     mxArray * bad = mclGetUninitializedArray();
     mclCopyArray(&temp);
     mclCopyArray(&costs);
+
     /*
      * % Forms exponential probability distribution given a temperature and vector of
      * % costs.  Internal function for simulated annealing algorithm.
@@ -663,21 +649,14 @@ static mxArray * MmakePDF(int nargout_,
      */
     mlfAssign(
       &bad, mlfFind(NULL, NULL, mlfIsnan(costs)));
+
     /*
      * if isempty(bad)
      */
     if (mlfTobool(mlfIsempty(bad))) {
-        /*
-         * pdf = eprob(temp, costs);
-         */
-        mlfAssign(
-          &pdf,
-          Meprob(1,
-            temp, costs));
-    /*
-     * else
-     */
-    } else {
+        mlfAssign(&pdf, eprob(temp, costs));
+    }
+	 else {
         /*
          * good = find(~isnan(costs));
          */
@@ -689,12 +668,9 @@ static mxArray * MmakePDF(int nargout_,
          */
         mlfAssign(
           &w, mclArrayRef1(costs, good));
-        /*
-         * pdf = eprob(temp, w);
-         */
-        mlfAssign(
-          &pdf,
-          Meprob(1, temp, w));
+
+        mlfAssign(&pdf, eprob(temp, w));
+
         /*
          * pdf(good) = pdf;
          */
@@ -709,7 +685,7 @@ static mxArray * MmakePDF(int nargout_,
      * end
      */
     }
-    mclValidateOutput(pdf, 1, nargout_, "pdf", "annealVisitParameters/makePDF");
+    mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
     mxDestroyArray(bad);
     mxDestroyArray(good);
     mxDestroyArray(w);
@@ -724,7 +700,7 @@ static mxArray * MmakePDF(int nargout_,
 }
 
 /*
- * The function "Meprob" is the implementation version of
+ * The function "eprob" is the implementation version of
  * the "annealVisitParameters/eprob" M-function from file
  * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
  * (lines 72-92). It contains the actual compiled code for that M-function. It
@@ -734,9 +710,8 @@ static mxArray * MmakePDF(int nargout_,
 /*
  * function pdf = eprob(temp, costs)
  */
-static mxArray * Meprob(int nargout_,
-                                              mxArray * temp,
-                                              mxArray * costs) {
+static mxArray * eprob(mxArray * temp,
+							  mxArray * costs) {
     mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
                                                          &_local_function_table_annealVisitParameters);
     mxArray * pdf = mclGetUninitializedArray();
@@ -817,7 +792,7 @@ static mxArray * Meprob(int nargout_,
     mlfAssign(
       &pdf,
       mclMrdivide(pdf, mlfSum(pdf, NULL)));
-    mclValidateOutput(pdf, 1, nargout_, "pdf", "annealVisitParameters/eprob");
+    mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/eprob");
     mxDestroyArray(toobig);
     mxDestroyArray(mpdf);
     mxDestroyArray(scale);
