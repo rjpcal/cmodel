@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 15:23:00 2002
+// written: Thu Feb 14 15:37:22 2002
 // $Id$
 //
 //
@@ -381,8 +381,6 @@ mxArray* doFuncEvals(bool canUseMatrix,
 DOTRACE("doFuncEvals");
 
   mxArray* costs_mx = mclGetUninitializedArray();
-  mxArray* e = mclGetUninitializedArray();
-  mxArray* NM = mclGetUninitializedArray();
   mxArray* models_mx = mclGetUninitializedArray();
   mlfAssign(&models_mx, models.makeMxArray());
   mclCopyArray(&func);
@@ -432,50 +430,31 @@ DOTRACE("doFuncEvals");
     {
       DOTRACE("eval w/o matrix");
       // NM = size(models, 2);
-      mlfAssign(&NM, mlfSize(mclValueVarargout(), models_mx, _mxarray22_));
+      int NM = mxGetN(models_mx);
 
       // costs = zeros(NM, 1);
-      mlfAssign(&costs_mx, mlfZeros(NM, _mxarray21_, NULL));
+      mlfAssign(&costs_mx, mxCreateDoubleMatrix(NM, 1, mxREAL));
 
       // for e = 1:NM
-      {
-        int v_ = mclForIntStart(1);
-        int e_ = mclForIntEnd(NM);
-        if (v_ > e_)
-          {
-            mlfAssign(&e, _mxarray23_);
-          }
-        else
-          {
-            //costs(e) = feval(func, models(:,e), varargin{:});
-            for (; ; )
-              {
-                mclIntArrayAssign1(&costs_mx,
-                                   mlfFeval(mclValueVarargout(),
-                                            func,
-                                            mclArrayRef2(models_mx,
-                                                         mlfCreateColonIndex(),
-                                                         mlfScalar(v_)),
-                                            mlfIndexRef(varargin_mx,
-                                                        "{?}",
-                                                        mlfCreateColonIndex()),
-                                            NULL),
-                                   v_);
-                if (v_ == e_)
-                  {
-                    break;
-                  }
-                ++v_;
-              }
-            mlfAssign(&e, mlfScalar(v_));
-          }
-      }
+      for (int e = 0; e < NM; ++e)
+        {
+          //costs(e) = feval(func, models(:,e), varargin{:});
+          mclIntArrayAssign1(&costs_mx,
+                             mlfFeval(mclValueVarargout(),
+                                      func,
+                                      mclArrayRef2(models_mx,
+                                                   mlfCreateColonIndex(),
+                                                   mlfScalar(e+1)),
+                                      mlfIndexRef(varargin_mx,
+                                                  "{?}",
+                                                  mlfCreateColonIndex()),
+                                      NULL),
+                             e+1);
+        }
     }
 
   mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
 
-  mxDestroyArray(NM);
-  mxDestroyArray(e);
   mxDestroyArray(varargin_mx);
   mxDestroyArray(func);
   mxDestroyArray(models_mx);
