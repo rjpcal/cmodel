@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 19 16:20:06 2001
-// written: Wed Feb 21 14:14:56 2001
+// written: Tue Mar  6 12:12:22 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,44 +22,51 @@
 class Rat {
 public:
   Rat(mxArray* a) :
-	 mrows(mxGetM(a)),
-	 ncols(mxGetN(a)),
-	 data(mxGetPr(a)),
-	 array(a)
+	 mrows_(mxGetM(a)),
+	 ncols_(mxGetN(a)),
+	 data_(mxGetPr(a))
   {}
 
   void print() const
     {
-		mexPrintf("array = %p, mrows = %d, ncols = %d\n", array, mrows, ncols);
-		for(int i = 0; i < mrows; ++i)
+		mexPrintf("mrows = %d, ncols = %d\n", mrows_, ncols_);
+		for(int i = 0; i < mrows_; ++i)
 		  {
-			 for(int j = 0; j < ncols; ++j)
+			 for(int j = 0; j < ncols_; ++j)
 				mexPrintf("%7.4f   ", at(i,j));
 			 mexPrintf("\n");
 		  }
 		mexPrintf("\n");
 	 }
 
-  int index(int row, int col) const { return row + (col*mrows); }
+  int index(int row, int col) const { return row + (col*mrows_); }
 
-  double* address(int row, int col) { return data + index(row, col); }
+  double* address(int row, int col) { return data_ + index(row, col); }
 
-  double& at(int row, int col) { return data[index(row, col)]; }
+  const double* address(int row, int col) const { return data_ + index(row, col); }
 
-  double at(int row, int col) const { return data[index(row, col)]; }
+  double& at(int row, int col) { return data_[index(row, col)]; }
 
-  double& at(int elem) { return data[elem]; }
+  double at(int row, int col) const { return data_[index(row, col)]; }
 
-  double at(int elem) const { return data[elem]; }
+  double& at(int elem) { return data_[elem]; }
 
-  int length() const { return (mrows > ncols) ? mrows : ncols; }
+  double at(int elem) const { return data_[elem]; }
 
-  int nelems() const { return mrows*ncols; }
+  int length() const { return (mrows_ > ncols_) ? mrows_ : ncols_; }
 
-  int mrows;
-  int ncols;
-  double* data;
-  void* array;
+  int nelems() const { return mrows_*ncols_; }
+
+  int mrows() const { return mrows_; }
+
+  double* data() { return data_; }
+
+  const double* data() const { return data_; }
+
+private:
+  int mrows_;
+  int ncols_;
+  double* data_;
 };
 
 static const char vcid_rutil_h[] = "$Header$";
