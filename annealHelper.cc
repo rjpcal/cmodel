@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:12:33 2002
+// written: Mon Feb 18 17:21:19 2002
 // $Id$
 //
 //
@@ -352,6 +352,24 @@ DOTRACE("sampleFromPdf");
 
 struct AnnealOpts
 {
+private:
+  Mtx makeScalingRange(int gridSpacing)
+  {
+    Mtx result(1, 2*gridSpacing+1);
+
+    for (int i = 0; i < gridSpacing; ++i)
+      {
+        double val = pow(2.0, -(i+1));
+        result.at(i) = -val;
+        result.at(2*gridSpacing-i) = val;
+      }
+
+    result.at(gridSpacing) = 0.0;
+
+    return result;
+  }
+
+public:
   AnnealOpts(mxArray* arr) :
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
     deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
@@ -365,7 +383,8 @@ struct AnnealOpts
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
     numModelParams(bounds.mrows()),
     numStartingPoints(std::max(100, 20*numModelParams)),
-    valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY)
+    valueScalingRange(makeScalingRange
+                      (int(mxGetScalar(Mx::getField(arr, "gridSpacing")))))
   {
     if (bounds.ncols() != 2)
       {
