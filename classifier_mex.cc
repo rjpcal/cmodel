@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 26 09:14:27 2002
+// written: Tue Feb 26 09:44:29 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -161,18 +161,6 @@ static mxArray* Mclassifier(const Mtx& modelParams,
                             mxArray* extraArgs_mx)
 {
   DOTRACE("Mclassifier");
-
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-  if (Mx::hasField(extraArgs_mx, "debugFlag"))
-    {
-      int debugFlag = Mx::getIntField(extraArgs_mx, "debugFlag");
-
-      if (debugFlag == -1)       Util::Prof::printAllProfData(std::cerr);
-      else if (debugFlag == -2)  Util::Prof::resetAllProfData();
-
-      return mxCreateScalarDouble(debugFlag);
-    }
-#endif
 
   const Mtx objParams(Mx::getField(extraArgs_mx, "objParams"));
 
