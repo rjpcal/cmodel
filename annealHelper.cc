@@ -18,14 +18,14 @@
 
 #include "trace.h"
 
-  fixed_string getString(const mxArray* arr)
-  {
-	 fixed_string str(mxGetM(arr) * mxGetN(arr) * sizeof(mxChar));
+fixed_string getString(const mxArray* arr)
+{
+  fixed_string str(mxGetM(arr) * mxGetN(arr) * sizeof(mxChar));
 
-	 mxGetString(arr, str.data(), str.length() + 1);
+  mxGetString(arr, str.data(), str.length() + 1);
 
-	 return str;
-  }
+  return str;
+}
 
 static mxArray* _mxarray20_;
 static mxArray* _mxarray21_;
@@ -83,7 +83,7 @@ mxArray* eprob(mxArray* temp,
 static mexFunctionTableEntry local_function_table_[5]
   = { { "makeTestModels",
         NULL /*mlxmakeTestModels*/, 5, 1, NULL },
-      { "doFuncEvals", NULL/*mlxdoFuncEvals*/, -4, 1, NULL },
+      { "doFuncEvals", NULL/*mlxdoFuncEvals*/, 2, 1, NULL },
       { "sampleFromPdf", NULL/*mlxsampleFromPdf*/, 2, 1, NULL },
       { "makePDF", NULL/*mlxmakePDF*/, 2, 1, NULL },
       { "eprob", NULL/*mlxeprob*/, 2, 1, NULL } };
@@ -471,34 +471,35 @@ DOTRACE("doFuncEvals");
 	 {
 		DOTRACE("eval w/ matrix");
 		// costs = feval(func, models, varargin{:});
-#if 1
+#if 0
 		mlfAssign(&costs_mx,
 					 mlfFeval(mclValueVarargout(),
 								 func,
 								 models_mx,
 								 mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
 								 NULL));
+
 #else
-		mxArray* plhs[1] = { mclGetUninitializedArray() };
-		mxArray* prhs[50];
 
-		prhs[0] = mclGetUninitializedArray();
-		mlfAssign(&prhs[0], mxDuplicateArray(models_mx));
-		int nrhs = 1;
-		for (int i = 0; i < mxGetM(varargin_mx) * mxGetN(varargin_mx); ++i)
-		  {
-			 prhs[i+1] = mclGetUninitializedArray();
-			 mlfAssign(&prhs[i+1], mxDuplicateArray(mxGetCell(varargin_mx, i)));
-			 ++nrhs;
-		  }
+		mxArray* plhs[1] = { 0 };
+		mxArray* prhs[6] = {
+  		  mxDuplicateArray(models_mx),
+		  mxDuplicateArray(mxGetCell(varargin_mx, 0)),
+		  mxDuplicateArray(mxGetCell(varargin_mx, 1)),
+		  mxDuplicateArray(mxGetCell(varargin_mx, 2)),
+		  mxDuplicateArray(mxGetCell(varargin_mx, 3)),
+		  mxDuplicateArray(mxGetCell(varargin_mx, 4))
+		};
 
-		fixed_string cmd_name = getString(func);
+		int nrhs = 6;
 
-		mexPrintf("nrhs %d, cmd_name %s\n", nrhs, cmd_name.c_str());
+  		fixed_string cmd_name = getString(func);
 
-		int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
+  		int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
-		if (result != 0) mexErrMsgTxt("mexCallMATLAB failed");
+		if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+
+		mlfAssign(&costs_mx, plhs[0]);
 #endif
 	 }
   else
