@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:10:06 2002
-// written: Mon Feb 25 13:53:11 2002
+// written: Thu Jun  6 16:53:10 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,7 +27,7 @@
 
 MatlabFunction::MatlabFunction(const fstring& funcName,
                                int nvararg, mxArray** pvararg,
-                               bool canUseMatrix = false)
+                               bool canUseMatrix)
   :
   itsFuncName(funcName),
   itsNvararg(nvararg),
