@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:24:17 2002
+// written: Mon Feb 18 16:30:29 2002
 // $Id$
 //
 //
@@ -403,7 +403,7 @@ class AnnealingRun
 {
 private:
   Astate& itsAstate;
-  const int itsRunNum;
+  int itsRunNum;
   int itsNvisits;
   double itsCriticalTemp;
   Mtx itsMinUsedParams;
@@ -414,13 +414,12 @@ private:
 
 public:
   AnnealingRun(const fstring& funcName,
-               int runNum,
                Astate& astate,
                int nvararg,
                mxArray** pvararg)
     :
     itsAstate(astate),
-    itsRunNum(runNum),
+    itsRunNum(0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
     itsMinUsedParams(0,0),
@@ -430,7 +429,7 @@ public:
     itsPvararg(pvararg)
   {}
 
-  void go();
+  void oneRun();
 
   // Returns the cost at the best model that was found
   double visitParameters(Mtx& bestModel, const double temp);
@@ -651,13 +650,13 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
 
 //---------------------------------------------------------------------
 //
-// AnnealingRun::go()
+// AnnealingRun::oneRun()
 //
 //---------------------------------------------------------------------
 
-void AnnealingRun::go()
+void AnnealingRun::oneRun()
 {
-DOTRACE("AnnealingRun::go");
+DOTRACE("AnnealingRun::oneRun");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
   if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
@@ -671,6 +670,11 @@ DOTRACE("AnnealingRun::go");
       return mxCreateScalarDouble(-2.0);
     }
 #endif
+
+  itsNvisits = 0;
+  itsCriticalTemp = std::numeric_limits<double>::max();
+  itsMinUsedParams = Mtx(0,0);
+  itsMaxUsedParams = Mtx(0,0);
 
   Mtx bestModel = createStartingModel();
 
@@ -711,6 +715,8 @@ DOTRACE("AnnealingRun::go");
   if (itsAstate.doNewton) runSimplex();
 
   itsAstate.startValues.column(0) = itsAstate.mhat.column(itsRunNum);
+
+  ++itsRunNum;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -732,11 +738,11 @@ public:
 
     Astate astate(astate_mx, numruns);
 
+    AnnealingRun ar(func_name, astate, nvararg, pvararg);
+
     for (int i = 0; i < numruns; ++i)
       {
-        AnnealingRun ar(func_name, i, astate, nvararg, pvararg);
-
-        ar.go();
+        ar.oneRun();
       }
 
     const char* fieldnames[] =
