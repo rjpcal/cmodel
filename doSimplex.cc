@@ -147,9 +147,6 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * debugFlags,
                             mxArray * varargin);
 
-_mexLocalFunctionTable _local_function_table_doSimplex
-  = { 0, (mexFunctionTableEntry *)NULL };
-
 /*
  * The function "mlxDoSimplex" contains the feval interface for the "doSimplex"
  * M-function from file
@@ -257,9 +254,6 @@ static mxArray * MdoSimplex(mxArray * * fval,
 {
 DOTRACE("MdoSimplex");
 
-  mexLocalFunctionTable save_local_function_table_ =
-    mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
-
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
   if (debugFlags_mx && mxIsStruct(debugFlags_mx))
     {
@@ -318,8 +312,6 @@ DOTRACE("MdoSimplex");
                      mxCreateScalarDouble(opt.funcCount()));
 
       mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
-
-      mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
       return opt.bestParams().makeMxArray();
     }
