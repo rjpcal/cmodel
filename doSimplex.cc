@@ -656,17 +656,26 @@ class SimplexOptimizer {
 private:
   FuncEvaluator& itsObjective;
 
-  const Mtx itsInitialGuess;
+  const Mtx itsInitialParams;
   const int itsPrnt;
   const double itsTolx;
   const double itsTolf;
-  const int itsNumModelParams;
+  const int itsNparams;
   const int itsMaxFevals;
   const int itsMaxIters;
 
+  Mtx itsSimplex;
+  Mtx itsFvals;
+
   int itsIterCount;
   Mtx itsBestParams;
-  double itsBestFval;
+
+  void putInSimplex(const Mtx& params, int simplexPoint)
+  {
+	 itsSimplex.column(simplexPoint) = params.column(0);
+
+	 itsFvals.at(0, simplexPoint) = itsObjective.evaluate(params);
+  }
 
 public:
   SimplexOptimizer(FuncEvaluator& objective,
@@ -674,22 +683,24 @@ public:
 						 const int prnt,
 						 const double tolx,
 						 const double tolf,
-						 const int numModelParams,
+						 const int nparams,
 						 const int maxfun,
 						 const int maxiter) :
 	 itsObjective(objective),
 
-	 itsInitialGuess(x_in),
+	 itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
 	 itsPrnt(prnt),
 	 itsTolx(tolx),
 	 itsTolf(tolf),
-	 itsNumModelParams(numModelParams),
+	 itsNparams(nparams),
 	 itsMaxFevals(maxfun),
 	 itsMaxIters(maxiter),
 
+	 itsSimplex(nparams, nparams+1),
+	 itsFvals(1, nparams+1),
+
 	 itsIterCount(0),
-	 itsBestParams(0,0),
-	 itsBestFval(0.0)
+	 itsBestParams(0,0)
   {}
 
   virtual ~SimplexOptimizer() {}
@@ -700,7 +711,7 @@ public:
   { return itsBestParams; }
 
   virtual double bestFval()
-  { return itsBestFval; }
+  { return itsFvals.row(0).min(); }
 
   virtual int iterCount()
   { return itsIterCount; }
@@ -722,17 +733,8 @@ int SimplexOptimizer::optimize()
   const double PSI = 0.5;
   const double SIGMA = 0.5;
 
-  // Set up a simplex near the initial guess.
-  Mtx initialParams(itsInitialGuess.asColumn());
-
-  Mtx theSimplex(itsNumModelParams,itsNumModelParams+1);
-
-  Mtx funcVals(1,itsNumModelParams+1);
-
   // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
-  theSimplex.column(0) = initialParams.column(0);
-
-  funcVals.at(0,0) = itsObjective.evaluate(initialParams);
+  putInSimplex(itsInitialParams, 0);
 
   {
 	 // Following improvement suggested by L.Pfeffer at Stanford
@@ -742,25 +744,25 @@ int SimplexOptimizer::optimize()
 	 // Even smaller delta for zero elements of x
 	 const double zero_term_delta = 0.00025;
 
-	 for (int j = 0; j < itsNumModelParams; ++j)
+	 for (int j = 0; j < itsNparams; ++j)
 		{
-		  theSimplex.column(j+1) = initialParams;
+		  itsSimplex.column(j+1) = itsInitialParams;
 
-		  if (theSimplex.at(j,j+1) != 0.0)
-			 theSimplex.at(j,j+1) *= (1.0 + usual_delta);
+		  if (itsSimplex.at(j,j+1) != 0.0)
+			 itsSimplex.at(j,j+1) *= (1.0 + usual_delta);
 		  else
-			 theSimplex.at(j,j+1) = zero_term_delta;
+			 itsSimplex.at(j,j+1) = zero_term_delta;
 
-		  funcVals.at(0,j+1) = itsObjective.evaluate(theSimplex.column(j+1));
+		  itsFvals.at(0,j+1) = itsObjective.evaluate(itsSimplex.column(j+1));
 		}
   }
 
   {
-	 // sort so theSimplex.column(0) has the lowest function value 
-	 Mtx index = funcVals.row(0).getSortOrder();
+	 // sort so itsSimplex.column(0) has the lowest function value 
+	 Mtx index = itsFvals.row(0).getSortOrder();
 
-	 funcVals.row(0).reorder(index);
-  	 theSimplex.reorderColumns(index);
+	 itsFvals.row(0).reorder(index);
+  	 itsSimplex.reorderColumns(index);
   }
 
   fixed_string how = "initial";
@@ -771,15 +773,15 @@ int SimplexOptimizer::optimize()
 	 {
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
 		mexPrintf(" %5d        %5d     %12.6g         ",
-					 itsIterCount, funcCount(), double(funcVals.at(0,0)));
+					 itsIterCount, funcCount(), double(itsFvals.at(0,0)));
 		mexPrintf(how.c_str());
 		mexPrintf("\n");
 	 }
   else if (itsPrnt == 4)
 	 {
 		mexPrintf("\n%s\n", how.c_str());
-		theSimplex.print("theSimplex");
-		funcVals.print("funcVals");
+		itsSimplex.print("simplex");
+		itsFvals.print("itsFvals");
 		mexPrintf("func_evals: %d\n", funcCount());
 	 }
 
@@ -800,79 +802,79 @@ int SimplexOptimizer::optimize()
 	 if ((funcCount() >= itsMaxFevals) || (itsIterCount >= itsMaxIters))
 		break; // out of main loop
 
-	 if (withinTolf(funcVals, itsTolf) && withinTolx(theSimplex, itsTolx))
+	 if (withinTolf(itsFvals, itsTolf) && withinTolx(itsSimplex, itsTolx))
 		break; // out of main loop
 
 	 how = "";
 
-	 // xbar = average of the itsNumModelParams (NOT itsNumModelParams+1) best points
+	 // xbar = average of the itsNparams (NOT itsNparams+1) best points
 
-	 Mtx xbar(itsNumModelParams,1);
-	 const Mtx simplex_1_n(theSimplex.columns(0,itsNumModelParams));
+	 Mtx xbar(itsNparams,1);
+	 const Mtx simplex_1_n(itsSimplex.columns(0,itsNparams));
 
-	 const double numparams_inv = 1.0/itsNumModelParams;
+	 const double numparams_inv = 1.0/itsNparams;
 	 MtxIter xbar_itr = xbar.columnIter(0);
 
-	 for (int r = 0; r < itsNumModelParams; ++r, ++xbar_itr)
+	 for (int r = 0; r < itsNparams; ++r, ++xbar_itr)
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
 
 
 	 // Calculate the reflection point
-	 Mtx xr = (xbar*(1.0+RHO) - theSimplex.columns(itsNumModelParams,1) * RHO);
+	 Mtx xr = (xbar*(1.0+RHO) - itsSimplex.columns(itsNparams,1) * RHO);
 
 	 double fxr = itsObjective.evaluate(xr);
 
 
-	 if (fxr < funcVals.at(0,0))
+	 if (fxr < itsFvals.at(0,0))
 		{
-		  DOTRACE("fxr < funcVals(:,1)");
+		  DOTRACE("fxr < itsFvals(:,1)");
 
 		  // Calculate the expansion point
-		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*theSimplex(:,end);
+		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*itsSimplex(:,end);
 		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
-						(theSimplex.columns(itsNumModelParams,1) * (RHO*CHI)));
+						(itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
 
 		  double fxe = itsObjective.evaluate(xe);
 
 		  if (fxe < fxr)
 			 {
-				theSimplex.column(itsNumModelParams) = xe;
-				funcVals.at(0,itsNumModelParams) = fxe;
+				itsSimplex.column(itsNparams) = xe;
+				itsFvals.at(0,itsNparams) = fxe;
 				how = "expand";
 			 }
 		  else
 			 {
-				theSimplex.column(itsNumModelParams) = xr;
-				funcVals.at(0,itsNumModelParams) = fxr;
+				itsSimplex.column(itsNparams) = xr;
+				itsFvals.at(0,itsNparams) = fxr;
 				how = "reflect";
 			 }
       }
 	 else
 		{
-		  DOTRACE("fxr >= funcVals(:,1)");
+		  DOTRACE("fxr >= itsFvals(:,1)");
 
-		  if (fxr < funcVals.at(0,itsNumModelParams-1))
+		  if (fxr < itsFvals.at(0,itsNparams-1))
 			 {
-				theSimplex.column(itsNumModelParams) = xr;
-				funcVals.at(0,itsNumModelParams) = fxr;
+				itsSimplex.column(itsNparams) = xr;
+				itsFvals.at(0,itsNparams) = fxr;
 				how = "reflect";
 			 }
 		  else
 			 {
 				// Perform contraction
 
-				if (fxr < funcVals.at(0,itsNumModelParams))
+				if (fxr < itsFvals.at(0,itsNparams))
 				  {
 					 // Perform an outside contraction
 					 Mtx xc = (xbar*(1.0 + PSI*RHO) -
-								  (theSimplex.columns(itsNumModelParams,1) *(PSI*RHO)));
+								  (itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
 
 					 double fxc = itsObjective.evaluate(xc);
 
 					 if (fxc <= fxr)
 						{
-						  theSimplex.column(itsNumModelParams) = xc;
-						  funcVals.at(0,itsNumModelParams) = fxc;
+						  itsSimplex.column(itsNparams) = xc;
+						  itsFvals.at(0,itsNparams) = fxc;
 						  how = "contract outside";
 						}
 					 else
@@ -884,14 +886,14 @@ int SimplexOptimizer::optimize()
 				  {
 					 // Perform an inside contraction
 					 Mtx xcc = (xbar*(1.0-PSI) +
-									(theSimplex.columns(itsNumModelParams,1)* PSI));
+									(itsSimplex.columns(itsNparams,1)* PSI));
 
 					 double fxcc = itsObjective.evaluate(xcc);
 
-					 if (fxcc < funcVals.at(0,itsNumModelParams))
+					 if (fxcc < itsFvals.at(0,itsNparams))
 						{
-						  theSimplex.column(itsNumModelParams) = xcc;
-						  funcVals.at(0,itsNumModelParams) = fxcc;
+						  itsSimplex.column(itsNparams) = xcc;
+						  itsFvals.at(0,itsNparams) = fxcc;
 						  how = "contract inside";
 						}
 					 else
@@ -902,37 +904,37 @@ int SimplexOptimizer::optimize()
 
 			 if (how == "shrink")
 				{
-				  for (int j = 1; j < itsNumModelParams+1; ++j)
+				  for (int j = 1; j < itsNparams+1; ++j)
 					 {
-						theSimplex.column(j) =
-						  theSimplex.columns(0,1) +
-						  (theSimplex.columns(j,1) - theSimplex.columns(0,1)) * SIGMA;
+						itsSimplex.column(j) =
+						  itsSimplex.columns(0,1) +
+						  (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
 
-						funcVals.at(0,j) =
-						  itsObjective.evaluate(theSimplex.columns(j,1));
+						itsFvals.at(0,j) =
+						  itsObjective.evaluate(itsSimplex.columns(j,1));
 					 }
 				}
 		  }
       }
 
 	 {DOTRACE("reorder simplex");
-	 // [dummy,index] = sort(funcVals);
-	 Mtx index = funcVals.row(0).getSortOrder();
+	 // [dummy,index] = sort(itsFvals);
+	 Mtx index = itsFvals.row(0).getSortOrder();
 
 	 const int smallest = int(index.at(0));
-	 const int largest = int(index.at(itsNumModelParams));
-	 const int largest2 = int(index.at(itsNumModelParams-1));
+	 const int largest = int(index.at(itsNparams));
+	 const int largest2 = int(index.at(itsNparams-1));
 
 	 // These swaps are smart enough to check if the column numbers
 	 // are the same before doing the swap
 
-	 funcVals.swapColumns(0, smallest);
-	 funcVals.swapColumns(largest, itsNumModelParams);
-	 funcVals.swapColumns(largest2, itsNumModelParams-1);
+	 itsFvals.swapColumns(0, smallest);
+	 itsFvals.swapColumns(largest, itsNparams);
+	 itsFvals.swapColumns(largest2, itsNparams-1);
 
-	 theSimplex.swapColumns(0, smallest);
-	 theSimplex.swapColumns(largest, itsNumModelParams);
-	 theSimplex.swapColumns(largest2, itsNumModelParams-1);
+	 itsSimplex.swapColumns(0, smallest);
+	 itsSimplex.swapColumns(largest, itsNparams);
+	 itsSimplex.swapColumns(largest2, itsNparams-1);
 	 }
 
 
@@ -941,24 +943,22 @@ int SimplexOptimizer::optimize()
 	 if (itsPrnt == 3)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itsIterCount, funcCount(), double(funcVals.at(0,0)));
+						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
 		  mexPrintf(how.c_str());
 		  mexPrintf("\n");
 		}
 	 else if (itsPrnt == 4)
 		{
 		  mexPrintf("\n%s\n", how.c_str());
-		  theSimplex.print("theSimplex");
-		  funcVals.print("funcVals");
+		  itsSimplex.print("simplex");
+		  itsFvals.print("itsFvals");
 		  mexPrintf("func_evals: %d\n", funcCount());
 		}
   }
 
-  itsBestParams = theSimplex.column(0);
+  itsBestParams = itsSimplex.column(0);
 
   // end Main algorithm
-
-  itsBestFval = funcVals.row(0).min();
 
   if (funcCount() >= itsMaxFevals)
 	 {
@@ -967,7 +967,7 @@ int SimplexOptimizer::optimize()
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxFunEvals option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						itsBestFval);
+						bestFval());
 		}
 
 		exitFlag = 0;
@@ -979,7 +979,7 @@ int SimplexOptimizer::optimize()
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxIter option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						itsBestFval);
+						bestFval());
 		}
 
 		exitFlag = 0;
