@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:24:55 2002
+// written: Mon Feb 18 18:26:40 2002
 // $Id$
 //
 //
@@ -264,6 +264,8 @@ private:
   mxArray** const itsPvararg;
   const bool itsCanUseMatrix;
 
+  enum { MAX_NRHS = 32 };
+
   Mtx evaluateParallel(const Mtx& models) const
   {
     DOTRACE("doParallelFuncEvals");
@@ -271,7 +273,6 @@ private:
     mxArray* costs_mx = 0;
     mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
 
-    const int MAX_NRHS = 32;
     mxArray* prhs[MAX_NRHS];
 
     // We don't need to call mxDuplicateArray, since models_mx is a bound
@@ -311,7 +312,6 @@ private:
 
     mxArray* plhs[1] = { 0 };
 
-    const int MAX_NRHS = 32;
     mxArray* prhs[MAX_NRHS];
 
     prhs[0] = 0;
