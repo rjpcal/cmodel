@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Mon Mar 12 14:09:35 2001
+// written: Mon Mar 12 14:15:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -78,15 +78,9 @@ DOTRACE("Classifier::computeLogL");
 
   const double LOG_10_MINUS_50 = -115.1293;
 
-  const double* observedIncidence1 =
-	 itsObservedIncidence.data();
-
-  const double* observedIncidence2 =
-	 itsObservedIncidence.data()+itsNumAllExemplars;
-
   for(int k = 0; k < itsNumAllExemplars; ++k) {
-	 double oi1 = observedIncidence1[k];
-	 double oi2 = observedIncidence2[k];
+	 double oi1 = itsObservedIncidence.at(k,0);
+	 double oi2 = itsObservedIncidence.at(k,1);
 
 	 // term 1
 	 ll += Num::gammaln(1.0 + oi1 + oi2);
