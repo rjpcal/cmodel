@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 15:16:22 2002
+// written: Thu Feb 14 15:23:00 2002
 // $Id$
 //
 //
@@ -108,7 +108,7 @@ mxArray* MannealVisitParameters(int nargout_,
 Mtx makeTestModels(int x_zerobased,
                    const Mtx& bestModel,
                    const Mtx& valueScalingRange,
-                   const Mtx& deltas,
+                   const double delta,
                    const Mtx& bounds);
 
 mxArray* doFuncEvals(bool canUseMatrix,
@@ -248,16 +248,16 @@ DOTRACE("MannealVisitParameters");
       const Mtx bounds(bounds_mx, Mtx::BORROW);
 
       // for x = find(deltas' ~= 0)
-      for (int x_zerobased = 0; x_zerobased < deltas.nelems(); ++x_zerobased)
+      for (int x = 0; x < deltas.nelems(); ++x)
         {
-          if (deltas.at(x_zerobased) == 0.0) continue;
+          const double delta = deltas.at(x);
 
-          // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
-          // deltas, bounds);
-          Mtx modelmatrix = makeTestModels(x_zerobased,
+          if (delta == 0.0) continue;
+
+          Mtx modelmatrix = makeTestModels(x,
                                            bestModel,
                                            valueScalingRange,
-                                           deltas,
+                                           delta,
                                            bounds);
 
           // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
@@ -279,7 +279,7 @@ DOTRACE("MannealVisitParameters");
           s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
 
           // bestModel(x, 1) = modelmatrix(x, s);
-          bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
+          bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
         }
 
       const char* fieldNames[] = { "nevals", "newModel", "cost" };
@@ -311,36 +311,29 @@ DOTRACE("MannealVisitParameters");
   return (mxArray*) 0; // can't happen, but placate compiler
 }
 
-/*
- * The function "MmakeTestModels" is the implementation
- * version of the "annealVisitParameters/makeTestModels" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 28-35). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-/*
- * function models = makeTestModels(x, bestModel, valueScalingRange, deltas, bounds)
- */
-Mtx makeTestModels(int x_zerobased,
+//---------------------------------------------------------------------
+//
+// makeTestModels()
+//
+//---------------------------------------------------------------------
+
+Mtx makeTestModels(int x,
                    const Mtx& bestModel,
                    const Mtx& valueScalingRange,
-                   const Mtx& deltas,
+                   const double delta,
                    const Mtx& bounds)
 {
 DOTRACE("makeTestModels");
 
-  const double current_x_val = bestModel.at(x_zerobased);
+  const double current_x_val = bestModel.at(x);
 
-  const double delta_x = deltas.at(x_zerobased);
-
-  const double lowerbound_x = bounds.at(x_zerobased,0);
-  const double upperbound_x = bounds.at(x_zerobased,1);
+  const double lowerbound_x = bounds.at(x,0);
+  const double upperbound_x = bounds.at(x,1);
 
   int num_testmodels = 0;
   {for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
     {
-      double value = current_x_val + (*iter) * delta_x;
+      double value = current_x_val + (*iter) * delta;
       if ( (value > lowerbound_x) && (value < upperbound_x) )
         ++num_testmodels;
     }
@@ -359,9 +352,9 @@ DOTRACE("makeTestModels");
     int col = 0;
     for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
     {
-      double value = current_x_val + (*iter) * delta_x;
+      double value = current_x_val + (*iter) * delta;
       if ( (value > lowerbound_x) && (value < upperbound_x) )
-        newModels.at(x_zerobased, col++) = value;
+        newModels.at(x, col++) = value;
     }
   }
 
