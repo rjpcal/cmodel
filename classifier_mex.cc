@@ -213,20 +213,6 @@ namespace
 extern "C"
 void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 {
-  DOTRACE("mlxClassifier");
-
-  if (nlhs != NARGOUT)
-    {
-      mexErrMsgTxt("Error: classifier was called with the wrong "
-                   "number of outputs (should be 1).");
-    }
-
-  if (nrhs != NARGIN)
-    {
-      mexErrMsgTxt("Error: classifier was called with the wrong "
-                   "number of inputs (should be 4).");
-    }
-
   mlfEnterNewContext(0, NARGIN, prhs[0], prhs[1], prhs[2], prhs[3]);
 
   plhs[0] = Mclassifier(Mtx(prhs[0], Mtx::COPY), // model params
