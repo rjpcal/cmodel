@@ -21,7 +21,7 @@
 #include "mx/mxwrapper.h"
 
 #include "util/error.h"
-#include "util/strings.h"
+#include "util/fstring.h"
 
 #include "util/trace.h"
 
@@ -53,11 +53,11 @@ CModelExemplar::CModelExemplar(const mtx& objParams,
   itsAttWtsCache(DIM_OBJ_PARAMS,1)
 {
   if (itsNumStoredExemplars <= 0)
-    throw Util::Error("must have at least one stored exemplar");
+    throw rutz::error("must have at least one stored exemplar", SRC_POS);
 
   if (itsTraining1.mrows() != itsTraining2.mrows()) {
-    throw Util::Error("the two categories must have the "
-                      "same number of training exemplars");
+    throw rutz::error("the two categories must have the "
+                      "same number of training exemplars", SRC_POS);
   }
 }
 
@@ -65,7 +65,7 @@ CModelExemplar::~CModelExemplar()
 {}
 
 Classifier::RequestResult
-CModelExemplar::handleRequest(fstring action,
+CModelExemplar::handleRequest(rutz::fstring action,
                               const mtx& allModelParams,
                               const mx_wrapper& extraArgs)
 {
@@ -90,8 +90,8 @@ DOTRACE("CModelExemplar::handleRequest");
       if (category == 1)
         return getStoredExemplars(CAT2);
 
-      throw Util::Error("unknown category while processing request"
-                        "'getStoredExemplars'");
+      throw rutz::error("unknown category while processing request"
+                        "'getStoredExemplars'", SRC_POS);
     }
 
   return Classifier::handleRequest(action, allModelParams, extraArgs);

@@ -18,7 +18,7 @@
 #include "cmodel/eucbinder.h"
 
 #include "util/error.h"
-#include "util/strings.h"
+#include "util/fstring.h"
 
 #include <cmath>
 #include <limits>
@@ -43,7 +43,7 @@ DOTRACE("CModelSPC::numModelParams");
 }
 
 Classifier::RequestResult
-CModelSPC::handleRequest(fstring action,
+CModelSPC::handleRequest(rutz::fstring action,
                          const mtx& allModelParams,
                          const mx_wrapper& extraArgs)
 {
@@ -70,8 +70,8 @@ DOTRACE("CmodelSPC::handleRequest");
         return storedExemplars(row_range_n(itsNumStoredExemplars,
                                            itsNumStoredExemplars));
 
-      throw Util::Error("unknown category while processing request"
-                        "'getStoredExemplars'");
+      throw rutz::error("unknown category while processing request"
+                        "'getStoredExemplars'", SRC_POS);
     }
 
   return Classifier::handleRequest(action, allModelParams, extraArgs);

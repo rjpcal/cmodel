@@ -35,8 +35,8 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
         }
       else
         {
-          throw Util::Error("Option must be an integer value "
-                            "if not the default.");
+          throw rutz::error("Option must be an integer value "
+                            "if not the default.", SRC_POS);
         }
     }
 

@@ -31,8 +31,8 @@
 #include "mx/mx.h"
 
 #include "util/error.h"
-#include "util/pointers.h"
-#include "util/strings.h"
+#include "util/fstring.h"
+#include "util/sharedptr.h"
 
 #include <mex.h>
 
@@ -43,6 +43,9 @@
 #else
 #define MEXFUNCNAME "classifier"
 #endif
+
+using rutz::fstring;
+using rutz::shared_ptr;
 
 namespace
 {
@@ -183,7 +186,8 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
     }
   else
     {
-      throw Util::Error(fstring("unknown classifier type: ", whichType));
+      throw rutz::error(fstring("unknown classifier type: ", whichType),
+                        SRC_POS);
     }
 
   // Can't get here, but placate compiler with a return value

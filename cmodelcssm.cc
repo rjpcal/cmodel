@@ -95,7 +95,8 @@ const mtx& CModelCssm::getStoredExemplars(Category cat)
     }
 
   else
-    throw Util::Error("unknown category enumerator in findStoredExemplar");
+    throw rutz::error("unknown category enumerator in findStoredExemplar",
+                      SRC_POS);
 
   return mtx::empty_mtx(); // can't happen, but placate the compiler
 }

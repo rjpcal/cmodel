@@ -23,7 +23,7 @@ public:
 
   virtual int numModelParams() const;
 
-  virtual RequestResult handleRequest(fstring action,
+  virtual RequestResult handleRequest(rutz::fstring action,
                                       const mtx& allModelParams,
                                       const mx_wrapper& extraArgs);
 

@@ -21,13 +21,15 @@
 #include "optim/simplexoptimizer.h"
 
 #include "util/error.h"
-#include "util/strings.h"
+#include "util/fstring.h"
 
 #include <limits>
 #include <matrix.h>
 
 #include "util/trace.h"
 #include "util/debug.h"
+
+using rutz::fstring;
 
 class LLEvaluator : public MultivarFunction
 {
@@ -61,10 +63,10 @@ namespace
   {
     DOTRACE("<classifier.cc>::testSize");
     if (objParams.ncols() != Classifier::DIM_OBJ_PARAMS+1)
-      throw Util::Error(fstring("objParams must have "
+      throw rutz::error(fstring("objParams must have "
                                 "DIM_OBJ_PARAMS+1 columns "
                                 "(expected ", Classifier::DIM_OBJ_PARAMS+1,
-                                ", got ", objParams.ncols(), ")"));
+                                ", got ", objParams.ncols(), ")"), SRC_POS);
 
     return objParams;
   }
@@ -106,10 +108,10 @@ DOTRACE("Classifier::modelParamsBounds");
 
   if (row != numModelParams())
     {
-      throw Util::Error(fstring("not all rows were filled "
+      throw rutz::error(fstring("not all rows were filled "
                                 "in modelParamsBounds() "
                                 "(expected ", numModelParams(),
-                                ", got ", row, ")"));
+                                ", got ", row, ")"), SRC_POS);
     }
 
   return bounds;
@@ -279,8 +281,8 @@ namespace
 
     if (result.ncols() != Classifier::DIM_OBJ_PARAMS)
       {
-        throw Util::Error("wrong number of columns in 'testObjects' "
-                          "(should be equal to DIM_OBJ_PARAMS)");
+        throw rutz::error("wrong number of columns in 'testObjects' "
+                          "(should be equal to DIM_OBJ_PARAMS)", SRC_POS);
       }
 
     return result;
@@ -291,15 +293,16 @@ namespace
   {
     if (allModelParams.mrows() != expectedNumber)
       {
-        throw Util::Error(fstring("wrong number of model params "
+        throw rutz::error(fstring("wrong number of model params "
                                   "(expected ", expectedNumber,
-                                  ", got ", allModelParams.mrows(), ")"));
+                                  ", got ", allModelParams.mrows(), ")"),
+                          SRC_POS);
       }
   }
 }
 
 Classifier::RequestResult
-Classifier::handleRequest(fstring action,
+Classifier::handleRequest(rutz::fstring action,
                           const mtx& allModelParams,
                           const mx_wrapper& extraArgs)
 {
@@ -485,7 +488,8 @@ DOTRACE("Classifier::objectsOfCategory");
   const int nobjs = countCategory(category);
 
   if (nobjs == 0)
-    throw Util::Error(fstring("no objects found in category ", category));
+    throw rutz::error(fstring("no objects found in category ", category),
+                      SRC_POS);
 
   mtx result(nobjs, DIM_OBJ_PARAMS);
 

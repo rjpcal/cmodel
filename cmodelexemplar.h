@@ -35,7 +35,7 @@ public:
   // Handles the request via chain-of-responsibility. Subclasses must
   // be sure to call the superclass version before attempting to
   // process the request.
-  virtual RequestResult handleRequest(fstring action,
+  virtual RequestResult handleRequest(rutz::fstring action,
                                       const mtx& modelParams,
                                       const mx_wrapper& extraArgs);
 
