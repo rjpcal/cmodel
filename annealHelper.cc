@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 15:35:31 2002
+// written: Fri Feb 15 15:41:02 2002
 // $Id$
 //
 //
@@ -442,23 +442,26 @@ DOTRACE("annealHelper");
 
   const int astate_t = int(mxGetScalar(mxGetField(astate_mx, 0, "t")));
 
-  for (int w_onebased = 1; w_onebased <= astate_t; ++w_onebased)
+  const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
+
+  const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
+
+  Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
+  Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
+
+  const bool astate_talk =
+    (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
+
+  int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+
+  Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
+  Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
+
+  for (int w = 0; w < astate_t; ++w)
     {
-      const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
+      const double temp = astate_T.at(w);
 
-      const double temp = astate_T.at(w_onebased-1);
-
-      int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
       ++astate_c;
-      mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
-
-      const bool astate_talk =
-        (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
-
-      Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
-      Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
-
-      const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
 
       if (astate_talk && (astate_c % 10 == 0))
         {
@@ -485,13 +488,10 @@ DOTRACE("annealHelper");
 
       energy.at(astate_c-1,k_onebased-1) = vresult.cost;
 
-      const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
+      const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
       // Update the used parameter ranges
       {
-        Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
-        Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
-
         if (minUsedParams.nelems() != bestModel.nelems()
             || maxUsedParams.nelems() != bestModel.nelems())
           {
@@ -514,7 +514,9 @@ DOTRACE("annealHelper");
 
         modelHist.column(astate_c-1) = bestModel;
       }
-    }
+    } // end "w" loop
+
+  mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
 
   return astate_mx;
 }
