@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Feb 19 10:58:36 2002
+// written: Tue Feb 19 11:10:32 2002
 // $Id$
 //
 //
@@ -22,8 +22,6 @@
 
 #ifndef ANNEALHELPER_CC_DEFINED
 #define ANNEALHELPER_CC_DEFINED
-
-#include "annealHelper.h"
 
 #include "annealingoptimizer.h"
 #include "matlabfunction.h"
@@ -159,6 +157,31 @@ DOTRACE("mlxAnnealHelper");
     }
 
   mlfRestorePreviousContext(0, NDECLARED, prhs[0], prhs[1]);
+}
+
+#ifndef MLF_V2
+#define MLF_V2 1
+#endif
+
+static mexFunctionTableEntry function_table[1]
+  = { { "annealHelper", mlxAnnealHelper, -2, 1, (_mexLocalFunctionTable*)0 } };
+
+static _mexInitTermTableEntry init_term_table[1]
+  = { { InitializeModule_annealHelper, TerminateModule_annealHelper } };
+
+static _mex_information _mex_info
+  = { 1, 1, function_table, 0, NULL, 0, NULL, 1, init_term_table };
+
+/*
+ * The function "mexLibrary" is a Compiler-generated mex wrapper, suitable for
+ * building a MEX-function. It initializes any persistent variables as well as
+ * a function table for use by the feval function. It then calls the function
+ * "mlxAnnealHelper". Finally, it clears the feval table and exits.
+ */
+extern "C"
+mex_information mexLibrary(void)
+{
+  return &_mex_info;
 }
 
 static const char vcid_annealHelper_cc[] = "$Header$";
