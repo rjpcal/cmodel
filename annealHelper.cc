@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 19:12:33 2002
+// written: Mon Feb 18 19:28:27 2002
 // $Id$
 //
 //
@@ -420,7 +420,7 @@ private:
   Mtx itsNumFunEvals;
   Mtx itsBestCosts;
   Mtx itsModelHist; // FIXME does this really need to be a member variable?
-  Mtx itsMhat;
+  Mtx itsBestModels;
   Mtx itsEnergy;
   Mtx itsStartValues;
 
@@ -438,7 +438,7 @@ public:
     itsNumFunEvals(itsOpts.numRuns, 1),
     itsBestCosts(itsOpts.numRuns, 1),
     itsModelHist(itsOpts.numModelParams, int(itsOpts.coolingSchedule.sum())),
-    itsMhat(itsOpts.numModelParams, itsOpts.numRuns),
+    itsBestModels(itsOpts.numModelParams, itsOpts.numRuns),
     itsEnergy(int(itsOpts.coolingSchedule.sum()), itsOpts.numRuns),
     itsStartValues(itsOpts.centers),
 
@@ -471,7 +471,7 @@ public:
     int best_pos = -1;
     double best_cost = itsBestCosts.min(&best_pos);
 
-    Mtx mhat = itsMhat.column(best_pos);
+    Mtx mhat = itsBestModels.column(best_pos);
 
     mxSetField(output, 0, "bestCost", mxCreateScalarDouble(best_cost));
     mxSetField(output, 0, "mhat", mhat.makeMxArray());
@@ -592,7 +592,7 @@ public:
   void runSimplex()
   {
     SimplexOptimizer opt(itsObjective,
-                         Mtx(itsMhat.column(itsRunNum)),
+                         Mtx(itsBestModels.column(itsRunNum)),
                          fstring("notify"),
                          itsOpts.numModelParams,
                          10000000, // maxFunEvals
@@ -625,7 +625,7 @@ public:
 
         if (inBounds)
           {
-            itsMhat.column(itsRunNum) = mstar;
+            itsBestModels.column(itsRunNum) = mstar;
             itsBestCosts.at(itsRunNum) = Ostar;
             if (itsOpts.talking)
               mexPrintf("\nSimplex method lowered cost "
@@ -747,32 +747,27 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
 
   // Update deltas
-  {
-    for (int i = 0; i < itsDeltas.nelems(); ++i)
-      {
-        itsDeltas.at(i) =
-          0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
-      }
-  }
+  for (int i = 0; i < itsDeltas.nelems(); ++i)
+    {
+      itsDeltas.at(i) = 0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
+    }
 
-  // Update bests
-  {
-    // FIXME ought to use a smarter algorithm to keep track of the best cost
+  // Update bests FIXME ought to use a smarter algorithm to keep track of the
+  // best cost
 
-    Mtx currentEnergy = itsEnergy.column(itsRunNum);
+  Mtx currentEnergy = itsEnergy.column(itsRunNum);
 
-    int best_pos = 0;
-    const double best_energy = currentEnergy.min(&best_pos);
+  int best_pos = 0;
+  const double best_energy = currentEnergy.min(&best_pos);
 
-    itsBestCosts.at(itsRunNum) = best_energy;
-    itsMhat.column(itsRunNum) = itsModelHist.column(best_pos);
+  itsBestCosts.at(itsRunNum) = best_energy;
+  itsBestModels.column(itsRunNum) = itsModelHist.column(best_pos);
 
-    displayParams(itsMhat.column(itsRunNum), itsBestCosts.at(itsRunNum));
-  }
+  displayParams(itsBestModels.column(itsRunNum), itsBestCosts.at(itsRunNum));
 
   if (itsOpts.doNewton) runSimplex();
 
-  itsStartValues.column(0) = itsMhat.column(itsRunNum);
+  itsStartValues = itsBestModels.column(itsRunNum);
 
   ++itsRunNum;
 }
