@@ -328,7 +328,7 @@ DOTRACE("Classifier::handleRequest");
       return modelParamsBounds();
     }
 
-  if ( action == "ll" || action == "llc" )
+  else if ( action == "ll" || action == "llc" )
     {
       DOTRACE("Classifier::handleRequest-llc");
 
@@ -349,7 +349,7 @@ DOTRACE("Classifier::handleRequest");
       return result;
     }
 
-  if ( action == "llf" )
+  else if ( action == "llf" )
     {
       DOTRACE("Classifier::handleRequest-llf");
 
@@ -366,7 +366,7 @@ DOTRACE("Classifier::handleRequest");
       return result;
     }
 
-  if ( action == "dev" )
+  else if ( action == "dev" )
     {
       DOTRACE("Classifier::handleRequest-dev");
 
@@ -387,7 +387,7 @@ DOTRACE("Classifier::handleRequest");
       return result;
     }
 
-  if ( action == "classify" )
+  else if ( action == "classify" )
     {
       DOTRACE("Classifier::handleRequest-classify");
 
@@ -406,7 +406,7 @@ DOTRACE("Classifier::handleRequest");
       return result;
     }
 
-  if ( action == "simplex" )
+  else if ( action == "simplex" )
     {
       DOTRACE("Classifier::handleRequest-simplex");
 
@@ -440,7 +440,7 @@ DOTRACE("Classifier::handleRequest");
       return result;
     }
 
-  if ( action == "anneal" )
+  else if ( action == "anneal" )
     {
       DOTRACE("Classifier::handleRequest-anneal");
 
