@@ -670,24 +670,21 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
   Mtx xx(x_in);
 
-  const double rho = 1.0;
-  const double chi = 2.0;
-  const double psi = 0.5;
-  const double sigma = 0.5;
+  const double RHO = 1.0;
+  const double CHI = 2.0;
+  const double PSI = 0.5;
+  const double SIGMA = 0.5;
 
   // Set up a simplex near the initial guess.
   Mtx initialParams(xx.asColumn());
 
-  // theSimplex = zeros(numModelParams,numModelParams+1);
   Mtx theSimplex(numModelParams,numModelParams+1);
 
-  // funcVals = zeros(1,numModelParams+1);
   Mtx funcVals(1,numModelParams+1);
 
-  // theSimplex(:,1) = initialParams;    % Place input guess in the simplex! (credit L.Pfeffer at Stanford)
-  theSimplex.column(0) = initialParams.columns(0,1);
+  // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
+  theSimplex.column(0) = initialParams.column(0);
 
-  // funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
   funcVals.at(0,0) = objective.evaluate(initialParams);
 
   {
@@ -701,20 +698,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 // zero-based index
 	 for (int j = 0; j < numModelParams; ++j)
 		{
-		  Mtx y = initialParams;
+		  theSimplex.column(j+1) = initialParams;
 
-		  if (y.at(j) != 0.0)
-			 {
-				y.at(j) *= (1.0 + usual_delta);
-			 }
+		  if (theSimplex.at(j,j+1) != 0.0)
+			 theSimplex.at(j,j+1) *= (1.0 + usual_delta);
 		  else
-			 {
-				y.at(j) = zero_term_delta;
-			 }
+			 theSimplex.at(j,j+1) = zero_term_delta;
 
-		  theSimplex.column(j+1) = y;
-
-		  funcVals.at(0,j+1) = objective.evaluate(y);
+		  funcVals.at(0,j+1) = objective.evaluate(theSimplex.column(j+1));
 		}
   }
 
@@ -791,9 +782,9 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
 
 
-	 // xr = (1 + rho)*xbar - rho*theSimplex(:,end);
-	 Mtx xr = (xbar*(1.0+rho) - 
-				  theSimplex.columns(numModelParams,1) * rho);
+	 // xr = (1 + RHO)*xbar - RHO*theSimplex(:,end);
+	 Mtx xr = (xbar*(1.0+RHO) - 
+				  theSimplex.columns(numModelParams,1) * RHO);
 
 	 double fxr = objective.evaluate(xr);
 
@@ -802,9 +793,9 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		  DOTRACE("if fxr < funcVals(:,1)");
 
 		  // % Calculate the expansion point
-		  // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
-		  Mtx xe = ((xbar * (1 + rho*chi)) -
-						(theSimplex.columns(numModelParams,1) * (rho*chi)));
+		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*theSimplex(:,end);
+		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
+						(theSimplex.columns(numModelParams,1) * (RHO*CHI)));
 
 		  double fxe = objective.evaluate(xe);
 
@@ -856,10 +847,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 			 if (fxr < funcVals.at(0,numModelParams)) {
 
 				// % Perform an outside contraction
-				// xc = (1 + psi*rho)*xbar -
-				//            psi*rho*theSimplex(:,end);
-				Mtx xc = (xbar*(1.0 + psi*rho) -
-							 (theSimplex.columns(numModelParams,1) *(psi*rho)));
+				// xc = (1 + PSI*RHO)*xbar -
+				//            PSI*RHO*theSimplex(:,end);
+				Mtx xc = (xbar*(1.0 + PSI*RHO) -
+							 (theSimplex.columns(numModelParams,1) *(PSI*RHO)));
 
 
 				double fxc = objective.evaluate(xc);
@@ -884,9 +875,9 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 			 } else {
 
 				// % Perform an inside contraction
-				// xcc = (1-psi)*xbar + psi*theSimplex(:,end);
-				Mtx xcc = (xbar*(1.0-psi) +
-							  (theSimplex.columns(numModelParams,1)* psi));
+				// xcc = (1-PSI)*xbar + PSI*theSimplex(:,end);
+				Mtx xcc = (xbar*(1.0-PSI) +
+							  (theSimplex.columns(numModelParams,1)* PSI));
 
 				double fxcc = objective.evaluate(xcc);
 
@@ -914,11 +905,11 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  // zero based index
 				  for (int j = 1; j < numModelParams+1; ++j)
 					 {
-						// theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
+						// theSimplex(:,j)=theSimplex(:,1)+SIGMA*(theSimplex(:,j) - theSimplex(:,1));
 						theSimplex.column(j) =
 						  theSimplex.columns(0,1) +
 						  (theSimplex.columns(j,1) -
-							theSimplex.columns(0,1)) * sigma;
+							theSimplex.columns(0,1)) * SIGMA;
 
 						// funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
 						funcVals.at(0,j) =
