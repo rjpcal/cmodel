@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 14:55:23 2002
+// written: Thu Feb 14 14:59:12 2002
 // $Id$
 //
 //
@@ -138,7 +138,6 @@ void mlxAnnealVisitParameters(int nlhs,
                               mxArray* prhs[])
 {
 DOTRACE("mlxAnnealVisitParameters");
-  mxArray* mprhs[8];
 
   if (nlhs > 1)
     {
@@ -151,45 +150,41 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of inputs (7).");
     }
 
-  for (int i = 0; i < 7; ++i)
-    {
-      mprhs[i] = prhs[i];
-    }
-  mprhs[7] = NULL;
+  mxArray* varargin = NULL;
 
   mlfEnterNewContext(0,
                      7,
-                     mprhs[0],
-                     mprhs[1],
-                     mprhs[2],
-                     mprhs[3],
-                     mprhs[4],
-                     mprhs[5],
-                     mprhs[6]);
-  mprhs[7] = NULL;
-  mlfAssign(&mprhs[7], mclCreateVararginCell(nrhs - 7, prhs + 7));
+                     prhs[0],
+                     prhs[1],
+                     prhs[2],
+                     prhs[3],
+                     prhs[4],
+                     prhs[5],
+                     prhs[6]);
+  varargin = NULL;
+  mlfAssign(&varargin, mclCreateVararginCell(nrhs - 7, prhs + 7));
 
   plhs[0] = MannealVisitParameters(nlhs,
-                                   mprhs[0],
-                                   mprhs[1],
-                                   mprhs[2],
-                                   mprhs[3],
-                                   mprhs[4],
-                                   mprhs[5],
-                                   mprhs[6],
-                                   mprhs[7]);
+                                   prhs[0],
+                                   prhs[1],
+                                   prhs[2],
+                                   prhs[3],
+                                   prhs[4],
+                                   prhs[5],
+                                   prhs[6],
+                                   varargin);
 
   mlfRestorePreviousContext(0,
                             7,
-                            mprhs[0],
-                            mprhs[1],
-                            mprhs[2],
-                            mprhs[3],
-                            mprhs[4],
-                            mprhs[5],
-                            mprhs[6]);
+                            prhs[0],
+                            prhs[1],
+                            prhs[2],
+                            prhs[3],
+                            prhs[4],
+                            prhs[5],
+                            prhs[6]);
 
-  mxDestroyArray(mprhs[7]);
+  mxDestroyArray(varargin);
 }
 
 /*
