@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sun Feb 17 18:21:09 2002
+// written: Mon Feb 18 13:22:12 2002
 // $Id$
 //
 //
@@ -446,6 +446,17 @@ public:
     mexPrintf("------------------------------------------------\n");
   }
 
+  void displayParams(const Mtx& model, double cost)
+  {
+    if (!itsTalking) return;
+
+    mexPrintf("\nparams: ");
+    for (int i = 0; i < model.nelems(); ++i)
+      mexPrintf("%f ", model.at(i));
+    mexPrintf("\ncost: %7.4f", cost);
+    mexPrintf("\n");
+  }
+
   void updateUsedParams(const Mtx& model)
   {
     for (int i = 0; i < model.nelems(); ++i)
@@ -490,6 +501,8 @@ public:
 
     bestCost.at(itsRunNum) = best_energy;
     mhat.column(itsRunNum) = modelHist.column(best_pos);
+
+    displayParams(mhat.column(itsRunNum), bestCost.at(itsRunNum));
   }
 
 private:
