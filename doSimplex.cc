@@ -934,18 +934,18 @@ DOTRACE("SimplexOptimizer::doOneIter");
   // compute average of the itsNparams (NOT itsNparams+1) best points
   Mtx xbar(itsSimplex.columns(0,itsNparams).meanColumn());
 
+  // Direction along which to reflect/expand/contract
+  Mtx direction(xbar - itsSimplex.columns(itsNparams,1));
+
   // Calculate the reflection point
   FuncPoint rflPt = evaluate(xbar*2.0 - itsSimplex.columns(itsNparams,1));
-
-  Mtx worst(itsSimplex.columns(itsNparams,1));
 
   if (rflPt.betterThan(simplexAt(0)))
  	 {
  		DOTRACE("rflPt.betterThan(simplexAt(0))");
 
  		// Calculate the expansion point
- 		FuncPoint expPt = evaluate(xbar*3.0 -
-											worst*2.0);
+ 		FuncPoint expPt = evaluate(xbar + direction*2.0);
 
  		if (expPt.betterThan(rflPt))
  		  { putInSimplex(expPt, itsNparams); itsCurIter = EXPAND; }
@@ -965,8 +965,7 @@ DOTRACE("SimplexOptimizer::doOneIter");
 			 if (rflPt.betterThan(simplexAt(itsNparams)))
 				{
 				  // Perform an outside contraction
-				  FuncPoint ictPt =
-					 evaluate(xbar*1.5 - worst*0.5);
+				  FuncPoint ictPt = evaluate(xbar + direction*0.5);
 
 				  if (ictPt.betterThan(rflPt))
 					 { putInSimplex(ictPt, itsNparams); itsCurIter = CONTRACT_OUTSIDE; }
@@ -976,8 +975,7 @@ DOTRACE("SimplexOptimizer::doOneIter");
 			 else
 				{
 				  // Perform an inside contraction
-				  FuncPoint octPt =
-					 evaluate(xbar*0.5 + worst*0.5);
+				  FuncPoint octPt = evaluate(xbar - direction*0.5);
 
 				  if (octPt.betterThan(simplexAt(itsNparams)))
 					 { putInSimplex(octPt, itsNparams); itsCurIter = CONTRACT_INSIDE; }
