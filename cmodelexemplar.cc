@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 28 10:15:36 2001
+// written: Fri Mar 30 12:46:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -86,6 +86,9 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   itsNumStoredExemplars(numStoredExemplars),
   itsTransferFunc(transferFunc)
 {
+  if (itsNumStoredExemplars <= 0)
+	 throw ErrorWithMsg("must have at least one stored exemplar");
+
   int num2 = countCategory(objParams, 1);
 
   if (itsNumTrainingExemplars != num2) {
