@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar 15 16:11:20 2001
+// written: Wed Mar 21 11:23:21 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,16 +17,14 @@
 #define MLF_V2 1
 #endif
 
-class Slice;
-class Mtx;
-
+#include "mtx.h"
 
 class Classifier {
 private:
   const Mtx& itsObjParams;
   int itsNumAllExemplars;
   const Mtx& itsObservedIncidence;
-  double* const itsDiffEvidence;
+  Mtx itsDiffEvidence;
   double* const itsPredictedProbability;
 
   void forwardProbit(double thresh, double sigmaNoise) const;
@@ -34,12 +32,6 @@ private:
   enum LogLType { CURRENT, FULL };
 
   double computeLogL(LogLType type);
-
-  void resetDiffEv()
-  {
-    for (int i = 0; i < itsNumAllExemplars; ++i)
-      itsDiffEvidence[i] = 0.0;
-  }
 
   // Must be overridden by subclasses
   virtual void computeDiffEv(Slice& modelParams) = 0;
@@ -57,7 +49,7 @@ public:
   double deviance(Slice& modelParams);
 
 protected:
-  double& diffEvidence(int i) { return itsDiffEvidence[i]; }
+  double& diffEvidence(int i) { return *(itsDiffEvidence.rowIter(i)); }
   int numAllExemplars() const { return itsNumAllExemplars; }
 
   Slice exemplar(int i) const;
