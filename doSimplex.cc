@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 06:35:09 2001
+// written: Wed Apr 18 06:54:20 2001
 // $Id$
 //
 //
@@ -27,6 +27,7 @@
 
 #include "error.h"
 #include "mtx.h"
+#include "multivarfunction.h"
 #include "strings.h"
 
 #include <fstream.h>
@@ -35,8 +36,7 @@
 #define LOCAL_PROF
 #include "trace.h"
 
-class FuncEvaluator {
-  int itsEvalCount;
+class MatlabFunction : public MultivarFunction {
   mxArray* itsFunfcn;
   mxArray* itsVarargin_ref;
 
@@ -47,38 +47,9 @@ class FuncEvaluator {
 								 mlfCreateColonIndex());
 	 }
 
-public:
-  FuncEvaluator(mxArray* funfcn_mx, mxArray* varargin_mx) :
-	 itsEvalCount(0),
-	 itsFunfcn(funfcn_mx),
-	 itsVarargin_ref(varargin_mx)
-  {
-  }
-
-  ~FuncEvaluator()
-  {
-  }
-
-  int evalCount() const { return itsEvalCount; }
-
-  mxArray* evaluate_mx(mxArray* x_mx)
+  double evaluate_mx(mxArray* x_mx)
   {
 	 DOTRACE("evaluate_mx");
-
-	 ++itsEvalCount;
-
-	 return mlfFeval(mclValueVarargout(),
-						  itsFunfcn,
-						  x_mx,
-						  getref(itsVarargin_ref),
-						  NULL);
-  }
-
-  double evaluate(mxArray* x_mx)
-  {
-	 DOTRACE("evaluate");
-
-	 ++itsEvalCount;
 
 	 mxArray* mx =  mlfFeval(mclValueVarargout(),
 									 itsFunfcn,
@@ -90,10 +61,19 @@ public:
 	 return result;
   }
 
-  double evaluate(const Mtx& x)
+  virtual double doEvaluate(const Mtx& x)
   {
-	 return evaluate(x.makeMxArray());
+	 return evaluate_mx(x.makeMxArray());
   }
+
+public:
+  MatlabFunction(mxArray* funfcn_mx, mxArray* varargin_mx) :
+	 MultivarFunction(),
+	 itsFunfcn(funfcn_mx),
+	 itsVarargin_ref(varargin_mx)
+  {}
+
+  virtual ~MatlabFunction() {}
 };
 
 int extractMaxIters(const mxArray* arr, int numModelParams)
@@ -312,7 +292,7 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
 
 class SimplexOptimizer {
 private:
-  FuncEvaluator& itsObjective;
+  MultivarFunction& itsObjective;
 
   const Mtx itsInitialParams;
   const int itsPrnt;
@@ -557,7 +537,7 @@ private:
   }
 
 public:
-  SimplexOptimizer(FuncEvaluator& objective,
+  SimplexOptimizer(MultivarFunction& objective,
 						 const Mtx& x_in,
 						 const fixed_string& printtype,
 						 const double tolx,
@@ -580,6 +560,7 @@ public:
 
 	 itsIterCount(1)
   {
+	 DOTRACE("SimplexOptimizer::SimplexOptimizer");
 	 // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
 	 putInSimplex(itsInitialParams, 0);
 
@@ -779,7 +760,7 @@ DOTRACE("MdoSimplex");
 	 // and still use the MATLAB compiler
 	 // %funfcn = fcnchk(funfcn,length(varargin));
 
-	 FuncEvaluator objective(funfcn_mx, varargin);
+	 MatlabFunction objective(funfcn_mx, varargin);
 
 	 SimplexOptimizer opt(objective,
 								 Mtx(x_in),
