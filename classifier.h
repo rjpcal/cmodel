@@ -5,17 +5,13 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Mar 28 10:24:51 2001
+// written: Fri Apr  6 10:23:25 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
 
 #ifndef CLASSIFIER_H_DEFINED
 #define CLASSIFIER_H_DEFINED
-
-#ifndef MLF_V2
-#define MLF_V2 1
-#endif
 
 #include "mtx.h"
 
