@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Tue Oct 30 11:37:24 2001
+// written: Mon Feb  4 15:51:25 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -57,12 +57,12 @@ public:
                                       const Mtx& modelParams,
                                       const MxWrapper& extraArgs);
 
+  static const int DIM_OBJ_PARAMS = 4;
+
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }
 
   Mtx objectsOfCategory(int category) const;
-
-  static const int DIM_OBJ_PARAMS = 4;
 
   // Must be overridden by subclasses
   virtual void computeDiffEv(const Mtx& objects,
