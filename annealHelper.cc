@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sun Feb 17 08:25:24 2002
+// written: Sun Feb 17 17:48:53 2002
 // $Id$
 //
 //
@@ -38,6 +38,14 @@
 
 #include "util/trace.h"
 #include "util/debug.h"
+
+namespace Mx
+{
+  inline mxArray* getField(mxArray* structArray, const char* fieldName)
+  {
+    return MxWrapper::extractStructField(structArray, fieldName);
+  }
+}
 
 namespace
 {
@@ -358,21 +366,23 @@ public:
                mxArray** pvararg)
     :
     itsAstate_mx(mxDuplicateArray(old_astate_mx)),
-    itsRunNum(int(mxGetScalar(mxGetField(itsAstate_mx, 0, "k")))-1),
-    itsTalking(mxGetScalar(mxGetField(itsAstate_mx, 0, "talk")) != 0.0),
+    itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
+    itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
-    itsCriticalTemp(mxGetScalar(mxGetField(itsAstate_mx, 0, "crit_temp"))),
-    itsNumTemps(int(mxGetScalar(mxGetField(itsAstate_mx, 0, "numTemps")))),
-    itsTempRepeats(mxGetField(itsAstate_mx, 0, "x"), Mtx::BORROW),
-    itsNumFunEvals(mxGetField(itsAstate_mx, 0, "numFunEvals"), Mtx::REFER),
-    itsEnergy(mxGetField(itsAstate_mx, 0, "energy"), Mtx::REFER),
-    itsMinUsedParams(mxGetField(itsAstate_mx, 0, "bestModel"), Mtx::COPY),
-    itsMaxUsedParams(mxGetField(itsAstate_mx, 0, "bestModel"), Mtx::COPY),
-    itsDeltas(mxGetField(itsAstate_mx, 0, "currentDeltas"), Mtx::REFER),
-    itsValueScalingRange(mxGetField(itsAstate_mx, 0, "valueScalingRange"),
+    itsCriticalTemp(mxGetScalar(Mx::getField(itsAstate_mx, "crit_temp"))),
+    itsNumTemps(int(mxGetScalar(Mx::getField(itsAstate_mx, "numTemps")))),
+    itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
+    itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
+    itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
+//     itsMinUsedParams(Mx::getField(itsAstate_mx, "bestModel"), Mtx::COPY),
+//     itsMaxUsedParams(Mx::getField(itsAstate_mx, "bestModel"), Mtx::COPY),
+    itsMinUsedParams(0,0),
+    itsMaxUsedParams(0,0),
+    itsDeltas(Mx::getField(itsAstate_mx, "currentDeltas"), Mtx::REFER),
+    itsValueScalingRange(Mx::getField(itsAstate_mx, "valueScalingRange"),
                          Mtx::BORROW),
-    itsBounds(mxGetField(itsAstate_mx, 0, "bounds"), Mtx::BORROW),
-    itsCanUseMatrix(mxGetScalar(mxGetField(itsAstate_mx, 0, "canUseMatrix"))
+    itsBounds(Mx::getField(itsAstate_mx, "bounds"), Mtx::BORROW),
+    itsCanUseMatrix(mxGetScalar(Mx::getField(itsAstate_mx, "canUseMatrix"))
                     != 0.0),
     itsFunFunName(funcName),
     itsNvararg(nvararg),
@@ -384,12 +394,52 @@ public:
   VisitResult visitParameters(mxArray* bestModel_mx,
                               const double temp);
 
-  void printRunHeader()
+  void createStartingModel()
   {
+    DOTRACE("createStartingModel");
+
+//     Mtx startingCosts(Mx::getField(itsAstate_mx, "startingCosts"), Mtx::BORROW);
+
+//     int best_pos = 0;
+//     double best_cost = startingCosts.at(0);
+//     for (int i = 1; i < startingCosts.nelems(); ++i)
+//       {
+//         if (startingCosts.at(i) < best_cost)
+//           {
+//             best_cost = startingCosts.at(i);
+//             best_pos = i;
+//           }
+//       }
+
+    int startingPos =
+      int(mxGetScalar(Mx::getField(itsAstate_mx, "startingPos"))) - 1;
+
+    double startingCost =
+      mxGetScalar(Mx::getField(itsAstate_mx, "startingCost"));
+
+    printRunHeader(startingCost);
+
+    Mtx startingModels(Mx::getField(itsAstate_mx, "startingModels"),
+                       Mtx::BORROW);
+    Mtx startingModel = startingModels.column(startingPos);
+
+    itsMinUsedParams = startingModel;
+    itsMaxUsedParams = startingModel;
+
+    startingModel.print();
+    int id = mxAddField(itsAstate_mx, "bestModel");
+    mexPrintf("id == %d\n", id);
+    mxSetField(itsAstate_mx, 0, "bestModel", startingModel.makeMxArray());
+  }
+
+  void printRunHeader(double startingCost)
+  {
+    DOTRACE("printRunHeader");
+
     if (!itsTalking) return;
 
-    const double startingCost =
-      mxGetScalar(mxGetField(itsAstate_mx, 0, "startingCost"));
+//     const double startingCost =
+//       mxGetScalar(Mx::getField(itsAstate_mx, "startingCost"));
 
     mexPrintf("\nStarting cost %7.2f", startingCost);
     mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
@@ -422,7 +472,7 @@ public:
 
   void updateModelHistory(const Mtx& bestModel)
   {
-    Mtx modelHist(mxGetField(itsAstate_mx, 0, "model"), Mtx::REFER);
+    Mtx modelHist(Mx::getField(itsAstate_mx, "model"), Mtx::REFER);
 
     modelHist.column(itsNvisits-1) = bestModel;
   }
@@ -442,10 +492,10 @@ public:
           }
       }
 
-    Mtx bestCost(mxGetField(itsAstate_mx, 0, "bestCost"), Mtx::REFER);
-    Mtx mhat(mxGetField(itsAstate_mx, 0, "mhat"), Mtx::REFER);
+    Mtx bestCost(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
+    Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
 
-    const Mtx modelHist(mxGetField(itsAstate_mx, 0, "model"), Mtx::BORROW);
+    const Mtx modelHist(Mx::getField(itsAstate_mx, "model"), Mtx::BORROW);
 
     bestCost.at(itsRunNum) = best_energy;
     mhat.column(itsRunNum) = modelHist.column(best_pos);
@@ -547,7 +597,12 @@ DOTRACE("AnnealingRun::go");
     }
 #endif
 
-  printRunHeader();
+  createStartingModel();
+
+  {
+    Mtx x(Mx::getField(itsAstate_mx, "bestModel"), Mtx::BORROW);
+    x.print();
+  }
 
   for (int temps_i = 0; temps_i < itsNumTemps; ++temps_i)
     {
@@ -570,7 +625,7 @@ DOTRACE("AnnealingRun::go");
             }
 
           VisitResult vresult =
-            visitParameters(mxGetField(itsAstate_mx, 0, "bestModel"),
+            visitParameters(Mx::getField(itsAstate_mx, "bestModel"),
                             temp);
 
           mxSetField(itsAstate_mx, 0, "bestModel", vresult.newModel);
