@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Mar  8 15:38:30 2001
+// written: Fri Mar 16 17:55:59 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -72,12 +72,20 @@ DOTRACE("makeClassifier");
 	 {
 		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
 		return shared_ptr<Classifier>(
-		  new CModelCssm(objParams, observedIncidence, numStoredExemplars));
+		  new CModelCssm(objParams, observedIncidence,
+							  CModelExemplar::EXP_DECAY, numStoredExemplars));
 	 }
   else if (whichType == "gcm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelGcm(objParams, observedIncidence));
+		  new CModelGcm(objParams, observedIncidence,
+							 CModelExemplar::EXP_DECAY));
+	 }
+  else if (whichType == "adm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelGcm(objParams, observedIncidence,
+							 CModelExemplar::LINEAR_DECAY));
 	 }
   else if (whichType == "pbi")
 	 {
@@ -87,7 +95,14 @@ DOTRACE("makeClassifier");
   else if (whichType == "wpsm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelWpsm(objParams, observedIncidence));
+		  new CModelWpsm(objParams, observedIncidence,
+							  CModelExemplar::EXP_DECAY));
+	 }
+  else if (whichType == "wpm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelWpsm(objParams, observedIncidence,
+							  CModelExemplar::LINEAR_DECAY));
 	 }
   else
 	 {
