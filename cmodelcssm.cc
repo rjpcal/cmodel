@@ -89,7 +89,7 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 							  &training1()[0], DIM_OBJ_PARAMS,
 							  &itsStored1[0]);
 
-		return Slice(&itsStored1[0], 1);
+		return Slice(&itsStored1[0], 1, DIM_OBJ_PARAMS);
 	 }
 
   else if (CAT2 == cat)
@@ -100,13 +100,13 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 							  &training2()[0], DIM_OBJ_PARAMS,
 							  &itsStored2[0]);
 
-		return Slice(&itsStored2[0], 1);
+		return Slice(&itsStored2[0], 1, DIM_OBJ_PARAMS);
 	 }
 
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return Slice(0,0); // can't happen, but placate the compiler
+  return Slice(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar 12 14:09:07 2001
+// written: Mon Mar 12 14:53:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,8 +22,8 @@
 #include <cmath>
 
 double minkDist(const double* w, int nelems,
-                Slice x1,
-                Slice x2,
+                Slice::ConstIterator x1,
+                Slice::ConstIterator x2,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
@@ -31,8 +31,8 @@ double minkDist(const double* w, int nelems,
 	 {
 		wt_sum += w[k] * pow( abs( *x1 - *x2), r);
 
-		x1.bump();
-		x2.bump();
+		++x1;
+		++x2;
 	 }
   return pow(wt_sum, r_inv);
 }
@@ -53,13 +53,13 @@ public:
   {}
 
   // Specialized Minkowski distance for r==2
-  double minkDist2(Slice x1) const
+  double minkDist2(Slice::ConstIterator x1) const
   {
 	 double wt_sum = 0.0;
-	 Slice x2 = itsX2;
+	 Slice::ConstIterator x2 = itsX2.begin();
 	 const double* w = itsAttWeights;
 
-	 for (int k = 0; k < itsNelems; ++k, x1.bump(), x2.bump(), ++w)
+	 for (int k = 0; k < itsNelems; ++k, ++x1, ++x2, ++w)
 		{
 		  wt_sum +=
 			 (*w) * 
@@ -103,9 +103,9 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   for (int i = 0; i < objParams.mrows(); ++i)
 	 {
 		if (int(objParams.at(i,0)) == 0)
-		  itsTraining1[c1++] = objParams.rowSlice(i);
+		  itsTraining1[c1++] = objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS);
 		else if (int(objParams.at(i,0)) == 1)
-		  itsTraining2[c2++] = objParams.rowSlice(i);
+		  itsTraining2[c2++] = objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS);
 	 }
 }
 
@@ -138,8 +138,8 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 	 // compute similarity of ex-y to stored-1-x
 	 double sim1 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
-					exemplar(y),
-					storedExemplar1,
+					exemplar(y).begin(),
+					storedExemplar1.begin(),
 					minkPower, minkPowerInv);
 
 	 diffEvidence(y) += exp(-sim1);
@@ -147,8 +147,8 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 		// compute similarity of ex-y to stored-2-x
 	 double sim2 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
-					exemplar(y),
-					storedExemplar2,
+					exemplar(y).begin(),
+					storedExemplar2.begin(),
 					minkPower, minkPowerInv);
 
 	 diffEvidence(y) -= exp(-sim2);
@@ -173,10 +173,10 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
 	 Slice ex(exemplar(y));
 
 	 // compute similarity of ex-y to stored-1-x
-	 const double sim1 = binder1.minkDist2(ex);
+	 const double sim1 = binder1.minkDist2(ex.begin());
 
 	 // compute similarity of ex-y to stored-2-x
-	 const double sim2 = binder2.minkDist2(ex);
+	 const double sim2 = binder2.minkDist2(ex.begin());
 
 	 diffEvidence(y) += exp(-sim1) - exp(-sim2);
   }

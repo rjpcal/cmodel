@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Mon Mar 12 12:34:26 2001
+// written: Mon Mar 12 14:35:44 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -55,7 +55,7 @@ DOTRACE("CModelGcm::findStoredExemplar");
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return Slice(0,0); // can't happen, but placate the compiler
+  return Slice(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelgcm_cc[] = "$Header$";

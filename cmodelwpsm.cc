@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Mon Mar 12 12:34:25 2001
+// written: Mon Mar 12 14:36:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -63,12 +63,12 @@ DOTRACE("CModelWpsm::findStoredExemplar");
 
   if (CAT1 == cat)
 	 {
-  		return Slice(&itsPrototype1[0], 1);
+  		return Slice(&itsPrototype1[0], 1, DIM_OBJ_PARAMS);
 	 }
 
   else if (CAT2 == cat)
 	 {
-  		return Slice(&itsPrototype2[0], 1);
+  		return Slice(&itsPrototype2[0], 1, DIM_OBJ_PARAMS);
 	 }
 
   else
