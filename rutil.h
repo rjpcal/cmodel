@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 19 16:20:06 2001
-// written: Tue Feb 20 17:50:06 2001
+// written: Wed Feb 21 13:24:34 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -28,13 +28,27 @@ public:
 
   void print() const
     {
-		int i;
 		mexPrintf("array = %p, mrows = %d, ncols = %d\n", array, mrows, ncols);
-		for(i=0; i < mrows * ncols; ++i) {
-		  mexPrintf("%7.4f\n", data[i]);
-		}
+		for(int i = 0; i < mrows; ++i)
+		  {
+			 for(int j = 0; j < ncols; ++j)
+				mexPrintf("%7.4f   ", at(i,j));
+			 mexPrintf("\n");
+		  }
 		mexPrintf("\n");
 	 }
+
+  int index(int row, int col) const { return row + (col*mrows); }
+
+  double* address(int row, int col) { return data + index(row, col); }
+
+  double& at(int row, int col) { return data[index(row, col)]; }
+
+  double at(int row, int col) const { return data[index(row, col)]; }
+
+  double& at(int elem) { return data[elem]; }
+
+  double at(int elem) const { return data[elem]; }
 
   int length() const { return (mrows > ncols) ? mrows : ncols; }
 
