@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:53:01 2002
+// written: Fri Feb 15 12:10:09 2002
 // $Id$
 //
 //
@@ -336,125 +336,121 @@ DOTRACE("sampleFromPdf");
 //
 //---------------------------------------------------------------------
 
-mxArray* annealVisitParameters(mxArray* astate_mx,
-                               mxArray* bestModel_mx,
+mxArray* annealVisitParameters(mxArray* bestModel_mx,
                                const Mtx& valueScalingRange,
                                const Mtx& deltas,
                                const Mtx& bounds,
                                const bool canUseMatrix,
                                const fstring& func_name,
+                               const double temp,
                                int nvararg,
                                mxArray** pvararg)
 {
-DOTRACE("annealVisitParameters");
 
-  try
+  mclCopyArray(&bestModel_mx);
+
+  Mtx bestModel(bestModel_mx, Mtx::REFER);
+
+  int nevals = 0;
+  int s = -1;
+
+  Mtx costs(0,0);
+
+  // for x = find(deltas' ~= 0)
+  for (int x = 0; x < deltas.nelems(); ++x)
     {
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (nvararg > 0)
-        {
-          const int debug_flag = int(mxGetScalar(pvararg[0]));
+      const double delta = deltas.at(x);
 
-          switch (debug_flag)
-            {
-            case -1:
-              Util::Prof::printAllProfData(std::cerr);
-              break;
-            case -2:
-              Util::Prof::resetAllProfData();
-              break;
-            }
+      if (delta == 0.0) continue;
 
-          return mxCreateScalarDouble(debug_flag);
-        }
-#endif
+      Mtx modelmatrix = makeTestModels(x,
+                                       bestModel,
+                                       valueScalingRange,
+                                       delta,
+                                       bounds);
 
-      int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+      // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
+      if (canUseMatrix)
+        costs = doParallelFuncEvals(modelmatrix, func_name,
+                                    nvararg, pvararg);
+      else
+        costs = doSerialFuncEvals(modelmatrix, func_name,
+                                  nvararg, pvararg);
 
-      const bool astate_talk =
-        (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
+      // S.nevals = S.nevals + length(costs);
+      nevals += costs.nelems();
 
-      const double temp = mxGetScalar(mxGetField(astate_mx, 0, "temp"));
+      // Sample from probability distribution
+      s = sampleFromPdf(temp, costs);
 
-      const Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
-                            Mtx::BORROW);
-
-      const Mtx energy(mxGetField(astate_mx, 0, "energy"));
-
-      const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
-
-      if (astate_talk && (astate_c % 10 == 0))
-        {
-          mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                    int(numFunEvals.at(k_onebased -1)),
-                    temp,
-                    energy.column(k_onebased-1).leftmost(astate_c-1).min());
-        }
-
-      mclCopyArray(&bestModel_mx);
-
-      Mtx bestModel(bestModel_mx, Mtx::REFER);
-
-      int nevals = 0;
-      int s = -1;
-
-      Mtx costs(0,0);
-
-      // for x = find(deltas' ~= 0)
-      for (int x = 0; x < deltas.nelems(); ++x)
-        {
-          const double delta = deltas.at(x);
-
-          if (delta == 0.0) continue;
-
-          Mtx modelmatrix = makeTestModels(x,
-                                           bestModel,
-                                           valueScalingRange,
-                                           delta,
-                                           bounds);
-
-          // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-          if (canUseMatrix)
-            costs = doParallelFuncEvals(modelmatrix, func_name,
-                                        nvararg, pvararg);
-          else
-            costs = doSerialFuncEvals(modelmatrix, func_name,
-                                      nvararg, pvararg);
-
-          // S.nevals = S.nevals + length(costs);
-          nevals += costs.nelems();
-
-          // Sample from probability distribution
-          s = sampleFromPdf(temp, costs);
-
-          bestModel.at(x, 0) = modelmatrix.at(x, s);
-        }
-
-      if (s < 0)
-        {
-          mexErrMsgTxt("didn't run any annealing iterations because "
-                       "there were no non-zero deltas");
-        }
-
-      const char* fieldNames[] = { "nevals", "newModel", "cost" };
-      mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
-
-      mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
-      mxSetField(output, 0, "newModel", bestModel_mx);
-      mxSetField(output, 0, "cost", mxCreateScalarDouble(costs.at(s)));
-
-      return output;
-    }
-  catch (Util::Error& err)
-    {
-      mexErrMsgTxt(err.msg_cstr());
-    }
-  catch (...)
-    {
-      mexErrMsgTxt("an unknown C++ exception occurred.");
+      bestModel.at(x, 0) = modelmatrix.at(x, s);
     }
 
-  return (mxArray*) 0; // can't happen, but placate compiler
+  if (s < 0)
+    {
+      mexErrMsgTxt("didn't run any annealing iterations because "
+                   "there were no non-zero deltas");
+    }
+
+  const char* fieldNames[] = { "nevals", "newModel", "cost" };
+  mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
+
+  mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
+  mxSetField(output, 0, "newModel", bestModel_mx);
+  mxSetField(output, 0, "cost", mxCreateScalarDouble(costs.at(s)));
+
+  return output;
+}
+
+//---------------------------------------------------------------------
+//
+// annealHelper()
+//
+//---------------------------------------------------------------------
+
+mxArray* annealHelper(mxArray* astate_mx,
+                      mxArray* bestModel_mx,
+                      const Mtx& valueScalingRange,
+                      const Mtx& deltas,
+                      const Mtx& bounds,
+                      const bool canUseMatrix,
+                      const fstring& func_name,
+                      int nvararg,
+                      mxArray** pvararg)
+{
+DOTRACE("annealHelper");
+
+  int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+
+  const bool astate_talk =
+    (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
+
+  const double temp = mxGetScalar(mxGetField(astate_mx, 0, "temp"));
+
+  const Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
+                        Mtx::BORROW);
+
+  const Mtx energy(mxGetField(astate_mx, 0, "energy"));
+
+  const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
+
+  if (astate_talk && (astate_c % 10 == 0))
+    {
+      mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
+                int(numFunEvals.at(k_onebased -1)),
+                temp,
+                energy.column(k_onebased-1).leftmost(astate_c-1).min());
+    }
+
+  return annealVisitParameters(bestModel_mx,
+                               valueScalingRange,
+                               deltas,
+                               bounds,
+                               canUseMatrix,
+                               func_name,
+                               temp,
+                               nvararg,
+                               pvararg);
 }
 
 /*
@@ -492,16 +488,48 @@ DOTRACE("mlxAnnealVisitParameters");
   int nvararg = nrhs - NDECLARED;
   mxArray** pvararg = prhs + NDECLARED;
 
-  plhs[0] = annealVisitParameters
-    (prhs[0], // astate
-     prhs[1], // bestModel
-     Mtx(prhs[2], Mtx::BORROW), // valueScalingRange
-     Mtx(prhs[3], Mtx::BORROW), // deltas
-     Mtx(prhs[4], Mtx::BORROW), // bounds
-     (mxGetScalar(prhs[5]) != 0.0), // canUseMatrix
-     MxWrapper::extractString(prhs[6]), // func_name
-     nvararg,
-     pvararg);
+  try
+    {
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+      if (nvararg > 0)
+        {
+          const int debug_flag = int(mxGetScalar(pvararg[0]));
+
+          switch (debug_flag)
+            {
+            case -1:
+              Util::Prof::printAllProfData(std::cerr);
+              break;
+            case -2:
+              Util::Prof::resetAllProfData();
+              break;
+            }
+
+          plhs[0] = mxCreateScalarDouble(debug_flag);
+        }
+#endif
+      else
+        {
+          plhs[0] = annealHelper
+            (prhs[0], // astate
+             prhs[1], // bestModel
+             Mtx(prhs[2], Mtx::BORROW), // valueScalingRange
+             Mtx(prhs[3], Mtx::BORROW), // deltas
+             Mtx(prhs[4], Mtx::BORROW), // bounds
+             (mxGetScalar(prhs[5]) != 0.0), // canUseMatrix
+             MxWrapper::extractString(prhs[6]), // func_name
+             nvararg,
+             pvararg);
+        }
+    }
+  catch (Util::Error& err)
+    {
+      mexErrMsgTxt(err.msg_cstr());
+    }
+  catch (...)
+    {
+      mexErrMsgTxt("an unknown C++ exception occurred.");
+    }
 
   mlfRestorePreviousContext(0, NDECLARED,
                             prhs[0], prhs[1], prhs[2], prhs[3],
