@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:54:42 2002
+// written: Mon Feb 18 19:12:33 2002
 // $Id$
 //
 //
@@ -124,56 +124,6 @@ void TerminateModule_annealHelper()
   std::cerr.rdbuf(0);
 
   delete mexBuf;
-}
-
-//---------------------------------------------------------------------
-//
-// makeTestModels()
-//
-//---------------------------------------------------------------------
-
-Mtx makeTestModels(int x,
-                   const Mtx& bestModel,
-                   const Mtx& valueScalingRange,
-                   const double delta,
-                   const Mtx& bounds)
-{
-DOTRACE("makeTestModels");
-
-  const double current_x_val = bestModel.at(x);
-
-  const double lowerbound_x = bounds.at(x,0);
-  const double upperbound_x = bounds.at(x,1);
-
-  int num_testmodels = 0;
-  {for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
-    {
-      double value = current_x_val + (*iter) * delta;
-      if ( (value > lowerbound_x) && (value < upperbound_x) )
-        ++num_testmodels;
-    }
-  }
-
-  Mtx newModels(bestModel.mrows(), num_testmodels);
-
-  const Slice bestModelCol = bestModel.column(0);
-
-  for (int i = 0; i < num_testmodels; ++i)
-    {
-      newModels.column(i) = bestModelCol;
-    }
-
-  {
-    int col = 0;
-    for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
-    {
-      double value = current_x_val + (*iter) * delta;
-      if ( (value > lowerbound_x) && (value < upperbound_x) )
-        newModels.at(x, col++) = value;
-    }
-  }
-
-  return newModels;
 }
 
 //---------------------------------------------------------------------
@@ -532,6 +482,54 @@ public:
     return output;
   }
 
+  // Make a new set of models, based on srcModel, but with a range of new
+  // parameters values for whichParam
+  Mtx makeTestModels(int whichParam, const Mtx& srcModel)
+  {
+    DOTRACE("makeTestModels");
+
+    const double delta = itsDeltas.at(whichParam);
+
+    const double current_param_val = srcModel.at(whichParam);
+
+    const double lowerbound = itsOpts.bounds.at(whichParam,0);
+    const double upperbound = itsOpts.bounds.at(whichParam,1);
+
+    int num_testmodels = 0;
+    {
+      for (MtxConstIter iter = itsOpts.valueScalingRange.rowIter(0);
+           iter.hasMore(); ++iter)
+        {
+          double value = current_param_val + (*iter) * delta;
+          if ( (value > lowerbound) && (value < upperbound) )
+            ++num_testmodels;
+        }
+    }
+
+    Mtx newModels(srcModel.mrows(), num_testmodels);
+
+    const Slice srcModelCol = srcModel.column(0);
+
+    for (int i = 0; i < num_testmodels; ++i)
+      {
+        newModels.column(i) = srcModelCol;
+      }
+
+    {
+      int col = 0;
+      for (MtxConstIter iter = itsOpts.valueScalingRange.rowIter(0);
+           iter.hasMore(); ++iter)
+        {
+          double value = current_param_val + (*iter) * delta;
+          if ( (value > lowerbound) && (value < upperbound) )
+            newModels.at(whichParam, col++) = value;
+        }
+    }
+
+    return newModels;
+  }
+
+
   // Returns the cost at the best model that was found
   double visitParameters(Mtx& bestModel, const double temp);
 
@@ -650,18 +648,13 @@ double AnnealingOptimizer::visitParameters(Mtx& bestModel, const double temp)
 
   Mtx costs(0,0);
 
-  // for x = find(deltas' ~= 0)
   for (int x = 0; x < itsDeltas.nelems(); ++x)
     {
       const double delta = itsDeltas.at(x);
 
       if (delta == 0.0) continue;
 
-      Mtx modelmatrix = makeTestModels(x,
-                                       bestModel,
-                                       itsOpts.valueScalingRange,
-                                       delta,
-                                       itsOpts.bounds);
+      Mtx modelmatrix = makeTestModels(x, bestModel);
 
       costs = itsObjective.evaluateEach(modelmatrix);
 
