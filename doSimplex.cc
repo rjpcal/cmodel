@@ -92,6 +92,13 @@ public:
 	 if (!itsMtxIsValid) updateMtx();
 	 return itsMtx;
   }
+
+  Mtx& ncMtx()
+  {
+	 if (!itsMtxIsValid) updateMtx();
+	 itsArrayIsValid = false;
+	 return itsMtx;
+  }
 };
 
 class FuncEvaluator {
@@ -116,14 +123,27 @@ public:
   {
   }
 
-  mxArray* evaluate(mxArray* x_mx)
+  mxArray* evaluate_mx(mxArray* x_mx)
   {
-	 DOTRACE("evaluate");
+	 DOTRACE("evaluate_mx");
 	 return mlfFeval(mclValueVarargout(),
 						  itsFunfcn,
 						  x_mx,
 						  getref(itsVarargin_ref),
 						  NULL);
+  }
+
+  double evaluate(mxArray* x_mx)
+  {
+	 DOTRACE("evaluate");
+	 mxArray* mx =  mlfFeval(mclValueVarargout(),
+									 itsFunfcn,
+									 x_mx,
+									 getref(itsVarargin_ref),
+									 NULL);
+	 double result = mxGetScalar(mx);
+	 mxDestroyArray(mx);
+	 return result;
   }
 };
 
@@ -713,7 +733,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 // HOME
 
-    mxArray* fxcc_mx = mclGetUninitializedArray();
+  double fxcc = 0.0;
     mxArray* xcc_mx = mclGetUninitializedArray();
     mxArray* fxc_mx = mclGetUninitializedArray();
     mxArray* xc_mx = mclGetUninitializedArray();
@@ -1026,7 +1046,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		mlfAssign(&xr_mx, xr.makeMxArray());
 		}
 
-		mlfAssign(&fxr_mx, fevaluator.evaluate(xr_mx));
+		mlfAssign(&fxr_mx, fevaluator.evaluate_mx(xr_mx));
 
 		++func_evals;
 		}
@@ -1064,7 +1084,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                       _mxarray24_))))));
 
 
-          mlfAssign(&fxe_mx, fevaluator.evaluate(xe_mx));
+          mlfAssign(&fxe_mx, fevaluator.evaluate_mx(xe_mx));
 
 			 ++func_evals;
 
@@ -1185,7 +1205,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                               _mxarray24_))))));
 
 
-                  mlfAssign(&fxc_mx, fevaluator.evaluate(xc_mx));
+                  mlfAssign(&fxc_mx, fevaluator.evaluate_mx(xc_mx));
 
 						++func_evals;
 
@@ -1248,14 +1268,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                               _mxarray24_,
                               _mxarray24_))))));
 
-                  mlfAssign(&fxcc_mx, fevaluator.evaluate(xcc_mx));
+						fxcc = fevaluator.evaluate(xcc_mx);
 
 						++func_evals;
 
                   // 
-                  // if fxcc_mx < funcVals_mx(:,end)
+                  // if fxcc < funcVals_mx(:,end)
                   if (mclLtBool(
-                        mclVv(fxcc_mx, "fxcc_mx"),
+                        mxCreateScalarDouble(fxcc),
                         mclVe(
                           mclArrayRef2(
                             mclVsv(funcVals_mx, "funcVals_mx"),
@@ -1275,10 +1295,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                           _mxarray24_,
                           _mxarray24_));
 
-                      // funcVals_mx(:,end) = fxcc_mx;
+                      // funcVals_mx(:,end) = fxcc;
                       mclArrayAssign2(
                         &funcVals_mx,
-                        mclVsv(fxcc_mx, "fxcc_mx"),
+                        mxCreateScalarDouble(fxcc),
                         mlfCreateColonIndex(),
                         mlfEnd(
                           mclVv(funcVals_mx, "funcVals_mx"),
@@ -1340,7 +1360,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                       // funcVals_mx(:,j_mx) = feval(funfcn,theSimplex_mx(:,j_mx),varargin{:});
                       mclArrayAssign2(
                         &funcVals_mx,
-								fevaluator.evaluate(mclArrayRef2(theSimplex_mx,
+								fevaluator.evaluate_mx(mclArrayRef2(theSimplex_mx,
 																mlfCreateColonIndex(),
 																mclVsv(j_mx, "j_mx"))),
                         mlfCreateColonIndex(),
@@ -1542,7 +1562,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(xc_mx);
     mxDestroyArray(fxc_mx);
     mxDestroyArray(xcc_mx);
-    mxDestroyArray(fxcc_mx);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(funfcn_mx);
