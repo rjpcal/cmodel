@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Feb 19 09:46:30 2002
+// written: Tue Feb 19 09:54:04 2002
 // $Id$
 //
 //
@@ -149,10 +149,10 @@ DOTRACE("MdoSimplex");
       // numModelParams = prod(size(x));
       const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
 
-      Objective objective(MxWrapper::extractString(funfcn_mx),
-                          nvararg,
-                          pvararg,
-                          false);
+      MatlabFunction objective(MxWrapper::extractString(funfcn_mx),
+                               nvararg,
+                               pvararg,
+                               false);
 
       SimplexOptimizer opt(objective,
                            Mtx(x_in),

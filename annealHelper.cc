@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Feb 19 09:29:09 2002
+// written: Tue Feb 19 09:53:50 2002
 // $Id$
 //
 //
@@ -702,10 +702,10 @@ DOTRACE("mlxAnnealHelper");
     {
       AnnealOpts opts(prhs[0]);
 
-      Objective objective(MxWrapper::extractString(prhs[1]), // funcName
-                          nvararg,
-                          pvararg,
-                          opts.canUseMatrix);
+      MatlabFunction objective(MxWrapper::extractString(prhs[1]), // funcName
+                               nvararg,
+                               pvararg,
+                               opts.canUseMatrix);
 
       AnnealingOptimizer ar(objective, opts);
 
