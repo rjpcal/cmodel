@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 10:49:20 2002
+// written: Fri Feb 15 10:56:19 2002
 // $Id$
 //
 //
@@ -367,7 +367,6 @@ mxArray* MannealVisitParameters(int nargout_,
                                 mxArray* canUseMatrix_mx,
                                 mxArray* FUN_mx,
                                 mxArray* temp_mx,
-                                mxArray* varargin_mx,
                                 int nvararg,
                                 mxArray** pvararg)
 {
@@ -375,18 +374,22 @@ DOTRACE("MannealVisitParameters");
 
   try
     {
-
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1)
+      if (nvararg > 0)
         {
-          Util::Prof::printAllProfData(std::cerr);
-          return mxCreateScalarDouble(-1.0);
-        }
+          const int debug_flag = int(mxGetScalar(pvararg[0]));
 
-      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2)
-        {
-          Util::Prof::resetAllProfData();
-          return mxCreateScalarDouble(-2.0);
+          switch (debug_flag)
+            {
+            case -1:
+              Util::Prof::printAllProfData(std::cerr);
+              break;
+            case -2:
+              Util::Prof::resetAllProfData();
+              break;
+            }
+
+          return mxCreateScalarDouble(debug_flag);
         }
 #endif
 
@@ -419,11 +422,8 @@ DOTRACE("MannealVisitParameters");
                                            bounds);
 
           // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-          costs = doFuncEvals(canUseMatrix,
-                              modelmatrix,
-                              FUN_mx,
-                              nvararg,
-                              pvararg);
+          costs = doFuncEvals(canUseMatrix, modelmatrix,
+                              FUN_mx, nvararg, pvararg);
 
           // S.nevals = S.nevals + length(costs);
           nevals += costs.nelems();;
@@ -492,19 +492,9 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of inputs (7).");
     }
 
-  mxArray* varargin = NULL;
-
-  mlfEnterNewContext(0,
-                     7,
-                     prhs[0],
-                     prhs[1],
-                     prhs[2],
-                     prhs[3],
-                     prhs[4],
-                     prhs[5],
-                     prhs[6]);
-  varargin = NULL;
-  mlfAssign(&varargin, mclCreateVararginCell(nrhs - 7, prhs + 7));
+  mlfEnterNewContext(0, 7,
+                     prhs[0], prhs[1], prhs[2], prhs[3],
+                     prhs[4], prhs[5], prhs[6]);
 
   int nvararg = nrhs - 7;
   mxArray** pvararg = prhs + 7;
@@ -517,21 +507,12 @@ DOTRACE("mlxAnnealVisitParameters");
                                    prhs[4],
                                    prhs[5],
                                    prhs[6],
-                                   varargin,
                                    nvararg,
                                    pvararg);
 
-  mlfRestorePreviousContext(0,
-                            7,
-                            prhs[0],
-                            prhs[1],
-                            prhs[2],
-                            prhs[3],
-                            prhs[4],
-                            prhs[5],
-                            prhs[6]);
-
-  mxDestroyArray(varargin);
+  mlfRestorePreviousContext(0, 7,
+                            prhs[0], prhs[1], prhs[2], prhs[3],
+                            prhs[4], prhs[5], prhs[6]);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
