@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Thu Mar 15 16:11:20 2001
+// written: Wed Mar 21 14:04:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,15 +25,18 @@ CModelPbi::CModelPbi(const Mtx& objParams, const Mtx& observedIncidence) :
 
 CModelPbi::~CModelPbi() {}
 
-void CModelPbi::computeDiffEv(Slice& modelParams)
+void CModelPbi::computeDiffEv(Slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
   MtxConstIter attWeights =
 	 static_cast<const Slice&>(modelParams.leftmost(DIM_OBJ_PARAMS)).begin();
 
-  for (int i = 0; i < numAllExemplars(); ++i)
-	 diffEvidence(i) = -1.0 * innerProduct(attWeights, exemplar(i).begin());
+  int i = 0;
+  MtxIter diffEv = diffEvOut.colIter(0);
+
+  for (; diffEv.hasMore(); ++i, ++diffEv)
+	 *diffEv = -1.0 * innerProduct(attWeights, exemplar(i).begin());
 }
 
 double CModelPbi::computeSigmaNoise(double /* rawSigma */) const

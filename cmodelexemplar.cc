@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Tue Mar 20 13:49:23 2001
+// written: Wed Mar 21 14:04:12 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -129,8 +129,10 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 //
 //---------------------------------------------------------------------
 
-void CModelExemplar::computeDiffEv(Slice& modelParams) {
+void CModelExemplar::computeDiffEv(Slice& modelParams, Mtx& diffEvOut) {
 DOTRACE("CModelExemplar::computeDiffEv");
+
+  diffEvOut.setAll(0.0);
 
   //---------------------------------------------------------------------
   //
@@ -169,6 +171,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const MtxIter distrust1 = distrust.colIter(0);
   const MtxIter distrust2 = distrust.colIter(1);
 
+  const MtxIter diffEv = diffEvOut.colIter(0);
+
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
 	 MinkowskiBinder binder1(attWts, stored1.rowIter(x),
@@ -203,19 +207,19 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 if (EXP_DECAY == itsTransferFunc) {
 		DOTRACE("exponential");
 		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
 			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2) {
-		  diffEvidence(y) += Num::fastexp7(-*iter1) - Num::fastexp7(-*iter2);
+			  ++y, ++iter1, ++iter2, ++diff) {
+		  *diff += Num::fastexp7(-*iter1) - Num::fastexp7(-*iter2);
 		}
 	 }
 	 else if (LINEAR_DECAY == itsTransferFunc) {
 		DOTRACE("linear");
 		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
 			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2) {
-			 diffEvidence(y) += -*iter1 + *iter2;
+			  ++y, ++iter1, ++iter2, ++diff) {
+			 *diff += -*iter1 + *iter2;
 		}
 	 }
   }
