@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sat Feb 16 17:27:46 2002
+// written: Sat Feb 16 17:45:33 2002
 // $Id$
 //
 //
@@ -361,7 +361,8 @@ public:
     itsRunNum(int(mxGetScalar(mxGetField(itsAstate_mx, 0, "k")))-1),
     itsTalking(mxGetScalar(mxGetField(itsAstate_mx, 0, "talk")) != 0.0),
     itsNvisits(0),
-    itsTemps(mxGetField(itsAstate_mx, 0, "temps"), Mtx::BORROW),
+    itsCriticalTemp(mxGetScalar(mxGetField(itsAstate_mx, 0, "crit_temp"))),
+    itsNumTemps(int(mxGetScalar(mxGetField(itsAstate_mx, 0, "numTemps")))),
     itsTempRepeats(mxGetField(itsAstate_mx, 0, "x"), Mtx::BORROW),
     itsNumFunEvals(mxGetField(itsAstate_mx, 0, "numFunEvals"), Mtx::REFER),
     itsEnergy(mxGetField(itsAstate_mx, 0, "energy"), Mtx::REFER),
@@ -440,7 +441,8 @@ private:
   const int itsRunNum;
   const bool itsTalking;
   int itsNvisits;
-  Mtx itsTemps;
+  const double itsCriticalTemp;
+  const int itsNumTemps;
   Mtx itsTempRepeats;
   Mtx itsNumFunEvals;
   Mtx itsEnergy;
@@ -530,9 +532,12 @@ DOTRACE("AnnealingRun::go");
    }
 #endif
 
-  for (int temps_i = 0; temps_i < itsTemps.nelems(); ++temps_i)
+  for (int temps_i = 0; temps_i < itsNumTemps; ++temps_i)
     {
-      const double temp = itsTemps.at(temps_i);
+      // so the temperatures range from 10^(crit_temp+1) ... 10^(crit_temp-1)
+      const double temp =
+        pow(10.0, itsCriticalTemp + 1.0 - 2.0*double(temps_i)/(itsNumTemps-1));
+
       const int temp_repeat = int(itsTempRepeats.at(temps_i));
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
