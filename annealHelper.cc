@@ -412,8 +412,8 @@ class AnnealingRun
 {
 public:
   AnnealingRun(mxArray* old_astate_mx,
-               const Mtx& valueScalingRange_,
-               const Mtx& bounds_,
+               const Mtx& valueScalingRange,
+               const Mtx& bounds,
                const bool canUseMatrix_,
                const fstring& func_name_,
                int nvararg_,
@@ -427,8 +427,9 @@ public:
     itsEnergy(mxGetField(astate_mx, 0, "energy"), Mtx::REFER),
     itsMinUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
     itsMaxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
-    valueScalingRange(valueScalingRange_),
-    bounds(bounds_),
+    itsDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER),
+    itsValueScalingRange(valueScalingRange),
+    itsBounds(bounds),
     canUseMatrix(canUseMatrix_),
     func_name(func_name_),
     nvararg(nvararg_),
@@ -458,8 +459,9 @@ private:
   Mtx itsEnergy;
   Mtx itsMinUsedParams;
   Mtx itsMaxUsedParams;
-  Mtx valueScalingRange;
-  Mtx bounds;
+  Mtx itsDeltas;
+  Mtx itsValueScalingRange;
+  Mtx itsBounds;
   const bool canUseMatrix;
   fstring func_name;
   int nvararg;
@@ -492,7 +494,7 @@ DOTRACE("AnnealingRun::go");
   const Mtx temps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW);
   const Mtx astate_x(mxGetField(astate_mx, 0, "x"), Mtx::BORROW);
 
-  const Mtx deltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::BORROW);
+//   const Mtx deltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::BORROW);
 
   for (int temps_i = 0; temps_i < temps.nelems(); ++temps_i)
     {
@@ -513,9 +515,9 @@ DOTRACE("AnnealingRun::go");
 
           VisitResult vresult =
             annealVisitParameters(mxGetField(astate_mx, 0, "bestModel"),
-                                  valueScalingRange,
-                                  deltas,
-                                  bounds,
+                                  itsValueScalingRange,
+                                  itsDeltas,
+                                  itsBounds,
                                   canUseMatrix,
                                   func_name,
                                   temp,
@@ -543,11 +545,12 @@ DOTRACE("AnnealingRun::go");
 
   // Update the deltas
   {
-    Mtx currentDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER);
+//     Mtx currentDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER);
 
-    for (int i = 0; i < currentDeltas.nelems(); ++i)
+    for (int i = 0; i < itsDeltas.nelems(); ++i)
       {
-        currentDeltas.at(i) =
+//         currentDeltas.at(i) =
+        itsDeltas.at(i) =
           0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
       }
   }
