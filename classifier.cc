@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Feb 20 17:54:03 2002
+// written: Mon Feb 25 13:54:43 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,7 +16,6 @@
 #include "classifier.h"
 
 #include "annealingoptimizer.h"
-#include "mxwrapper.h"
 #include "multivarfunction.h"
 #include "simplexoptimizer.h"
 
