@@ -1082,7 +1082,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   // output.algorithm = 'Nelder-Mead simplex direct search';
   mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
-  mlfAssign(fval, mlfMin(NULL, funcVals_dr.asArray(), NULL, NULL));
+  mlfAssign(fval, mxCreateScalarDouble(funcVals_dr.asMtx().row(0).min()));
 
   if (objective.evalCount() >= maxfun)
 	 {
