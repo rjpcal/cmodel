@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:43:30 2002
+// written: Fri Feb 15 11:53:01 2002
 // $Id$
 //
 //
@@ -338,12 +338,11 @@ DOTRACE("sampleFromPdf");
 
 mxArray* annealVisitParameters(mxArray* astate_mx,
                                mxArray* bestModel_mx,
-                               mxArray* valueScalingRange_mx,
-                               mxArray* deltas_mx,
-                               mxArray* bounds_mx,
-                               mxArray* canUseMatrix_mx,
-                               mxArray* FUN_mx,
-                               mxArray* temp_mx,
+                               const Mtx& valueScalingRange,
+                               const Mtx& deltas,
+                               const Mtx& bounds,
+                               const bool canUseMatrix,
+                               const fstring& func_name,
                                int nvararg,
                                mxArray** pvararg)
 {
@@ -396,16 +395,8 @@ DOTRACE("annealVisitParameters");
 
       Mtx bestModel(bestModel_mx, Mtx::REFER);
 
-      const bool canUseMatrix = (mxGetScalar(canUseMatrix_mx) != 0.0);
-
       int nevals = 0;
       int s = -1;
-
-      const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
-      const Mtx deltas(deltas_mx, Mtx::BORROW);
-      const Mtx bounds(bounds_mx, Mtx::BORROW);
-
-      const fstring func_name = MxWrapper::extractString(FUN_mx);
 
       Mtx costs(0,0);
 
@@ -486,7 +477,7 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of outputs (1).");
     }
 
-  const int NDECLARED = 8;
+  const int NDECLARED = 7;
 
   if (nrhs < NDECLARED)
     {
@@ -496,25 +487,25 @@ DOTRACE("mlxAnnealVisitParameters");
 
   mlfEnterNewContext(0, NDECLARED,
                      prhs[0], prhs[1], prhs[2], prhs[3],
-                     prhs[4], prhs[5], prhs[6], prhs[7]);
+                     prhs[4], prhs[5], prhs[6]);
 
   int nvararg = nrhs - NDECLARED;
   mxArray** pvararg = prhs + NDECLARED;
 
-  plhs[0] = annealVisitParameters(prhs[0],
-                                  prhs[1],
-                                  prhs[2],
-                                  prhs[3],
-                                  prhs[4],
-                                  prhs[5],
-                                  prhs[6],
-                                  prhs[7],
-                                  nvararg,
-                                  pvararg);
+  plhs[0] = annealVisitParameters
+    (prhs[0], // astate
+     prhs[1], // bestModel
+     Mtx(prhs[2], Mtx::BORROW), // valueScalingRange
+     Mtx(prhs[3], Mtx::BORROW), // deltas
+     Mtx(prhs[4], Mtx::BORROW), // bounds
+     (mxGetScalar(prhs[5]) != 0.0), // canUseMatrix
+     MxWrapper::extractString(prhs[6]), // func_name
+     nvararg,
+     pvararg);
 
   mlfRestorePreviousContext(0, NDECLARED,
                             prhs[0], prhs[1], prhs[2], prhs[3],
-                            prhs[4], prhs[5], prhs[6], prhs[7]);
+                            prhs[4], prhs[5], prhs[6]);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
