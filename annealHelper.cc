@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 16:04:08 2002
+// written: Sat Feb 16 17:07:24 2002
 // $Id$
 //
 //
@@ -349,15 +349,90 @@ namespace
   };
 }
 
-VisitResult annealVisitParameters(mxArray* bestModel_mx,
-                                  const Mtx& valueScalingRange,
-                                  const Mtx& deltas,
-                                  const Mtx& bounds,
-                                  const bool canUseMatrix,
-                                  const fstring& func_name,
-                                  const double temp,
-                                  int nvararg,
-                                  mxArray** pvararg)
+class AnnealingRun
+{
+public:
+  AnnealingRun(mxArray* old_astate_mx,
+               const fstring& funcName,
+               int nvararg,
+               mxArray** pvararg)
+    :
+    itsAstate_mx(mxDuplicateArray(old_astate_mx)),
+    itsRunNum(int(mxGetScalar(mxGetField(itsAstate_mx, 0, "k")))-1),
+    itsTalking(mxGetScalar(mxGetField(itsAstate_mx, 0, "talk")) != 0.0),
+    itsNvisits(0),
+    itsTemps(mxGetField(itsAstate_mx, 0, "temps"), Mtx::BORROW),
+    itsTempRepeats(mxGetField(itsAstate_mx, 0, "x"), Mtx::BORROW),
+    itsNumFunEvals(mxGetField(itsAstate_mx, 0, "numFunEvals"), Mtx::REFER),
+    itsEnergy(mxGetField(itsAstate_mx, 0, "energy"), Mtx::REFER),
+    itsMinUsedParams(mxGetField(itsAstate_mx, 0, "bestModel"), Mtx::COPY),
+    itsMaxUsedParams(mxGetField(itsAstate_mx, 0, "bestModel"), Mtx::COPY),
+    itsDeltas(mxGetField(itsAstate_mx, 0, "currentDeltas"), Mtx::REFER),
+    itsValueScalingRange(mxGetField(itsAstate_mx, 0, "valueScalingRange"),
+                         Mtx::BORROW),
+    itsBounds(mxGetField(itsAstate_mx, 0, "bounds"), Mtx::BORROW),
+    itsCanUseMatrix(mxGetScalar(mxGetField(itsAstate_mx, 0, "canUseMatrix"))
+                    != 0.0),
+    itsFunFunName(funcName),
+    itsNvararg(nvararg),
+    itsPvararg(pvararg)
+  {}
+
+  mxArray* go();
+
+  VisitResult visitParameters(mxArray* bestModel_mx,
+                              const double temp);
+
+  void updateUsedParams(const Mtx& model)
+  {
+    for (int i = 0; i < model.nelems(); ++i)
+      {
+        itsMinUsedParams.at(i) = std::min(double(itsMinUsedParams.at(i)),
+                                          model.at(i));
+
+        itsMaxUsedParams.at(i) = std::max(double(itsMaxUsedParams.at(i)),
+                                          model.at(i));
+      }
+  }
+
+  void updateDeltas()
+  {
+    for (int i = 0; i < itsDeltas.nelems(); ++i)
+      {
+        itsDeltas.at(i) =
+          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
+      }
+  }
+
+  void updateModelHistory(const Mtx& bestModel)
+  {
+    Mtx modelHist(mxGetField(itsAstate_mx, 0, "model"), Mtx::REFER);
+
+    modelHist.column(itsNvisits-1) = bestModel;
+  }
+
+private:
+  mxArray* const itsAstate_mx;
+  const int itsRunNum;
+  const bool itsTalking;
+  int itsNvisits;
+  Mtx itsTemps;
+  Mtx itsTempRepeats;
+  Mtx itsNumFunEvals;
+  Mtx itsEnergy;
+  Mtx itsMinUsedParams;
+  Mtx itsMaxUsedParams;
+  Mtx itsDeltas;
+  const Mtx itsValueScalingRange;
+  const Mtx itsBounds;
+  const bool itsCanUseMatrix;
+  fstring itsFunFunName;
+  int itsNvararg;
+  mxArray** itsPvararg;
+};
+
+VisitResult AnnealingRun::visitParameters(mxArray* bestModel_mx,
+                                          const double temp)
 {
 
   mclCopyArray(&bestModel_mx);
@@ -370,25 +445,25 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
   Mtx costs(0,0);
 
   // for x = find(deltas' ~= 0)
-  for (int x = 0; x < deltas.nelems(); ++x)
+  for (int x = 0; x < itsDeltas.nelems(); ++x)
     {
-      const double delta = deltas.at(x);
+      const double delta = itsDeltas.at(x);
 
       if (delta == 0.0) continue;
 
       Mtx modelmatrix = makeTestModels(x,
                                        bestModel,
-                                       valueScalingRange,
+                                       itsValueScalingRange,
                                        delta,
-                                       bounds);
+                                       itsBounds);
 
       // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-      if (canUseMatrix)
-        costs = doParallelFuncEvals(modelmatrix, func_name,
-                                    nvararg, pvararg);
+      if (itsCanUseMatrix)
+        costs = doParallelFuncEvals(modelmatrix, itsFunFunName,
+                                    itsNvararg, itsPvararg);
       else
-        costs = doSerialFuncEvals(modelmatrix, func_name,
-                                  nvararg, pvararg);
+        costs = doSerialFuncEvals(modelmatrix, itsFunFunName,
+                                  itsNvararg, itsPvararg);
 
       // S.nevals = S.nevals + length(costs);
       nevals += costs.nelems();
@@ -408,88 +483,9 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
   return VisitResult(nevals, bestModel_mx, costs.at(s));
 }
 
-class AnnealingRun
-{
-public:
-  AnnealingRun(mxArray* old_astate_mx,
-               const fstring& funcName,
-               int nvararg,
-               mxArray** pvararg)
-    :
-    astate_mx(mxDuplicateArray(old_astate_mx)),
-    itsRunNum(int(mxGetScalar(mxGetField(astate_mx, 0, "k")))-1),
-    itsTalking(mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0),
-    itsNvisits(0),
-    itsTemps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW),
-    itsTempRepeats(mxGetField(astate_mx, 0, "x"), Mtx::BORROW),
-    itsNumFunEvals(mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER),
-    itsEnergy(mxGetField(astate_mx, 0, "energy"), Mtx::REFER),
-    itsMinUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
-    itsMaxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
-    itsDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER),
-    itsValueScalingRange(mxGetField(astate_mx, 0, "valueScalingRange"),
-			 Mtx::BORROW),
-    itsBounds(mxGetField(astate_mx, 0, "bounds"), Mtx::BORROW),
-    itsCanUseMatrix(mxGetScalar(mxGetField(astate_mx, 0, "canUseMatrix"))
-		    != 0.0),
-    itsFunFunName(funcName),
-    itsNvararg(nvararg),
-    itsPvararg(pvararg)
-  {}
-
-  mxArray* go();
-
-  void updateUsedParams(const Mtx& model)
-  {
-    for (int i = 0; i < model.nelems(); ++i)
-      {
-	itsMinUsedParams.at(i) = std::min(double(itsMinUsedParams.at(i)),
-					  model.at(i));
-
-	itsMaxUsedParams.at(i) = std::max(double(itsMaxUsedParams.at(i)),
-					  model.at(i));
-      }
-  }
-
-  void updateDeltas()
-  {
-    for (int i = 0; i < itsDeltas.nelems(); ++i)
-      {
-        itsDeltas.at(i) =
-          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
-      }
-  }
-
-  void updateModelHistory(const Mtx& bestModel)
-  {
-    Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
-
-    modelHist.column(itsNvisits-1) = bestModel;
-  }
-
-private:
-  mxArray* const astate_mx;
-  const int itsRunNum;
-  const bool itsTalking;
-  int itsNvisits;
-  Mtx itsTemps;
-  Mtx itsTempRepeats;
-  Mtx itsNumFunEvals;
-  Mtx itsEnergy;
-  Mtx itsMinUsedParams;
-  Mtx itsMaxUsedParams;
-  Mtx itsDeltas;
-  const Mtx itsValueScalingRange;
-  const Mtx itsBounds;
-  const bool itsCanUseMatrix;
-  fstring itsFunFunName;
-  int itsNvararg;
-  mxArray** itsPvararg;
-};
-
 //---------------------------------------------------------------------
 //
-// annealHelper()
+// AnnealingRun::go()
 //
 //---------------------------------------------------------------------
 
@@ -528,17 +524,10 @@ DOTRACE("AnnealingRun::go");
             }
 
           VisitResult vresult =
-            annealVisitParameters(mxGetField(astate_mx, 0, "bestModel"),
-                                  itsValueScalingRange,
-                                  itsDeltas,
-                                  itsBounds,
-                                  itsCanUseMatrix,
-                                  itsFunFunName,
-                                  temp,
-                                  itsNvararg,
-                                  itsPvararg);
+            visitParameters(mxGetField(itsAstate_mx, 0, "bestModel"),
+                            temp);
 
-          mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
+          mxSetField(itsAstate_mx, 0, "bestModel", vresult.newModel);
 
           itsNumFunEvals.at(itsRunNum) += vresult.nevals;
 
@@ -546,15 +535,15 @@ DOTRACE("AnnealingRun::go");
 
           const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
-	  updateUsedParams(bestModel);
+          updateUsedParams(bestModel);
 
-	  updateModelHistory(bestModel);
+          updateModelHistory(bestModel);
         }
     }
 
   updateDeltas();
 
-  return astate_mx;
+  return itsAstate_mx;
 }
 
 /*
