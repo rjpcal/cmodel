@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 25 14:31:06 2002
+// written: Mon Feb 25 15:11:58 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -47,13 +47,19 @@
 #define MEXFUNCNAME "classifier"
 #endif
 
+extern "C"
+void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]);
+
 namespace
 {
+  const int NARGIN = 4;
+  const int NARGOUT = 1;
+
   class MyMexPkg : public MexPkg
   {
   public:
-    MyMexPkg() :
-      MexPkg(MEXFUNCNAME),
+    MyMexPkg(ExitFcn f) :
+      MexPkg(MEXFUNCNAME, f, mlxClassifier, NARGIN, NARGOUT),
       recentNumStored(-1),
       recentModel(0),
       recentObjParams(0,0)
@@ -67,15 +73,6 @@ namespace
   };
 
   MyMexPkg* mexPkg = 0;
-}
-
-void InitializeModule_classifier() {}
-
-void TerminateModule_classifier()
-{
-  mexPrintf("\tdeleting mexPkg...\n");
-  delete mexPkg;
-  mexPrintf("\tdone.\n");
 }
 
 shared_ptr<Classifier> makeClassifier(const fstring& whichType,
@@ -213,12 +210,6 @@ static mxArray* Mclassifier(const Mtx& modelParams,
 //
 ///////////////////////////////////////////////////////////////////////
 
-namespace
-{
-  const int NARGIN = 4;
-  const int NARGOUT = 1;
-}
-
 extern "C"
 void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 {
@@ -281,27 +272,22 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 //
 ///////////////////////////////////////////////////////////////////////
 
+void TerminateModule_classifier()
+{
+  mexPrintf("\tdeleting mexPkg...\n");
+  delete mexPkg;
+  mexPrintf("\tdone.\n");
+}
+
 extern "C"
 mex_information mexLibrary()
 {
   DOTRACE("mexLibrary");
 
   if (mexPkg == 0)
-    mexPkg = new MyMexPkg;
+    mexPkg = new MyMexPkg(TerminateModule_classifier);
 
-  static _mexInitTermTableEntry init_term_table[1] =
-    { { InitializeModule_classifier, TerminateModule_classifier }, };
-
-  static mexFunctionTableEntry function_table[1] =
-    {
-      { MEXFUNCNAME, mlxClassifier, NARGIN, NARGOUT,
-        (_mexLocalFunctionTable*)0 }
-    };
-
-  static _mex_information _mex_info
-    = { 1, 1, function_table, 0, NULL, 0, NULL, 1, init_term_table };
-
-  return &_mex_info;
+  return mexPkg->mexInfo();
 }
 
 static const char vcid_classifier_mex_cc[] = "$Header$";
