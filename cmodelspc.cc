@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Tue Feb 19 14:56:16 2002
+// written: Sun Mar  3 14:16:59 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -112,12 +112,11 @@ DOTRACE("CmodelSPC::handleRequest");
                                                itsHiLo1);
 
       if (category == 0)
-        return storedExemplars.rows(0,
-                                    itsNumStoredExemplars);
+        return storedExemplars(row_range_n(0, itsNumStoredExemplars));
 
       if (category == 1)
-        return storedExemplars.rows(itsNumStoredExemplars,
-                                    itsNumStoredExemplars);
+        return storedExemplars(row_range_n(itsNumStoredExemplars,
+                                           itsNumStoredExemplars));
 
       throw Util::Error("unknown category while processing request"
                         "'getStoredExemplars'");

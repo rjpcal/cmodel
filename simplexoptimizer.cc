@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Feb 20 18:13:20 2002
+// written: Sun Mar  3 14:20:56 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -197,10 +197,10 @@ void SimplexOptimizer::doOneIter()
 DOTRACE("SimplexOptimizer::doOneIter");
 
   // compute average of the itsNparams (NOT itsNparams+1) best points
-  Mtx xbar(itsSimplex.columns(0,itsNparams).meanColumn());
+  Mtx xbar(itsSimplex(col_range_n(0,itsNparams)).meanColumn());
 
   // Direction along which to reflect/expand/contract
-  Mtx direction(xbar - itsSimplex.columns(itsNparams,1));
+  Mtx direction(xbar - itsSimplex(col_range_n(itsNparams,1)));
 
   // Calculate the reflection point
   FuncPoint rflPt = evaluate(xbar + direction);
@@ -252,9 +252,9 @@ DOTRACE("SimplexOptimizer::doOneIter");
             {
               for (int j = 1; j < itsNparams+1; ++j)
                 {
-                  putInSimplex(itsSimplex.columns(0,1) +
-                               (itsSimplex.columns(j,1) -
-                                itsSimplex.columns(0,1)) * 0.5,
+                  putInSimplex(itsSimplex(col_range_n(0,1)) +
+                               (itsSimplex(col_range_n(j,1)) -
+                                itsSimplex(col_range_n(0,1))) * 0.5,
                                j);
                 }
             }
