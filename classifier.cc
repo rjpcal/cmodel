@@ -456,7 +456,7 @@ DOTRACE("Classifier::handleRequest");
 
       ar.optimize();
 
-      return ar.getOutput2();
+      return ar.getOutput();
     }
 
   return RequestResult();
