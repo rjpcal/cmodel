@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Feb 19 17:11:23 2002
+// written: Tue Feb 19 17:55:08 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -71,12 +71,9 @@ Mtx AnnealOpts::makeCoolingSchedule(int scale)
 
   double repeats[N] = { 1.0, 2.0, 4.0, 6.0, 10.0, 6.0, 4.0, 2.0, 1.0 };
 
-  Mtx result(1, N);
+  Mtx result(&repeats[0], 1, N, Mtx::COPY);
 
-  for (int i = 0; i < N; ++i)
-    {
-      result.at(i) = scale * repeats[i];
-    }
+  result *= scale;
 
   return result;
 }
@@ -236,9 +233,7 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
-          ++nvisits;
-
-          if (itsOpts.talking && (nvisits % 10 == 0))
+          if (itsOpts.talking && (nvisits % 10 == 9))
             {
               std::cerr << std::setw(7) << int(itsNumFunEvals.at(itsRunNum))
                         << "\t\t"
@@ -250,19 +245,15 @@ DOTRACE("AnnealingOptimizer::doOneRun");
                         << "\n";
             }
 
-          itsEnergy.at(nvisits-1,itsRunNum) =
+          itsEnergy.at(nvisits,itsRunNum) =
             visitParameters(bestModel, temp);
 
-          for (int i = 0; i < bestModel.nelems(); ++i)
-            {
-              minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
-                                             double(bestModel.at(i)));
+          minUsedParams = min(minUsedParams, bestModel);
+          maxUsedParams = max(maxUsedParams, bestModel);
 
-              maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
-                                             double(bestModel.at(i)));
-            }
+          itsModelHist.column(nvisits) = bestModel;
 
-          itsModelHist.column(nvisits-1) = bestModel;
+          ++nvisits;
         }
     }
 
