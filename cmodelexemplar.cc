@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Fri Apr  6 10:56:54 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -100,11 +100,12 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   int c1=0,c2=0;
   for (int i = 0; i < objParams.mrows(); ++i)
 	 {
-		if (int(objParams.at(i,0)) == 0)
+		const int cat = exemplarCategory(i);
+		if (cat == 0)
 		  {
 			 itsTraining1.row(c1++) = exemplar(i);
 		  }
-		else if (int(objParams.at(i,0)) == 1)
+		else if (cat == 1)
 		  {
 			 itsTraining2.row(c2++) = exemplar(i);
 		  }
