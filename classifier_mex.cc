@@ -94,7 +94,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
 
           // To avoid relying on transient matlab storage:
           Mtx uniqObjParams = objParams;
-          uniqObjParams.makeUnique();
+          uniqObjParams.make_unique();
 
           mexPkg->recentCssm.reset
             (new CModelCssm(uniqObjParams,
@@ -129,7 +129,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
 
           // To avoid relying on transient matlab storage:
           Mtx uniqObjParams = objParams;
-          uniqObjParams.makeUnique();
+          uniqObjParams.make_unique();
 
           mexPkg->recentRxm.reset
             (new CModelRxm(uniqObjParams,

@@ -66,8 +66,8 @@ DOTRACE("CModelCssm::loadModelParams");
   bool do1 = (scaledWeights1 != itsCachedRawWts1);
   bool do2 = (scaledWeights2 != itsCachedRawWts2);
 
-  if (do1) itsCachedRawWts1 = scaledWeights1; itsCachedRawWts1.makeUnique();
-  if (do2) itsCachedRawWts2 = scaledWeights2; itsCachedRawWts2.makeUnique();
+  if (do1) itsCachedRawWts1 = scaledWeights1; itsCachedRawWts1.make_unique();
+  if (do2) itsCachedRawWts2 = scaledWeights2; itsCachedRawWts2.make_unique();
 
   if (do1) scaledWeights1.apply(std::abs);
   if (do2) scaledWeights2.apply(std::abs);
