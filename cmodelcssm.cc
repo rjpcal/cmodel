@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Thu Aug  1 11:12:08 2002
+// written: Thu Aug  1 11:13:09 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -44,7 +44,7 @@ int CModelCssm::numModelParams() const
 DOTRACE("CModelCssm::numModelParams");
 
   return CModelExemplar::numModelParams()
-    + 2 * numStoredExemplars * numTrainingExemplars();
+    + 2 * numStoredExemplars() * numTrainingExemplars();
 }
 
 void CModelCssm::loadModelParams(Slice& modelParams)
@@ -109,7 +109,7 @@ DOTRACE("CModelCssm::fillModelParamsBounds");
   // Classifier to be negative and positive "infinity" (i.e. realmax)
 
   return CModelExemplar::fillModelParamsBounds(bounds, startRow)
-    + 2 * numStoredExemplars * numTrainingExemplars();
+    + 2 * numStoredExemplars() * numTrainingExemplars();
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";
