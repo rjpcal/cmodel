@@ -732,9 +732,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   double fxcc = 0.0;
   double fxc = 0.0;
   double fxe = 0.0;
-  mxArray* xe_mx = mclGetUninitializedArray();
   double fxr = 0.0;
-  mxArray* xr_mx = mclGetUninitializedArray();
   mxArray* formatsave_mx = mclGetUninitializedArray();
   mxArray* how_mx = mclGetUninitializedArray();
   mxArray* y_mx = mclGetUninitializedArray();
@@ -745,6 +743,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   mxArray* header_mx = mclGetUninitializedArray();
   mxArray* ans_mx = mclGetUninitializedArray();
 
+  DualRepMtx xr_dr;
+  DualRepMtx xe_dr;
   DualRepMtx xc_dr;
   DualRepMtx xcc_dr;
   DualRepMtx xbar_dr;
@@ -1008,15 +1008,11 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 		{DOTRACE("compute xr");
       // xr_mx = (1 + rho)*xbar - rho*theSimplex(:,end);
-		const Mtx xbar(xbar_dr.asMtx());
-
-		Mtx xr = xbar*(1.0+rho) - 
-		  theSimplex_dr.asMtx().columns(numModelParams,1) * rho;
-
-		mlfAssign(&xr_mx, xr.makeMxArray());
+		xr_dr.assignMtx(xbar_dr.asMtx()*(1.0+rho) - 
+							 theSimplex_dr.asMtx().columns(numModelParams,1) * rho);
 		}
 
-		fxr = fevaluator.evaluate(xr_mx);
+		fxr = fevaluator.evaluate(xr_dr.asArray());
 
 		++func_evals;
 		}
@@ -1028,33 +1024,21 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 			 DOTRACE("if fxr < funcVals(:,1)");
 
           // % Calculate the expansion point
-          // xe_mx = (1 + rho*chi_mx)*xbar - rho*chi_mx*theSimplex(:,end);
-          mlfAssign(
-            &xe_mx,
-            mclMinus(
-              mclMtimes(
-                mclPlus(
-                  _mxarray11_,
-                  mclMtimes(mclVv(rho_mx, "rho_mx"), mclVv(chi_mx, "chi_mx"))),
-                xbar_dr.asArray()),
-              mclMtimes(
-                mclMtimes(mclVv(rho_mx, "rho_mx"), mclVv(chi_mx, "chi_mx")),
-                mclVe(
-							 theSimplex_dr.asMtx()
-							 .columns(numModelParams,1).makeMxArray()
-							 )
-					 )));
+          // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
+			 xe_dr.assignMtx((xbar_dr.asMtx() * (1 + rho*chi))
+								  -
+								  (theSimplex_dr.asMtx().columns(numModelParams,1)
+									*(rho*chi)));
 
-
-			 fxe = fevaluator.evaluate(xe_mx);
+			 fxe = fevaluator.evaluate(xe_dr.asArray());
 
 			 ++func_evals;
 
           // if fxe < fxr
           if (fxe < fxr) {
 
-				// theSimplex(:,end) = xe_mx;
-				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xe_mx);
+				// theSimplex(:,end) = xe;
+				theSimplex_dr.ncMtx().column(numModelParams) = xe_dr.asMtx();
 
 				// funcVals(:,end) = fxe;
 				funcVals_dr.ncMtx().at(0,numModelParams) = fxe;
@@ -1065,8 +1049,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
           // else
           } else {
 
-				// theSimplex(:,end) = xr_mx; 
-				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
+				// theSimplex(:,end) = xr; 
+				theSimplex_dr.ncMtx().column(numModelParams) = xr_dr.asMtx();
 
 				// funcVals(:,end) = fxr;
 				funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
@@ -1084,8 +1068,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
           // if fxr < funcVals(:,numModelParams)
           if (fxr < funcVals_dr.asMtx().at(0,numModelParams-1)) {
 
-				// theSimplex(:,end) = xr_mx; 
-				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
+				// theSimplex(:,end) = xr; 
+				theSimplex_dr.ncMtx().column(numModelParams) = xr_dr.asMtx();
 
 				// funcVals(:,end) = fxr;
 				funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
@@ -1374,8 +1358,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(y_mx);
     mxDestroyArray(how_mx);
     mxDestroyArray(formatsave_mx);
-    mxDestroyArray(xr_mx);
-    mxDestroyArray(xe_mx);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(funfcn_mx);
