@@ -2,10 +2,10 @@
 //
 // multivarfunction.h
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:45:02 2001
-// written: Thu Feb  7 13:52:02 2002
+// written: Thu Feb 14 11:56:24 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

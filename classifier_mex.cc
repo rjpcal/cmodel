@@ -2,10 +2,10 @@
 //
 // classifier_mex.cc
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Feb  7 15:05:55 2002
+// written: Thu Feb 14 11:57:52 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

@@ -2,10 +2,10 @@
 //
 // cmodelexemplar.h
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Thu Feb  7 13:50:33 2002
+// written: Thu Feb 14 11:54:28 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

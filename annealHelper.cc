@@ -2,10 +2,10 @@
 //
 // annealVisitParameters.cc
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
-// created: Mon Feb  4 18:14:46 2002
-// written: Thu Feb  7 16:44:37 2002
+// created: Fri Mar 23 17:17:00 2001
+// written: Thu Feb 14 11:57:23 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

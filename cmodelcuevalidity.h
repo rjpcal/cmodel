@@ -2,10 +2,10 @@
 //
 // cmodelcuevalidity.h
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Thu Feb  7 13:50:19 2002
+// written: Thu Feb 14 11:54:20 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

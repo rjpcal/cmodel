@@ -2,10 +2,10 @@
 //
 // cmodelgcm.h
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Thu Feb  7 13:50:42 2002
+// written: Thu Feb 14 11:54:37 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
