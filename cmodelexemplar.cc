@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 28 09:16:56 2001
+// written: Wed Mar 28 09:49:07 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -82,6 +82,7 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   itsStored2Cache(numStoredExemplars, DIM_OBJ_PARAMS),
   itsEvidence1Cache(numStoredExemplars, objParams.mrows()),
   itsEvidence2Cache(numStoredExemplars, objParams.mrows()),
+  itsAttWtsCache(DIM_OBJ_PARAMS,1),
   itsNumStoredExemplars(numStoredExemplars),
   itsTransferFunc(transferFunc)
 {
@@ -133,6 +134,8 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 //
 //---------------------------------------------------------------------
 
+#include "libmatlb.h"
+
 void CModelExemplar::computeDiffEv(Slice& modelParams, Mtx& diffEvOut) {
 DOTRACE("CModelExemplar::computeDiffEv");
 
@@ -146,6 +149,10 @@ DOTRACE("CModelExemplar::computeDiffEv");
   Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
   attWeights.apply(abs);
+
+  const bool newAttWts = (itsAttWtsCache.column(0) != attWeights);
+
+  itsAttWtsCache.column(0) = attWeights;
 
   Slice otherParams = modelParams.rightmost(modelParams.nelems()-
 														  (DIM_OBJ_PARAMS+2));
@@ -171,10 +178,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 exemplars.push_back(exemplar(yy).begin());
   }
 
-  const MtxIter diffEv = diffEvOut.colIter(0);
-
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 	 DOTRACE("minkowski loop");
+
 	 MinkowskiBinder binder1(attWts, stored1.rowIter(x),
 									 minkPower, minkPowerInv);
 	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
@@ -183,20 +189,15 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
 
-  	 bool compute1 = true;
-  	 bool compute2 = true;
-
-//  	 bool compute1 = (itsStored1Cache.row(x) != stored1.row(x));
-//  	 bool compute2 = (itsStored2Cache.row(x) != stored2.row(x));
+  	 bool compute1 = newAttWts || (itsStored1Cache.row(x) != stored1.row(x));
+  	 bool compute2 = newAttWts || (itsStored2Cache.row(x) != stored2.row(x));
 
 	 if (compute1) {
 		DOTRACE("compute1");
-		itsStored1Cache.row(x) = stored1.row(x);
 
 		int y = 0;
-		for (MtxIter iter1 = distrust1;
-			  iter1.hasMore();
-			  ++y, ++iter1) {
+		for (MtxIter iter1 = distrust1; iter1.hasMore(); ++y, ++iter1) {
+
 		  if (minkPower == 2.0) {
 			 if (EXP_DECAY == itsTransferFunc) {
 				*iter1 = Num::fastexp7(-binder1.minkDist2(exemplars[y]));
@@ -213,17 +214,17 @@ DOTRACE("CModelExemplar::computeDiffEv");
 				*iter1 = -binder1.minkDist(exemplars[y]);
 			 }
 		  }
+
 		}
+		itsStored1Cache.row(x) = stored1.row(x);
 	 }
 
 	 if (compute2) {
-		DOTRACE("compute1");
+		DOTRACE("compute2");
 		itsStored2Cache.row(x) = stored2.row(x);
 
 		int y = 0;
-		for (MtxIter iter2 = distrust2;
-			  iter2.hasMore();
-			  ++y, ++iter2) {
+		for (MtxIter iter2 = distrust2; iter2.hasMore(); ++y, ++iter2) {
 		  if (minkPower == 2.0) {
 			 if (EXP_DECAY == itsTransferFunc) {
 				*iter2 = Num::fastexp7(-binder2.minkDist2(exemplars[y]));
@@ -249,6 +250,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
 	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
+
+	 const MtxIter diffEv = diffEvOut.colIter(0);
 
 	 for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
 			iter1.hasMore();
