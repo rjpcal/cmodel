@@ -22,6 +22,7 @@
 
 #include "cmodelcssm.h"
 #include "cmodelgcm.h"
+#include "cmodelwpsm.h"
 
 #include "error.h"
 #include "rutil.h"
@@ -75,6 +76,11 @@ DOTRACE("makeClassifier");
 	 {
 	   return shared_ptr<Classifier>(
 		  new CModelGcm(objParams, observedIncidence));
+	 }
+  else if (whichType == "wpsm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelWpsm(objParams, observedIncidence));
 	 }
   else
 	 {
