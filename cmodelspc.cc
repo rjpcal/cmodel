@@ -89,7 +89,7 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
 
-  attWeights.apply(std::abs);
+  attWeights.apply(&::fabs);
 
   const slice otherParams =
     modelParams(range(Classifier::DIM_OBJ_PARAMS+2,

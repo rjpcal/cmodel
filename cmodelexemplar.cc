@@ -120,7 +120,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   slice attWeights = modelParams(range(0, DIM_OBJ_PARAMS));
 
-  attWeights.apply(std::abs);
+  attWeights.apply(&::fabs);
 
   const bool newAttWts = (itsAttWtsCache.column(0) != attWeights);
 

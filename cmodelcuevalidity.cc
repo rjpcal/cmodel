@@ -48,7 +48,7 @@ void CModelCueValidity::computeDiffEv(const mtx& objects,
 DOTRACE("CModelCueValidity::computeDiffEv");
 
   mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
-  attWeights.apply(std::abs);
+  attWeights.apply(&::fabs);
 
   double nTrainers = itsTraining1.mrows() + itsTraining2.mrows();
 
