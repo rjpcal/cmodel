@@ -16,16 +16,38 @@
 #define LOCAL_DEBUG
 #include "trace.h"
 
-mxArray* doFuncEval(mxArray* funfcn_mx, mxArray* x_mx, mxArray* varargin_mx)
-{
-DOTRACE("doFuncEval");
+class FuncEvaluator {
+  mxArray* itsFunfcn;
+  mxArray* itsVarargin_ref;
 
-  return mlfFeval(mclValueVarargout(),
-						funfcn_mx,
-						x_mx,
-						mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
-						NULL);
-}
+  static mxArray* getref(mxArray* varargin)
+	 {
+		return mlfIndexRef(varargin,
+								 "{?}",
+								 mlfCreateColonIndex());
+	 }
+
+public:
+  FuncEvaluator(mxArray* funfcn_mx, mxArray* varargin_mx) :
+	 itsFunfcn(funfcn_mx),
+	 itsVarargin_ref(varargin_mx)
+  {
+  }
+
+  ~FuncEvaluator()
+  {
+  }
+
+  mxArray* evaluate(mxArray* x_mx)
+  {
+	 DOTRACE("evaluate");
+	 return mlfFeval(mclValueVarargout(),
+						  itsFunfcn,
+						  x_mx,
+						  getref(itsVarargin_ref),
+						  NULL);
+  }
+};
 
 // ? max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
 bool withinTolf(mxArray* funcVals_mx, const double tolf)
@@ -650,6 +672,8 @@ DOTRACE("MdoSimplex");
 	 const double tolx = mxGetScalar(tolx_mx);
 	 const double tolf = mxGetScalar(tolf_mx);
 
+	 FuncEvaluator fevaluator(funfcn_mx, varargin);
+
     // numModelParams = prod(size(x));
 	 const int numModelParams = mxGetM(x) * mxGetN(x);
 
@@ -1063,7 +1087,7 @@ DOTRACE("MdoSimplex");
                   _mxarray24_))))));
 		}
 
-      mlfAssign(&fxr, doFuncEval(funfcn_mx, xr, varargin));
+		mlfAssign(&fxr, fevaluator.evaluate(xr));
 
 		++func_evals;
 		}
@@ -1101,7 +1125,7 @@ DOTRACE("MdoSimplex");
                       _mxarray24_))))));
 
 
-          mlfAssign(&fxe, doFuncEval(funfcn_mx, xe, varargin));
+          mlfAssign(&fxe, fevaluator.evaluate(xe));
 
 			 ++func_evals;
 
@@ -1222,7 +1246,7 @@ DOTRACE("MdoSimplex");
                               _mxarray24_))))));
 
 
-                  mlfAssign(&fxc, doFuncEval(funfcn_mx, xc, varargin));
+                  mlfAssign(&fxc, fevaluator.evaluate(xc));
 
 						++func_evals;
 
@@ -1286,7 +1310,7 @@ DOTRACE("MdoSimplex");
                               _mxarray24_))))));
 
 
-                  mlfAssign(&fxcc, doFuncEval(funfcn_mx, xcc, varargin));
+                  mlfAssign(&fxcc, fevaluator.evaluate(xcc));
 
 						++func_evals;
 
@@ -1378,11 +1402,9 @@ DOTRACE("MdoSimplex");
                       // funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
                       mclArrayAssign2(
                         &funcVals,
-								doFuncEval(funfcn_mx,
-											  mclArrayRef2(theSimplex,
+								fevaluator.evaluate(mclArrayRef2(theSimplex,
 																mlfCreateColonIndex(),
-																mclVsv(j, "j")),
-											  varargin),
+																mclVsv(j, "j"))),
                         mlfCreateColonIndex(),
                         mclVsv(j, "j"));
 
