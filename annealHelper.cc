@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 14:26:58 2002
+// written: Mon Feb 18 14:37:08 2002
 // $Id$
 //
 //
@@ -29,6 +29,13 @@
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "rutil.h"
+
+#define NEW_VERSION
+
+#ifdef NEW_VERSION
+#include "matlabfunction.h"
+#include "simplexoptimizer.h"
+#endif
 
 #include "util/error.h"
 #include "util/strings.h"
@@ -393,6 +400,9 @@ public:
     itsCanUseMatrix(mxGetScalar(Mx::getField(itsAstate_mx, "canUseMatrix"))
                     != 0.0),
     itsFunFunName(funcName),
+#ifdef NEW_VERSION
+    itsDoNewton(mxGetScalar(Mx::getField(itsAstate_mx, "newton")) != 0.0),
+#endif
     itsNvararg(nvararg),
     itsPvararg(pvararg)
   {}
@@ -537,6 +547,73 @@ public:
     displayParams(mhat.column(itsRunNum), bestCost.at(itsRunNum));
   }
 
+#ifdef NEW_VERSION
+  void runSimplex()
+  {
+    Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
+
+    int numModelParams = mhat.mrows();
+
+    mxArray* funfun_mx = 0;
+    mlfAssign(&funfun_mx, mxCreateString(itsFunFunName.c_str()));
+
+    MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
+
+    SimplexOptimizer opt(objective,
+                         Mtx(mhat.column(itsRunNum)),
+                         fstring("notify"),
+                         numModelParams,
+                         10000000, // maxFunEvals
+                         10000, // maxIter
+                         1e-4, // tolx
+                         1e-4 // tolf
+                         );
+
+    /*int exitFlag =*/ opt.optimize();
+
+    double Ostar = opt.bestFval();
+
+    Mtx bestCosts(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
+
+    Mtx mstar = opt.bestParams();
+
+    if (Ostar < bestCosts.at(itsRunNum))
+      {
+        displayParams(mstar, Ostar);
+
+        if (itsTalking)
+          mexPrintf("%d iterations\n", opt.iterCount());
+
+        bool inBounds = true;
+
+        for (int i = 0; i < mstar.nelems(); ++i)
+          {
+            double val = mstar.at(i);
+            if (val < itsBounds.at(i, 0)) { inBounds = false; break; }
+            if (val > itsBounds.at(i, 1)) { inBounds = false; break; }
+          }
+
+        if (inBounds)
+          {
+            mhat.column(itsRunNum) = mstar;
+            bestCosts.at(itsRunNum) = Ostar;
+            if (itsTalking)
+              mexPrintf("\nSimplex method lowered cost "
+                        "and remained within constraints.\n\n");
+          }
+        else
+          {
+            if (itsTalking)
+              mexPrintf("\nSimplex method lowered cost "
+                        "but failed to remain within constraints.\n\n");
+          }
+      }
+
+
+    mxDestroyArray(funfun_mx);
+  }
+#endif
+
 private:
   mxArray* const itsAstate_mx;
   const int itsRunNum;
@@ -554,6 +631,9 @@ private:
   const Mtx itsBounds;
   const bool itsCanUseMatrix;
   fstring itsFunFunName;
+#ifdef NEW_VERSION
+  const bool itsDoNewton;
+#endif
   int itsNvararg;
   mxArray** itsPvararg;
 };
@@ -669,6 +749,10 @@ DOTRACE("AnnealingRun::go");
   updateDeltas();
 
   updateBests();
+
+#ifdef NEW_VERSION
+  if (itsDoNewton) runSimplex();
+#endif
 
   return itsAstate_mx;
 }
