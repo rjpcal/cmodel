@@ -224,153 +224,124 @@ static mxArray * MannealVisitParameters(int nargout_,
                                         mxArray * canUseMatrix,
                                         mxArray * FUN,
                                         mxArray * temp,
-                                        mxArray * varargin) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * S = mclGetUninitializedArray();
-    mxArray * s = mclGetUninitializedArray();
-    mxArray * costs = mclGetUninitializedArray();
-    mxArray * modelmatrix = mclGetUninitializedArray();
-    mxArray * x = mclGetUninitializedArray();
+                                        mxArray * varargin)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-	 validateInput(bestModel);
-    mclCopyArray(&bestModel);
+  mxArray * S = mclGetUninitializedArray();
+  mxArray * s = mclGetUninitializedArray();
+  mxArray * costs = mclGetUninitializedArray();
+  mxArray * modelmatrix = mclGetUninitializedArray();
+  mxArray * x = mclGetUninitializedArray();
 
-	 validateInput(valueScalingRange);
-    mclCopyArray(&valueScalingRange);
+  validateInput(bestModel);
+  mclCopyArray(&bestModel);
 
-	 validateInput(deltas);
-    mclCopyArray(&deltas);
+  validateInput(valueScalingRange);
+  mclCopyArray(&valueScalingRange);
 
-	 validateInput(bounds);
-    mclCopyArray(&bounds);
+  validateInput(deltas);
+  mclCopyArray(&deltas);
 
-	 validateInput(canUseMatrix);
-    mclCopyArray(&canUseMatrix);
+  validateInput(bounds);
+  mclCopyArray(&bounds);
 
-	 validateInput(FUN);
-    mclCopyArray(&FUN);
+  validateInput(canUseMatrix);
+  mclCopyArray(&canUseMatrix);
 
-	 validateInput(temp);
-    mclCopyArray(&temp);
+  validateInput(FUN);
+  mclCopyArray(&FUN);
 
-	 validateInput(varargin);
-    mclCopyArray(&varargin);
+  validateInput(temp);
+  mclCopyArray(&temp);
 
-    /*
-     * 
-     * S.nevals = 0;
-     */
-    mlfIndexAssign(&S, ".nevals", _mxarray20_);
-    /*
-     * 
-     * for x = find(deltas' ~= 0)
-     */
-    {
-        mclForLoopIterator viter__;
-        for (mclForStart(
-               &viter__,
-					mlfFind(
-							  NULL,
-							  NULL,
-							  mclNe(mlfCtranspose(deltas), _mxarray20_)),
-               NULL,
-               NULL);
-             mclForNext(&viter__, &x);
-             ) {
-            /*
-             * 
-             * modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
-             * deltas, bounds);
-             */
-            mlfAssign(
-              &modelmatrix,
-              makeTestModels(
-									  x,
-									  bestModel,
-									  valueScalingRange,
-									  deltas,
-									  bounds));
-            /*
-             * 
-             * costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-             */
-            mlfAssign(
-              &costs,
-				  doFuncEvals(
-                canUseMatrix,
-                modelmatrix,
-                FUN,
-					 mlfIndexRef(
-									 varargin,
-									 "{?}",
-									 mlfCreateColonIndex())
-									));
-            /*
-             * S.nevals = S.nevals + length(costs);
-             */
-            mlfIndexAssign(
-              &S,
-              ".nevals",
-              mclFeval(
-                mclValueVarargout(),
-                mlxPlus,
-                mlfIndexRef(S, ".nevals"),
-                mlfScalar(mclLengthInt(costs)),
-                NULL));
-            /*
-             * 
-             * % Sample from probability distribution
-             * s = sampleFromPdf(temp, costs);
-             */
-            mlfAssign(
-              &s,
-              sampleFromPdf(
-                temp, costs));
-            /*
-             * 
-             * bestModel(x, 1) = modelmatrix(x, s);
-             */
-            mclArrayAssign2(
-              &bestModel,
-              mclArrayRef2(
-                modelmatrix,
-                x,
-                s),
-              x,
-              _mxarray21_);
-        /*
-         * end
-         */
-        }
-        mclDestroyForLoopIterator(viter__);
-    }
-    /*
-     * 
-     * S.newModel = bestModel;
-     */
-    mlfIndexAssign(&S, ".newModel", bestModel);
-    /*
-     * 
-     * S.cost = costs(s);
-     */
-    mlfIndexAssign(
-      &S, ".cost", mclArrayRef1(costs, s));
-    mclValidateOutput(S, 1, nargout_, "S", "annealVisitParameters");
-    mxDestroyArray(x);
-    mxDestroyArray(modelmatrix);
-    mxDestroyArray(costs);
-    mxDestroyArray(s);
-    mxDestroyArray(varargin);
-    mxDestroyArray(temp);
-    mxDestroyArray(FUN);
-    mxDestroyArray(canUseMatrix);
-    mxDestroyArray(bounds);
-    mxDestroyArray(deltas);
-    mxDestroyArray(valueScalingRange);
-    mxDestroyArray(bestModel);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return S;
+  validateInput(varargin);
+  mclCopyArray(&varargin);
+
+  // S.nevals = 0;
+  mlfIndexAssign(&S, ".nevals", _mxarray20_);
+
+  // for x = find(deltas' ~= 0)
+  {
+	 mclForLoopIterator viter__;
+	 for (mclForStart(
+							&viter__,
+							mlfFind(
+									  NULL,
+									  NULL,
+									  mclNe(mlfCtranspose(deltas), _mxarray20_)),
+							NULL,
+							NULL);
+			mclForNext(&viter__, &x);
+			) {
+
+		// modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
+		// deltas, bounds);
+		mlfAssign(&modelmatrix,
+					 makeTestModels(x,
+										 bestModel,
+										 valueScalingRange,
+										 deltas,
+										 bounds));
+
+		// costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
+		mlfAssign(&costs,
+					 doFuncEvals(canUseMatrix,
+									 modelmatrix,
+									 FUN,
+									 mlfIndexRef(varargin,
+													 "{?}",
+													 mlfCreateColonIndex())
+									 ));
+
+		// S.nevals = S.nevals + length(costs);
+		mlfIndexAssign(&S, ".nevals", mclFeval(mclValueVarargout(),
+															mlxPlus,
+															mlfIndexRef(S, ".nevals"),
+															mlfScalar(mclLengthInt(costs)),
+															NULL));
+
+		// Sample from probability distribution
+		// s = sampleFromPdf(temp, costs);
+		mlfAssign(&s, sampleFromPdf(temp, costs));
+
+		// bestModel(x, 1) = modelmatrix(x, s);
+		mclArrayAssign2(&bestModel,
+							 mclArrayRef2(modelmatrix,
+											  x,
+											  s),
+							 x,
+							 _mxarray21_);
+
+	 }
+
+	 mclDestroyForLoopIterator(viter__);
+  }
+
+  // S.newModel = bestModel;
+  mlfIndexAssign(&S, ".newModel", bestModel);
+
+  // S.cost = costs(s);
+  mlfIndexAssign(&S, ".cost", mclArrayRef1(costs, s));
+
+  mclValidateOutput(S, 1, nargout_, "S", "annealVisitParameters");
+
+  mxDestroyArray(x);
+  mxDestroyArray(modelmatrix);
+  mxDestroyArray(costs);
+  mxDestroyArray(s);
+  mxDestroyArray(varargin);
+  mxDestroyArray(temp);
+  mxDestroyArray(FUN);
+  mxDestroyArray(canUseMatrix);
+  mxDestroyArray(bounds);
+  mxDestroyArray(deltas);
+  mxDestroyArray(valueScalingRange);
+  mxDestroyArray(bestModel);
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return S;
 }
 
 /*
@@ -388,63 +359,57 @@ static mxArray * makeTestModels(mxArray * x,
 										  mxArray * bestModel,
 										  mxArray * valueScalingRange,
 										  mxArray * deltas,
-										  mxArray * bounds) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * models = mclGetUninitializedArray();
-    mxArray * xv = mclGetUninitializedArray();
-    /*
-     * xv = bestModel(x) + valueScalingRange*deltas(x);
-     */
-    mlfAssign(
-      &xv,
-      mclPlus(
-        mclArrayRef1(bestModel, x),
-        mclMtimes(
-          valueScalingRange,
-          mclArrayRef1(deltas, x))));
-    /*
-     * xv = xv(find( (xv<=bounds(x,2)) & (xv>=bounds(x,1)) ));
-     */
-    mlfAssign(
-      &xv,
-      mclArrayRef1(
-        xv,
-        mlfFind(
-          NULL,
-          NULL,
-          mclAnd(
-            mclLe(
-              xv,
-				  mclArrayRef2(
-                  bounds, x, _mxarray22_)),
-            mclGe(
-              xv,
-				  mclArrayRef2(
-                  bounds, x, _mxarray21_))))));
-    /*
-     * models = bestModel*ones(1, length(xv));
-     */
-    mlfAssign(
-      &models,
-      mclMtimes(
-        bestModel,
-		  mlfOnes(
-            _mxarray21_, mlfScalar(mclLengthInt(xv)), NULL)));
-    /*
-     * models(x,:) = xv;
-     */
-    mclArrayAssign2(
-      &models, xv, x, mlfCreateColonIndex());
-    mclValidateOutput(
-      models, 1, 1, "models", "annealVisitParameters/makeTestModels");
-    mxDestroyArray(xv);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return models;
-    /*
-     * 
-     * 
-     */
+										  mxArray * bounds)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+
+  mxArray * models = mclGetUninitializedArray();
+  mxArray * xv = mclGetUninitializedArray();
+
+  // xv = bestModel(x) + valueScalingRange*deltas(x);
+  mlfAssign(
+				&xv,
+				mclPlus(
+						  mclArrayRef1(bestModel, x),
+						  mclMtimes(
+										valueScalingRange,
+										mclArrayRef1(deltas, x))));
+
+  // xv = xv(find( (xv<=bounds(x,2)) & (xv>=bounds(x,1)) ));
+  mlfAssign(
+				&xv,
+				mclArrayRef1(
+								 xv,
+								 mlfFind(
+											NULL,
+											NULL,
+											mclAnd(
+													 mclLe(
+															 xv,
+															 mclArrayRef2(
+																			  bounds, x, _mxarray22_)),
+													 mclGe(
+															 xv,
+															 mclArrayRef2(
+																			  bounds, x, _mxarray21_))))));
+
+  // models = bestModel*ones(1, length(xv));
+  mlfAssign(
+				&models,
+				mclMtimes(
+							 bestModel,
+							 mlfOnes(
+										_mxarray21_, mlfScalar(mclLengthInt(xv)), NULL)));
+
+  // models(x,:) = xv;
+  mclArrayAssign2(&models, xv, x, mlfCreateColonIndex());
+
+  mclValidateOutput(models, 1, 1, "models", "annealVisitParameters/makeTestModels");
+
+  mxDestroyArray(xv);
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+  return models;
 }
 
 /*
@@ -458,105 +423,89 @@ static mxArray * makeTestModels(mxArray * x,
 /*
  * function costs = doFuncEvals(canUseMatrix, models, func, varargin)
  */
+
 static mxArray * doFuncEvals(mxArray * canUseMatrix,
 									  mxArray * models,
 									  mxArray * func,
-									  mxArray * varargin) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * costs = mclGetUninitializedArray();
-    mxArray * e = mclGetUninitializedArray();
-    mxArray * NM = mclGetUninitializedArray();
-    mclCopyArray(&canUseMatrix);
-    mclCopyArray(&models);
-    mclCopyArray(&func);
-    mclCopyArray(&varargin);
-    /*
-     * 
-     * if canUseMatrix
-     */
-    if (mlfTobool(canUseMatrix)) {
-        /*
-         * costs = feval(func, models, varargin{:});
-         */
-        mlfAssign(
-          &costs,
-          mlfFeval(
-            mclValueVarargout(),
-            func,
-            models,
-				mlfIndexRef(
-                varargin, "{?}", mlfCreateColonIndex()),
-            NULL));
-    /*
-     * else
-     */
-    } else {
-        /*
-         * NM = size(models, 2);
-         */
-        mlfAssign(
-          &NM,
-          mlfSize(mclValueVarargout(), models, _mxarray22_));
-        /*
-         * costs = zeros(NM, 1);
-         */
-        mlfAssign(&costs, mlfZeros(NM, _mxarray21_, NULL));
-        /*
-         * for e = 1:NM
-         */
-        {
-            int v_ = mclForIntStart(1);
-            int e_ = mclForIntEnd(NM);
-            if (v_ > e_) {
-                mlfAssign(&e, _mxarray23_);
-            } else {
-                /*
-                 * costs(e) = feval(func, models(:,e), varargin{:});
-                 * end
-                 */
-                for (; ; ) {
-                    mclIntArrayAssign1(
-                      &costs,
-                      mlfFeval(
-                        mclValueVarargout(),
-                        func,
-								mclArrayRef2(
-												 models,
-												 mlfCreateColonIndex(),
-												 mlfScalar(v_)),
-								mlfIndexRef(
-												varargin,
-												"{?}",
-												mlfCreateColonIndex()),
-                        NULL),
-                      v_);
-                    if (v_ == e_) {
-                        break;
-                    }
-                    ++v_;
-                }
-                mlfAssign(&e, mlfScalar(v_));
-            }
-        }
-    /*
-     * end
-     */
-    }
-    mclValidateOutput(
-      costs, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
-    mxDestroyArray(NM);
-    mxDestroyArray(e);
-    mxDestroyArray(varargin);
-    mxDestroyArray(func);
-    mxDestroyArray(models);
-    mxDestroyArray(canUseMatrix);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return costs;
-    /*
-     * 
-     * 
-     */
+									  mxArray * varargin)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+
+  mxArray * costs = mclGetUninitializedArray();
+  mxArray * e = mclGetUninitializedArray();
+  mxArray * NM = mclGetUninitializedArray();
+  mclCopyArray(&canUseMatrix);
+  mclCopyArray(&models);
+  mclCopyArray(&func);
+  mclCopyArray(&varargin);
+
+  if (mlfTobool(canUseMatrix))
+	 {
+		// costs = feval(func, models, varargin{:});
+		mlfAssign(&costs,
+					 mlfFeval(mclValueVarargout(),
+								 func,
+								 models,
+								 mlfIndexRef(varargin, "{?}", mlfCreateColonIndex()),
+								 NULL));
+	 }
+  else
+	 {
+		// NM = size(models, 2);
+		mlfAssign(&NM, mlfSize(mclValueVarargout(), models, _mxarray22_));
+
+		// costs = zeros(NM, 1);
+		mlfAssign(&costs, mlfZeros(NM, _mxarray21_, NULL));
+
+		// for e = 1:NM
+		{
+		  int v_ = mclForIntStart(1);
+		  int e_ = mclForIntEnd(NM);
+		  if (v_ > e_)
+			 {
+				mlfAssign(&e, _mxarray23_);
+			 }
+		  else
+			 {
+				//costs(e) = feval(func, models(:,e), varargin{:});
+				for (; ; ) {
+				  mclIntArrayAssign1(
+											&costs,
+											mlfFeval(
+														mclValueVarargout(),
+														func,
+														mclArrayRef2(
+																		 models,
+																		 mlfCreateColonIndex(),
+																		 mlfScalar(v_)),
+														mlfIndexRef(
+																		varargin,
+																		"{?}",
+																		mlfCreateColonIndex()),
+														NULL),
+											v_);
+				  if (v_ == e_) {
+					 break;
+				  }
+				  ++v_;
+				}
+				mlfAssign(&e, mlfScalar(v_));
+			 }
+		}
+  }
+
+  mclValidateOutput(costs, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
+
+  mxDestroyArray(NM);
+  mxDestroyArray(e);
+  mxDestroyArray(varargin);
+  mxDestroyArray(func);
+  mxDestroyArray(models);
+  mxDestroyArray(canUseMatrix);
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return costs;
 }
 
 /*
@@ -570,52 +519,41 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
 /*
  * function s = sampleFromPdf(temp, costs)
  */
-static mxArray * sampleFromPdf(mxArray * temp,
-										 mxArray * costs) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * s = mclGetUninitializedArray();
-    mxArray * cutoff = mclGetUninitializedArray();
-    mxArray * dist = mclGetUninitializedArray();
-    mclCopyArray(&temp);
-    mclCopyArray(&costs);
+static mxArray * sampleFromPdf(mxArray * temp, mxArray * costs)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-    /*
-     * dist = makePDF(temp, costs);
-     */
-    mlfAssign(&dist, makePDF(temp, costs));
+  mxArray * s = mclGetUninitializedArray();
+  mxArray * cutoff = mclGetUninitializedArray();
+  mxArray * dist = mclGetUninitializedArray();
+  mclCopyArray(&temp);
+  mclCopyArray(&costs);
 
-    /*
-     * cutoff = rand;
-     */
-    mlfAssign(&cutoff, mlfNRand(1, NULL));
-    /*
-     * s = find(cumsum(dist) >= cutoff);
-     */
-    mlfAssign(
-      &s,
-      mlfFind(
-        NULL,
-        NULL,
-        mclGe(
-          mlfCumsum(dist, NULL),
-          cutoff)));
-    /*
-     * s = s(1);
-     */
-    mlfAssign(&s, mclIntArrayRef1(s, 1));
-    mclValidateOutput(
-      s, 1, 1, "s", "annealVisitParameters/sampleFromPdf");
-    mxDestroyArray(dist);
-    mxDestroyArray(cutoff);
-    mxDestroyArray(costs);
-    mxDestroyArray(temp);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return s;
-    /*
-     * 
-     * 
-     */
+  // dist = makePDF(temp, costs);
+  mlfAssign(&dist, makePDF(temp, costs));
+
+  // cutoff = rand;
+  mlfAssign(&cutoff, mlfNRand(1, NULL));
+
+  // s = find(cumsum(dist) >= cutoff);
+  mlfAssign(&s,
+				mlfFind(NULL,
+						  NULL,
+						  mclGe(mlfCumsum(dist, NULL), cutoff)));
+
+  // s = s(1);
+  mlfAssign(&s, mclIntArrayRef1(s, 1));
+  mclValidateOutput(s, 1, 1, "s", "annealVisitParameters/sampleFromPdf");
+
+  mxDestroyArray(dist);
+  mxDestroyArray(cutoff);
+  mxDestroyArray(costs);
+  mxDestroyArray(temp);
+
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return s;
 }
 
 /*
@@ -629,74 +567,62 @@ static mxArray * sampleFromPdf(mxArray * temp,
 /*
  * function pdf = makePDF(temp, costs)
  */
-static mxArray * makePDF(mxArray * temp,
-								 mxArray * costs) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * pdf = mclGetUninitializedArray();
-    mxArray * ans = mclGetUninitializedArray();
-    mxArray * w = mclGetUninitializedArray();
-    mxArray * good = mclGetUninitializedArray();
-    mxArray * bad = mclGetUninitializedArray();
-    mclCopyArray(&temp);
-    mclCopyArray(&costs);
+static mxArray * makePDF(mxArray * temp, mxArray * costs)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-    /*
-     * % Forms exponential probability distribution given a temperature and vector of
-     * % costs.  Internal function for simulated annealing algorithm.
-     * 
-     * bad = find(isnan(costs));
-     */
-    mlfAssign(
-      &bad, mlfFind(NULL, NULL, mlfIsnan(costs)));
+  mxArray * pdf = mclGetUninitializedArray();
+  mxArray * ans = mclGetUninitializedArray();
+  mxArray * w = mclGetUninitializedArray();
+  mxArray * good = mclGetUninitializedArray();
+  mxArray * bad = mclGetUninitializedArray();
+  mclCopyArray(&temp);
+  mclCopyArray(&costs);
 
-    /*
-     * if isempty(bad)
-     */
-    if (mlfTobool(mlfIsempty(bad))) {
-        mlfAssign(&pdf, eprob(temp, costs));
-    }
-	 else {
-        /*
-         * good = find(~isnan(costs));
-         */
-        mlfAssign(
-          &good,
-          mlfFind(NULL, NULL, mclNot(mlfIsnan(costs))));
-        /*
-         * w = costs(good);
-         */
-        mlfAssign(
-          &w, mclArrayRef1(costs, good));
+  // Forms exponential probability distribution given a temperature and vector of
+  // costs.  Internal function for simulated annealing algorithm.
 
-        mlfAssign(&pdf, eprob(temp, w));
+  // bad = find(isnan(costs));
+  mlfAssign(&bad, mlfFind(NULL, NULL, mlfIsnan(costs)));
 
-        /*
-         * pdf(good) = pdf;
-         */
-        mclArrayAssign1(&pdf, pdf, good);
-        /*
-         * pdf(bad) = 0;
-         */
-        mclArrayAssign1(&pdf, _mxarray20_, bad);
+  // if isempty(bad)
+  if (mlfTobool(mlfIsempty(bad)))
+	 {
+		mlfAssign(&pdf, eprob(temp, costs));
+	 }
+  else
+	 {
+		// good = find(~isnan(costs));
+		mlfAssign(&good, mlfFind(NULL, NULL, mclNot(mlfIsnan(costs))));
 
-        mexPrintf("Warning: the cost function generated a NaN for one or more models.");
-    /*
-     * end
-     */
-    }
-    mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
-    mxDestroyArray(bad);
-    mxDestroyArray(good);
-    mxDestroyArray(w);
-    mxDestroyArray(ans);
-    mxDestroyArray(costs);
-    mxDestroyArray(temp);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return pdf;
-    /*
-     * 
-     */
+		// w = costs(good);
+		mlfAssign(&w, mclArrayRef1(costs, good));
+
+		mlfAssign(&pdf, eprob(temp, w));
+
+		// pdf(good) = pdf;
+		mclArrayAssign1(&pdf, pdf, good);
+
+		// pdf(bad) = 0;
+		mclArrayAssign1(&pdf, _mxarray20_, bad);
+
+		mexPrintf("Warning: the cost function generated a NaN "
+					 "for one or more models.");
+	 }
+
+  mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
+
+  mxDestroyArray(bad);
+  mxDestroyArray(good);
+  mxDestroyArray(w);
+  mxDestroyArray(ans);
+  mxDestroyArray(costs);
+  mxDestroyArray(temp);
+
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return pdf;
 }
 
 /*
@@ -710,94 +636,67 @@ static mxArray * makePDF(mxArray * temp,
 /*
  * function pdf = eprob(temp, costs)
  */
-static mxArray * eprob(mxArray * temp,
-							  mxArray * costs) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_annealVisitParameters);
-    mxArray * pdf = mclGetUninitializedArray();
-    mxArray * scale = mclGetUninitializedArray();
-    mxArray * mpdf = mclGetUninitializedArray();
-    mxArray * toobig = mclGetUninitializedArray();
-    mclCopyArray(&temp);
-    mclCopyArray(&costs);
-    /*
-     * % Scales cost vector and calculates exponential probability distribution.  The
-     * % scaling is necessary to permit wide ranges in temperature.  Internal
-     * % function for simulated annealing algorithm.
-     * 
-     * toobig = 708.3964185322641;
-     */
-    mlfAssign(&toobig, _mxarray26_);
-    /*
-     * pdf = costs/temp;
-     */
-    mlfAssign(&pdf, mclMrdivide(costs, temp));
-    /*
-     * mpdf = max(pdf);
-     */
-    mlfAssign(&mpdf, mlfMax(NULL, pdf, NULL, NULL));
-    /*
-     * 
-     * if mpdf>toobig
-     */
-    if (mclGtBool(mpdf, toobig)) {
-        /*
-         * scale = mpdf/toobig;
-         */
-        mlfAssign(
-          &scale, mclMrdivide(mpdf, toobig));
-        /*
-         * pdf = exp(-pdf/scale);
-         */
-        mlfAssign(
-          &pdf,
-          mlfExp(
-            mclMrdivide(mclUminus(pdf), scale)));
-        /*
-         * pdf = pdf/max(pdf);
-         */
-        mlfAssign(
-          &pdf,
-          mclMrdivide(
-            pdf,
-            mlfMax(NULL, pdf, NULL, NULL)));
-        /*
-         * pdf = pdf.^scale;
-         */
-        mlfAssign(&pdf, mlfPower(pdf, scale));
-    /*
-     * else
-     */
-    } else {
-        /*
-         * pdf = exp(-pdf);
-         */
-        mlfAssign(&pdf, mlfExp(mclUminus(pdf)));
-        /*
-         * pdf = pdf/max(pdf);
-         */
-        mlfAssign(
-          &pdf,
-          mclMrdivide(
-            pdf,
-            mlfMax(NULL, pdf, NULL, NULL)));
-    /*
-     * end
-     */
-    }
-    /*
-     * 
-     * pdf = pdf/sum(pdf);
-     */
-    mlfAssign(
-      &pdf,
-      mclMrdivide(pdf, mlfSum(pdf, NULL)));
-    mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/eprob");
-    mxDestroyArray(toobig);
-    mxDestroyArray(mpdf);
-    mxDestroyArray(scale);
-    mxDestroyArray(costs);
-    mxDestroyArray(temp);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
-    return pdf;
+static mxArray * eprob(mxArray * temp, mxArray * costs)
+{
+  mexLocalFunctionTable save_local_function_table_ =
+	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+
+  mxArray * pdf = mclGetUninitializedArray();
+  mxArray * scale = mclGetUninitializedArray();
+  mxArray * mpdf = mclGetUninitializedArray();
+  mxArray * toobig = mclGetUninitializedArray();
+  mclCopyArray(&temp);
+  mclCopyArray(&costs);
+
+  // Scales cost vector and calculates exponential probability distribution.  The
+  // scaling is necessary to permit wide ranges in temperature.  Internal
+  // function for simulated annealing algorithm.
+
+  // toobig = 708.3964185322641;
+  mlfAssign(&toobig, _mxarray26_);
+
+  // pdf = costs/temp;
+  mlfAssign(&pdf, mclMrdivide(costs, temp));
+
+  // mpdf = max(pdf);
+  mlfAssign(&mpdf, mlfMax(NULL, pdf, NULL, NULL));
+
+  // if mpdf>toobig
+  if (mclGtBool(mpdf, toobig))
+	 {
+		// scale = mpdf/toobig;
+		mlfAssign(&scale, mclMrdivide(mpdf, toobig));
+
+		// pdf = exp(-pdf/scale);
+		mlfAssign(&pdf, mlfExp(mclMrdivide(mclUminus(pdf), scale)));
+
+		// pdf = pdf/max(pdf);
+		mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+
+		// pdf = pdf.^scale;
+		mlfAssign(&pdf, mlfPower(pdf, scale));
+	 }
+  else
+	 {
+		// pdf = exp(-pdf);
+		mlfAssign(&pdf, mlfExp(mclUminus(pdf)));
+
+		// pdf = pdf/max(pdf);
+		mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+	 }
+
+  // pdf = pdf/sum(pdf);
+  mlfAssign(&pdf, mclMrdivide(pdf, mlfSum(pdf, NULL)));
+
+  mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/eprob");
+
+  mxDestroyArray(toobig);
+  mxDestroyArray(mpdf);
+  mxDestroyArray(scale);
+  mxDestroyArray(costs);
+  mxDestroyArray(temp);
+
+  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+  return pdf;
 }
