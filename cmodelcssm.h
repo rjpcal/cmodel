@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////
 //
-// modelcssm.h
+// cmodelcssm.h
 //
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
@@ -10,8 +10,8 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifndef MODELCSSM_H_DEFINED
-#define MODELCSSM_H_DEFINED
+#ifndef CMODELCSSM_H_DEFINED
+#define CMODELCSSM_H_DEFINED
 
 #include "cmodelexemplar.h"
 
@@ -53,5 +53,5 @@ public:
   virtual const double* findStoredExemplar(Category cat, int n);
 };
 
-static const char vcid_modelcssm_h[] = "$Header$";
-#endif // !MODELCSSM_H_DEFINED
+static const char vcid_cmodelcssm_h[] = "$Header$";
+#endif // !CMODELCSSM_H_DEFINED
