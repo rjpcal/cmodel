@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 15:11:47 2001
+// written: Tue Mar 27 20:34:59 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -88,29 +88,11 @@ DOTRACE("makeClassifier");
 
 		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
 
-		if (numStoredExemplars == recentNumStored)
-		  { DOTRACE("same num"); }
-		if (objParams == *recentObjParams)
-		  { DOTRACE("same params"); }
-		if (observedIncidence == *recentIncidence)
-		  { DOTRACE("same inc"); }
-		else
-		  { observedIncidence.print(); recentIncidence->print(); }
-
 		if ( (numStoredExemplars == recentNumStored) &&
 			  (objParams == *recentObjParams) &&
 			  (observedIncidence == *recentIncidence) )
 		  {
 			 DOTRACE("use old");
-
-			 Classifier* p1 = recentModel->get();
-
-  			 recentModel->reset(
-                new CModelCssm(objParams, observedIncidence,
-                               CModelExemplar::EXP_DECAY, numStoredExemplars));
-
-			 mexPrintf("before* = %x, after = %x\n",
-						  p1, recentModel->get());
 
 			 return *recentModel;
 		  }
@@ -118,19 +100,17 @@ DOTRACE("makeClassifier");
 		  {
 			 DOTRACE("make new");
 
-			 recentObjParams->makeUnique();
 			 *recentObjParams = objParams;
 			 recentObjParams->makeUnique();
 
-			 recentIncidence->makeUnique();
 			 *recentIncidence = observedIncidence;
 			 recentIncidence->makeUnique();
 
 			 recentNumStored = numStoredExemplars;
 
           recentModel->reset(
-              new CModelCssm(objParams, observedIncidence,
-                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+              new CModelCssm(*recentObjParams, *recentIncidence,
+                             CModelExemplar::EXP_DECAY, recentNumStored));
 
 			 return *recentModel;
         }
