@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:46:53 2002
+// written: Mon Feb 18 18:54:42 2002
 // $Id$
 //
 //
@@ -298,22 +298,24 @@ public:
 private:
   Mtx evaluateParallel(const Mtx& models) const
   {
-    DOTRACE("doParallelFuncEvals");
+    DOTRACE("evaluateParallel");
 
     mxArray* costs_mx = 0;
 
-    // Due to the mlfAssign(), itsPrhs[0] becomes a bound array, which is why
-    // we have to explicitly destroy it at the end of the function
-    itsPrhs[0] = 0; mlfAssign(&itsPrhs[0], models.makeMxArray());
+    // Since there is no mlfAssign here, this is treated as an unbound
+    // (temporary) array, which is automatically destroyed during
+    // mexCallMATLAB() below
+    itsPrhs[0] = models.makeMxArray();
 
     int err =
       mexCallMATLAB(1, &costs_mx, itsNvararg+1, itsPrhs, itsFuncName.c_str());
+
+    itsPrhs[0] = 0;
 
     if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
 
     Mtx costs(costs_mx, Mtx::COPY);
 
-    mxDestroyArray(itsPrhs[0]); itsPrhs[0] = 0;
     mxDestroyArray(costs_mx);
 
     return costs;
@@ -321,36 +323,36 @@ private:
 
   Mtx evaluateSerial(const Mtx& models) const
   {
-    DOTRACE("doSerialFuncEvals");
+    DOTRACE("evaluateSerial");
 
-    mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
+    const int numModels = models.ncols();
 
-    const int NM = models.ncols();
+    Mtx result(numModels, 1);
 
-    Mtx costs(NM, 1);
+    mxArray* cost_mx = 0;
 
-    mxArray* plhs[1] = { 0 };
-
-    for (int e = 0; e < NM; ++e)
+    for (int e = 0; e < numModels; ++e)
       {
-        //costs(e) = feval(func, models(:,e), varargin{:});
-        itsPrhs[0] = mclArrayRef2(models_mx,
-                                  mlfCreateColonIndex(),
-                                  mlfScalar(e+1));
+        Mtx currentModel = models.column(e);
+
+        // Since there is no mlfAssign here, this is treated as an unbound
+        // (temporary) array, which is automatically destroyed during
+        // mexCallMATLAB() below
+        itsPrhs[0] = currentModel.makeMxArray();
 
         int err =
-          mexCallMATLAB(1, plhs, itsNvararg+1, itsPrhs, itsFuncName.c_str());
+          mexCallMATLAB(1, &cost_mx, itsNvararg+1, itsPrhs, itsFuncName.c_str());
+
+        itsPrhs[0] = 0;
 
         if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
 
-        costs.at(e) = mxGetScalar(plhs[0]);
+        result.at(e) = mxGetScalar(cost_mx);
 
-        mxDestroyArray(plhs[0]);
+        mxDestroyArray(cost_mx);
       }
 
-    mxDestroyArray(models_mx);
-
-    return costs;
+    return result;
   }
 
 public:
