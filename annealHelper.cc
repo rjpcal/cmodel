@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 10:56:19 2002
+// written: Fri Feb 15 11:02:44 2002
 // $Id$
 //
 //
@@ -153,7 +153,7 @@ DOTRACE("makeTestModels");
 //---------------------------------------------------------------------
 
 Mtx doParallelFuncEvals(const Mtx& models,
-                        mxArray* func,
+                        const fstring& func_name,
                         int nvararg,
                         mxArray** pvararg)
 {
@@ -161,7 +161,6 @@ DOTRACE("doParallelFuncEvals");
 
   mxArray* costs_mx = 0;
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
-  mclCopyArray(&func);
 
   mxArray* plhs[1] = { 0 };
 
@@ -180,18 +179,13 @@ DOTRACE("doParallelFuncEvals");
       prhs[nrhs++] = mxDuplicateArray(pvararg[i]);
     }
 
-  fstring cmd_name = MxWrapper::extractString(func);
-
   // costs = feval(func, models, varargin{:});
-  int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
+  int result = mexCallMATLAB(1, plhs, nrhs, prhs, func_name.c_str());
 
   if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
 
   mlfAssign(&costs_mx, plhs[0]);
 
-  mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
-
-  mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
   Mtx costs(costs_mx, Mtx::COPY);
@@ -202,14 +196,13 @@ DOTRACE("doParallelFuncEvals");
 }
 
 Mtx doSerialFuncEvals(const Mtx& models,
-                      mxArray* func,
+                      const fstring& func_name,
                       int nvararg,
                       mxArray** pvararg)
 {
 DOTRACE("doSerialFuncEvals");
 
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
-  mclCopyArray(&func);
 
   const int NM = models.ncols();
 
@@ -230,8 +223,6 @@ DOTRACE("doSerialFuncEvals");
       ++nrhs;
     }
 
-  fstring cmd_name = MxWrapper::extractString(func);
-
   for (int e = 0; e < NM; ++e)
     {
       //costs(e) = feval(func, models(:,e), varargin{:});
@@ -239,7 +230,7 @@ DOTRACE("doSerialFuncEvals");
                              mlfCreateColonIndex(),
                              mlfScalar(e+1));
 
-      int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
+      int result = mexCallMATLAB(1, plhs, nrhs, prhs, func_name.c_str());
 
       if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
 
@@ -253,7 +244,7 @@ DOTRACE("doSerialFuncEvals");
       mxDestroyArray(prhs[nrhs]);
     }
 
-  mxDestroyArray(func);
+//   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
   return costs;
@@ -261,16 +252,16 @@ DOTRACE("doSerialFuncEvals");
 
 Mtx doFuncEvals(bool canUseMatrix,
                 const Mtx& models,
-                mxArray* func,
+                const fstring& func_name,
                 int nvararg,
                 mxArray** pvararg)
 {
   if (canUseMatrix)
     {
-      return doParallelFuncEvals(models, func, nvararg, pvararg);
+      return doParallelFuncEvals(models, func_name, nvararg, pvararg);
     }
 
-  return doSerialFuncEvals(models, func, nvararg, pvararg);
+  return doSerialFuncEvals(models, func_name, nvararg, pvararg);
 }
 
 //---------------------------------------------------------------------
@@ -406,6 +397,8 @@ DOTRACE("MannealVisitParameters");
       const Mtx deltas(deltas_mx, Mtx::BORROW);
       const Mtx bounds(bounds_mx, Mtx::BORROW);
 
+      const fstring func_name = MxWrapper::extractString(FUN_mx);
+
       Mtx costs(0,0);
 
       // for x = find(deltas' ~= 0)
@@ -423,7 +416,7 @@ DOTRACE("MannealVisitParameters");
 
           // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
           costs = doFuncEvals(canUseMatrix, modelmatrix,
-                              FUN_mx, nvararg, pvararg);
+                              func_name, nvararg, pvararg);
 
           // S.nevals = S.nevals + length(costs);
           nevals += costs.nelems();;
