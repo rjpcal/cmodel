@@ -13,7 +13,6 @@
 #include <fstream.h>
 #include "libmatlbm.h"
 
-#define LOCAL_DEBUG
 #include "trace.h"
 
 namespace {
@@ -1439,16 +1438,6 @@ DOTRACE("MdoSimplex");
 		mxDestroyArray(mlfSort(&j, funcVals, NULL));
 		}
 
-#if 0
-		{DOTRACE("reorder simplex");
-		mlfAssign(
-					 &theSimplex,
-					 mclArrayRef2(
-									  theSimplex,
-									  mlfCreateColonIndex(),
-									  mclVsv(j, "j")));
-		}
-#else
 		{DOTRACE("reorder simplex");
 		Mtx jref(j, Mtx::BORROW);
 		const int smallest = int(jref.at(0)) - 1;
@@ -1469,7 +1458,6 @@ DOTRACE("MdoSimplex");
 		simref.swapColumns(largest, numModelParams);
 		simref.swapColumns(largest2, numModelParams-1);
 		}
-#endif
 
       // itercount = itercount + 1;
       mlfAssign(
