@@ -582,59 +582,20 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     mxDestroyArray(mprhs[8]);
 }
 
-/*
- * The function "MdoSimplex" is the implementation version of the "doSimplex"
- * M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/doSimplex.m" (lines 1-237).
- * It contains the actual compiled code for that M-function. It is a static
- * function and must only be called from one of the interface functions,
- * appearing below.
- */
-/*
- * function [x,fval,exitflag,output] = ...
- */
-
-static mxArray * MdoSimplex(mxArray * * fval,
-                            mxArray * * exitflag,
-                            mxArray * * output,
-                            int nargout_,
-                            mxArray * funfcn_mx,
-                            mxArray * x_in,
-                            mxArray * printtype,
-                            mxArray * tolx_mx,
-                            mxArray * tolf_mx,
-                            mxArray * maxfun_mx,
-                            mxArray * maxiter,
-                            mxArray * debugFlags_mx,
-                            mxArray * varargin) {
-
-DOTRACE("MdoSimplex");
-
-// HOME
-
-    mexLocalFunctionTable save_local_function_table_ =
-		mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
-
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-	 if (debugFlags_mx && mxIsStruct(debugFlags_mx))
-		{
-		  mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
-
-		  if (debugFlag)
-			 {
-				if (mxGetScalar(debugFlag) == -1) {
-				  ofstream ofs("profdata.out");
-				  Util::Prof::printAllProfData(ofs);
-				  return mxCreateScalarDouble(-1.0);
-				}
-
-				if (mxGetScalar(debugFlag) == -2) {
-				  Util::Prof::resetAllProfData();
-				  return mxCreateScalarDouble(-2.0);
-				}
-			 }
-		}
-#endif
+static mxArray * doSimplexImpl(mxArray * * fval,
+										 mxArray * * exitflag,
+										 mxArray * * output,
+										 int nargout_,
+										 mxArray * funfcn_mx,
+										 mxArray * x_in,
+										 mxArray * printtype,
+										 mxArray * tolx_mx,
+										 mxArray * tolf_mx,
+										 mxArray * maxfun_mx,
+										 mxArray * maxiter_mx,
+										 mxArray * debugFlags_mx,
+										 mxArray * varargin)
+{
 
     mxArray * x = mclGetUninitializedArray();
     mxArray * convmsg1 = mclGetUninitializedArray();
@@ -675,7 +636,7 @@ DOTRACE("MdoSimplex");
     mclCopyArray(&tolx_mx);
     mclCopyArray(&tolf_mx);
     mclCopyArray(&maxfun_mx);
-    mclCopyArray(&maxiter);
+    mclCopyArray(&maxiter_mx);
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
@@ -694,61 +655,43 @@ DOTRACE("MdoSimplex");
 	 int maxfun = 0;
 
     // In case the defaults were gathered from calling: optimset('simplex'):
-    if (mxIsChar(maxfun_mx)) {
+    if (mxIsChar(maxfun_mx))
+		{
+		  if (Mtx::extractString(maxfun_mx) == "200*numberofvariables")
+			 {
+				maxfun = 200*numModelParams;
+			 }
+		  else
+			 {
+				mexErrMsgTxt("Option 'MaxFunEvals' must be an integer value "
+								 "if not the default.");
+			 }
+		}
+	 else
+		{
+		  maxfun = int(mxGetScalar(maxfun_mx));
+		}
 
-        // if isequal(lower(maxfun_mx),'200*numberofvariables')
-//          if (mlfTobool(
-//                mclVe(
-//                  mlfIsequal(
-//                    mclVe(mlfLower(mclVa(maxfun_mx, "maxfun"))),
-//                    _mxarray2_, NULL)))) {
-		if (Mtx::extractString(maxfun_mx) == "200*numberofvariables") {
-
-            // maxfun_mx = 200*numModelParams;
-		  maxfun = 200*numModelParams;
-//              mlfAssign(&maxfun_mx, mxCreateScalarDouble(200*numModelParams));
-
-		} else {
-
-		  mexErrMsgTxt("Option ''MaxFunEvals'' must be an integer value "
-							"if not the default.");
-
-//              // error('
-//              mlfError(_mxarray5_);
-
-        // end
-        }
-
-    // end
-    }
-	 else {
-		maxfun = int(mxGetScalar(maxfun_mx));
-	 }
+	 int maxiter = 0;
 
     // if ischar(maxiter)
-    if (mlfTobool(mclVe(mlfIschar(mclVa(maxiter, "maxiter"))))) {
-
-        // if isequal(lower(maxiter),'200*numberofvariables')
-        if (mlfTobool(
-              mclVe(
-                mlfIsequal(
-                  mclVe(mlfLower(mclVa(maxiter, "maxiter"))),
-                  _mxarray2_, NULL)))) {
-
-            // maxiter = 200*numModelParams;
-			 mlfAssign(&maxiter, mxCreateScalarDouble(200*numModelParams));
-
-        // else
-        } else {
-
-            // error('Option ''MaxIter'' must be an integer value if not the default.')
-            mlfError(_mxarray7_);
-
-        // end
+    if (mxIsChar(maxiter_mx))
+		{
+        if (Mtx::extractString(maxiter_mx) == "200*numberofvariables")
+			 {
+				maxiter = 200*numModelParams;
+			 }
+		  else
+			 {
+            // error('')
+				mexErrMsgTxt("Option 'MaxIter' must be an integer value "
+								 "if not the default.");
         }
-
-    // end
     }
+	 else
+		{
+		  maxiter = int(mxGetScalar(maxiter_mx));
+		}
 
     // 
     // switch printtype
@@ -1041,7 +984,7 @@ DOTRACE("MdoSimplex");
 		bool okEvals = (func_evals < maxfun);
 
 		if (okEvals
-			 && mxGetScalar(itercount) < mxGetScalar(maxiter)) {
+			 && mxGetScalar(itercount) < mxGetScalar(maxiter_mx)) {
 //  		  mxDestroyArray(a_);
 		} else {
 //  		  mxDestroyArray(a_);
@@ -1576,7 +1519,7 @@ DOTRACE("MdoSimplex");
 
     // elseif itercount >= maxiter 
     } else if (mclGeBool(
-                 mclVv(itercount, "itercount"), mclVa(maxiter, "maxiter"))) {
+                 mclVv(itercount, "itercount"), mclVa(maxiter_mx, "maxiter"))) {
 
         // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
@@ -1679,13 +1622,83 @@ DOTRACE("MdoSimplex");
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
-    mxDestroyArray(maxiter);
+    mxDestroyArray(maxiter_mx);
     mxDestroyArray(maxfun_mx);
     mxDestroyArray(tolf_mx);
     mxDestroyArray(tolx_mx);
     mxDestroyArray(printtype);
     mxDestroyArray(funfcn_mx);
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
     return x;
+}
+
+
+/*
+ * The function "MdoSimplex" is the implementation version of the "doSimplex"
+ * M-function from file
+ * "/cit/rjpeters/science/psyphy/classmodels/matlab/doSimplex.m" (lines 1-237).
+ * It contains the actual compiled code for that M-function. It is a static
+ * function and must only be called from one of the interface functions,
+ * appearing below.
+ */
+/*
+ * function [x,fval,exitflag,output] = ...
+ */
+
+static mxArray * MdoSimplex(mxArray * * fval,
+                            mxArray * * exitflag,
+                            mxArray * * output,
+                            int nargout_,
+                            mxArray * funfcn_mx,
+                            mxArray * x_in,
+                            mxArray * printtype,
+                            mxArray * tolx_mx,
+                            mxArray * tolf_mx,
+                            mxArray * maxfun_mx,
+                            mxArray * maxiter_mx,
+                            mxArray * debugFlags_mx,
+                            mxArray * varargin) {
+
+DOTRACE("MdoSimplex");
+
+// HOME
+
+    mexLocalFunctionTable save_local_function_table_ =
+		mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
+
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+	 if (debugFlags_mx && mxIsStruct(debugFlags_mx))
+		{
+		  mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
+
+		  if (debugFlag)
+			 {
+				if (mxGetScalar(debugFlag) == -1) {
+				  ofstream ofs("profdata.out");
+				  Util::Prof::printAllProfData(ofs);
+				  return mxCreateScalarDouble(-1.0);
+				}
+
+				if (mxGetScalar(debugFlag) == -2) {
+				  Util::Prof::resetAllProfData();
+				  return mxCreateScalarDouble(-2.0);
+				}
+			 }
+		}
+#endif
+
+	 mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
+												funfcn_mx,
+												x_in,
+												printtype,
+												tolx_mx,
+												tolf_mx,
+												maxfun_mx,
+												maxiter_mx,
+												debugFlags_mx,
+												varargin);
+
+    mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+	 return result;
 }
