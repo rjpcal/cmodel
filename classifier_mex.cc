@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Mar  8 11:40:14 2001
+// written: Thu Mar  8 15:38:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,36 +25,52 @@
 #include "strings.h"
 #include "trace.h"
 
+#include "util/pointers.h"
+
 #include "libmatlb.h"
 
-void InitializeModule_classifier(void) {
+void InitializeModule_classifier() {
+#ifdef LOCAL_DEBUG
+  mexPrintf("loading 'classifier' mex file\n");
+#endif
 }
 
-void TerminateModule_classifier(void) {
+void TerminateModule_classifier() {
+#ifdef LOCAL_DEBUG
+  mexPrintf("unloading 'classifier' mex file\n");
+#endif
 }
 
 _mexLocalFunctionTable _local_function_table_classifier
   = { 0, (mexFunctionTableEntry *)NULL };
 
+namespace Local {
+  fixed_string getString(const mxArray* arr)
+  {
+	 fixed_string str(mxGetM(arr) * mxGetN(arr) * sizeof(mxChar));
+
+	 mxGetString(arr, str.data(), str.length() + 1);
+
+	 return str;
+  }
+}
+
 static mxArray* Mclassifier(int /* nargout_ */,
 									 mxArray* modelParams_mx,
 									 mxArray* modelName_mx,
+									 mxArray* actionRequest_mx,
 									 mxArray* objParams_mx,
 									 mxArray* observedIncidence_mx,
 									 mxArray* numStoredExemplars_mx)
 {
 DOTRACE("Mclassifier");
 
-  try { 
+  try {
 
-	 fixed_string modelName(mxGetM(modelName_mx) * 
-									mxGetN(modelName_mx) *
-									sizeof(mxChar) + 1);
+	 fixed_string modelName = Local::getString(modelName_mx);
 
-	 mxGetString(modelName_mx, modelName.data(), modelName.length() + 1);
+	 fixed_string actionRequest = Local::getString(actionRequest_mx);
 
-	 if ( !(modelName == "cssm") )
-		throw ErrorWithMsg("the only currently supported model is 'cssm'");
 
 #ifdef LOCAL_DEBUG
 	 mexPrintf("model name: '%s'\n", modelName.c_str());
@@ -93,26 +109,62 @@ DOTRACE("Mclassifier");
 
 	 int numStoredExemplars = int(mxGetScalar(numStoredExemplars_mx));
 
-	 //---------------------------------------------------------------------
-	 //
-	 // Call the real computational function for each set of model params
-	 //
-	 //---------------------------------------------------------------------
-
 	 Rat allModelParams(modelParams_mx);
 
-	 mxArray* ll_mx = mxCreateDoubleMatrix(allModelParams.ncols(), 1, mxREAL);
-	 Rat ll(ll_mx);
+	 mxArray* result_mx = mxCreateDoubleMatrix(allModelParams.ncols(), 1, mxREAL);
+	 Rat result(result_mx);
 
-	 ModelCssm model(objParams,
-						  observedIncidence,
-						  numStoredExemplars);
+	 shared_ptr<Classifier> model = Classifier::make(modelName,
+																	 objParams,
+																	 observedIncidence,
+																	 numStoredExemplars);
 
-	 for (int i = 0; i < allModelParams.ncols(); ++i)
+	 int multiplier = 1;
+	 // check for minus sign
+	 if (actionRequest.c_str()[0] == '-')
 		{
-		  Rat modelParams(allModelParams.columnSlice(i));
-		  ll.at(i) = model.loglikelihoodFor(modelParams);
+		  multiplier = -1;
+		  fixed_string trimmed = actionRequest.c_str() + 1;
+		  actionRequest = trimmed;
 		}
+
+	 //---------------------------------------------------------------------
+	 //
+	 // Call the requested computational function for each set of model
+	 // params
+	 //
+	 //---------------------------------------------------------------------
+
+	 if ( actionRequest == "ll" || actionRequest == "llc" )
+		{
+		  for (int i = 0; i < allModelParams.ncols(); ++i)
+			 {
+				Rat modelParams(allModelParams.columnSlice(i));
+				result.at(i) = multiplier * model->currentLogL(modelParams);
+			 }
+		}
+	 else if ( actionRequest == "llf" )
+		{
+		  for (int i = 0; i < allModelParams.ncols(); ++i)
+			 {
+				Rat modelParams(allModelParams.columnSlice(i));
+				result.at(i) = multiplier * model->fullLogL();
+			 }
+		}
+	 else if ( actionRequest == "dev" )
+		{
+		  for (int i = 0; i < allModelParams.ncols(); ++i)
+			 {
+				Rat modelParams(allModelParams.columnSlice(i));
+				result.at(i) = multiplier * model->deviance(modelParams);
+			 }
+		}
+	 else
+		{
+		  ErrorWithMsg err("unknown model action: ");
+		  err.appendMsg(actionRequest.c_str());
+		  throw err;
+ 		}
 
 	 //---------------------------------------------------------------------
 	 //
@@ -124,7 +176,7 @@ DOTRACE("Mclassifier");
 
 	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-	 return ll_mx;
+	 return result_mx;
   }
   catch (ErrorWithMsg& err) {
 	 mexErrMsgTxt(err.msg_cstr());
@@ -146,8 +198,10 @@ DOTRACE("Mclassifier");
 //
 ///////////////////////////////////////////////////////////////////////
 
+extern "C"
 mxArray* mlfClassifier(mxArray* modelParams_mx,
 							  mxArray* modelName_mx,
+							  mxArray* actionRequest_mx,
 							  mxArray* objParams_mx,
 							  mxArray* observedIncidence_mx,
 							  mxArray* numStoredExemplars_mx)
@@ -156,18 +210,21 @@ DOTRACE("mlfClassifier");
 
   int nargout = 1;
 
-  mlfEnterNewContext(0, 5,
-							modelParams_mx, modelName_mx, objParams_mx,
-							observedIncidence_mx, numStoredExemplars_mx);
+  mlfEnterNewContext(0, CLASSIFIER_NARGIN,
+							modelParams_mx, modelName_mx, actionRequest_mx,
+							objParams_mx, observedIncidence_mx, numStoredExemplars_mx);
 
-  mxArray * ll = Mclassifier(nargout, modelParams_mx, modelName_mx, objParams_mx,
-									  observedIncidence_mx, numStoredExemplars_mx);
+  mxArray* result = Mclassifier(nargout,
+										  modelParams_mx, modelName_mx, actionRequest_mx,
+										  objParams_mx,
+										  observedIncidence_mx, numStoredExemplars_mx);
 
-  mlfRestorePreviousContext(0, 5,
-									 modelParams_mx, modelName_mx, objParams_mx,
-									 observedIncidence_mx, numStoredExemplars_mx);
+  mlfRestorePreviousContext(0, CLASSIFIER_NARGIN,
+									 modelParams_mx, modelName_mx, actionRequest_mx, 
+									 objParams_mx, observedIncidence_mx,
+									 numStoredExemplars_mx);
 
-  return mlfReturnValue(ll);
+  return mlfReturnValue(result);
 }
 
 
@@ -183,13 +240,13 @@ DOTRACE("mlfClassifier");
 //
 ///////////////////////////////////////////////////////////////////////
 
+extern "C"
 void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
 DOTRACE("mlxClassifier");
 
-  const int NUM_INPUTS = 5; 
   const int NUM_OUTPUTS = 1;
 
-  mxArray * mprhs[NUM_INPUTS];
+  mxArray * mprhs[CLASSIFIER_NARGIN];
   mxArray * mplhs[NUM_OUTPUTS];
   int i;
   if (nlhs > NUM_OUTPUTS) {
@@ -197,28 +254,23 @@ DOTRACE("mlxClassifier");
 					  "The function \"classifier\" was called with more "
 					  "than the declared number of outputs (1).");
   }
-  if (nrhs > NUM_INPUTS) {
+  if (nrhs > CLASSIFIER_NARGIN) {
 	 mexErrMsgTxt("Run-time Error: "
 					  "The function \"classifier\" was called with more "
-					  "than the declared number of inputs (5).");
+					  "than the declared number of inputs.");
   }
   for (i = 0; i < NUM_OUTPUTS; ++i) {
 	 mplhs[i] = mclGetUninitializedArray();
   }
-  for (i = 0; i < NUM_INPUTS && i < nrhs; ++i) {
+  for (i = 0; i < CLASSIFIER_NARGIN && i < nrhs; ++i) {
 	 mprhs[i] = prhs[i];
   }
-  for (; i < NUM_INPUTS; ++i) {
+  for (; i < CLASSIFIER_NARGIN; ++i) {
 	 mprhs[i] = NULL;
   }
 
-  mlfEnterNewContext(0, 5,
-							mprhs[0], mprhs[1], mprhs[2], mprhs[3], mprhs[4]);
-
-  mplhs[0] = Mclassifier(nlhs, mprhs[0], mprhs[1], mprhs[2], mprhs[3], mprhs[4]);
-
-  mlfRestorePreviousContext(0, 5,
-									 mprhs[0], mprhs[1], mprhs[2], mprhs[3], mprhs[4]);
+  mplhs[0] = mlfClassifier(mprhs[0], mprhs[1], mprhs[2],
+									mprhs[3], mprhs[4], mprhs[5]);
 
   plhs[0] = mplhs[0];
 }
