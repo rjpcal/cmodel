@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 14:46:11 2001
+// written: Tue Mar 27 14:52:50 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -85,13 +85,8 @@ shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
 DOTRACE("makeClassifier");
   if (whichType == "cssm")
 	 {
-//  		static shared_ptr<CModelCssm> recentModel(0);
-//  		static Mtx recentObjParams(0,0);
-//  		static Mtx recentIncidence(0,0);
-//  		static int recentNumStored = -1;
 
 		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
-
 
 		if (numStoredExemplars == recentNumStored)
 		  { DOTRACE("same num"); }
@@ -107,34 +102,38 @@ DOTRACE("makeClassifier");
 			  (observedIncidence == *recentIncidence) )
 		  {
 			 DOTRACE("use old");
+
+			 recentModel->reset(
+              new CModelCssm(objParams, observedIncidence,
+                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+
+			 return *recentModel;
 		  }
 		else
 		  {
 			 DOTRACE("make new");
- recentObjParams->makeUnique();			 *recentObjParams = objParams; recentObjParams->makeUnique();
- recentIncidence->makeUnique();			 *recentIncidence = observedIncidence; recentIncidence->makeUnique();
+
+			 recentObjParams->makeUnique();
+			 *recentObjParams = objParams;
+			 recentObjParams->makeUnique();
+
+			 recentIncidence->makeUnique();
+			 *recentIncidence = observedIncidence;
+			 recentIncidence->makeUnique();
+
 			 recentNumStored = numStoredExemplars;
 
           recentModel->reset(
               new CModelCssm(objParams, observedIncidence,
                              CModelExemplar::EXP_DECAY, numStoredExemplars));
-        }
 
-#if 0
-		return *recentModel;
-#else
-          recentModel->reset(
+
+			 recentModel->reset(
               new CModelCssm(objParams, observedIncidence,
                              CModelExemplar::EXP_DECAY, numStoredExemplars));
 
 			 return *recentModel;
-//  		return shared_ptr<Classifier>(
-//                new CModelCssm(objParams,
-//  									  observedIncidence,
-//                               CModelExemplar::EXP_DECAY,
-//  									  recentNumStored));
-#endif
-
+        }
 	 }
   else if (whichType == "gcm")
 	 {
