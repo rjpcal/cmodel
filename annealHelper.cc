@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 10:06:45 2002
+// written: Fri Feb 15 10:26:09 2002
 // $Id$
 //
 //
@@ -154,14 +154,16 @@ DOTRACE("makeTestModels");
 
 Mtx doParallelFuncEvals(const Mtx& models,
                         mxArray* func,
-                        mxArray* varargin_mx)
+                        mxArray* /*varargin_mx*/,
+                        int nvararg,
+                        mxArray** pvararg)
 {
 DOTRACE("doParallelFuncEvals");
 
   mxArray* costs_mx = 0;
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
   mclCopyArray(&func);
-  mclCopyArray(&varargin_mx);
+//   mclCopyArray(&varargin_mx);
 
   // costs = feval(func, models, varargin{:});
 #if 0
@@ -183,12 +185,13 @@ DOTRACE("doParallelFuncEvals");
 
   int nrhs = 1;
 
-  const int nvararg = mxGetNumberOfElements(varargin_mx);
+//   const int nvararg = mxGetNumberOfElements(varargin_mx);
 
   for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
     {
       DebugEvalNL(i);
-      prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
+//       prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
+      prhs[nrhs++] = mxDuplicateArray(pvararg[i]);
     }
 
   fstring cmd_name = MxWrapper::extractString(func);
@@ -202,7 +205,7 @@ DOTRACE("doParallelFuncEvals");
 
   mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
 
-  mxDestroyArray(varargin_mx);
+//   mxDestroyArray(varargin_mx);
   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
@@ -255,11 +258,13 @@ DOTRACE("doSerialFuncEvals");
 Mtx doFuncEvals(bool canUseMatrix,
                 const Mtx& models,
                 mxArray* func,
-                mxArray* varargin_mx)
+                mxArray* varargin_mx,
+                int nvararg,
+                mxArray** pvararg)
 {
   if (canUseMatrix)
     {
-      return doParallelFuncEvals(models, func, varargin_mx);
+      return doParallelFuncEvals(models, func, varargin_mx, nvararg, pvararg);
     }
 
   return doSerialFuncEvals(models, func, varargin_mx);
@@ -362,7 +367,9 @@ mxArray* MannealVisitParameters(int nargout_,
                                 mxArray* canUseMatrix_mx,
                                 mxArray* FUN_mx,
                                 mxArray* temp_mx,
-                                mxArray* varargin_mx)
+                                mxArray* varargin_mx,
+                                int nvararg,
+                                mxArray** pvararg)
 {
 DOTRACE("MannealVisitParameters");
 
@@ -417,7 +424,9 @@ DOTRACE("MannealVisitParameters");
                               FUN_mx,
                               mlfIndexRef(varargin_mx,
                                           "{?}",
-                                          mlfCreateColonIndex()));
+                                          mlfCreateColonIndex()),
+                              nvararg,
+                              pvararg);
 
           // S.nevals = S.nevals + length(costs);
           nevals += costs.nelems();;
@@ -500,6 +509,9 @@ DOTRACE("mlxAnnealVisitParameters");
   varargin = NULL;
   mlfAssign(&varargin, mclCreateVararginCell(nrhs - 7, prhs + 7));
 
+  int nvararg = nrhs - 7;
+  mxArray** pvararg = prhs + 7;
+
   plhs[0] = MannealVisitParameters(nlhs,
                                    prhs[0],
                                    prhs[1],
@@ -508,7 +520,9 @@ DOTRACE("mlxAnnealVisitParameters");
                                    prhs[4],
                                    prhs[5],
                                    prhs[6],
-                                   varargin);
+                                   varargin,
+                                   nvararg,
+                                   pvararg);
 
   mlfRestorePreviousContext(0,
                             7,
