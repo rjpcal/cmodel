@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Sun Mar  3 14:14:20 2002
+// written: Tue Mar  5 19:07:56 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -23,6 +23,8 @@
 
 #include "util/error.h"
 #include "util/strings.h"
+
+#include <libmatlb.h>
 
 #include "util/trace.h"
 #include "util/debug.h"
@@ -327,15 +329,20 @@ DOTRACE("Classifier::handleRequest");
 
       MxWrapper annealArgs(extraArgs.getStructField("annealOpts"));
 
-      // FIXME memory leak here?
-      AnnealOpts opts(annealArgs.release());
+      // FIXME this is ugly
+      mxArray* args = annealArgs.release();
+      AnnealOpts opts(args);
+      mxDestroyArray(args);
 
       AnnealingOptimizer ar(objective, opts);
 
       ar.optimize();
 
-      // FIXME memory leak here?
-      return MxWrapper(ar.getOutput());
+      // FIXME this is also ugly
+      mxArray* output = ar.getOutput();
+      MxWrapper result(output);
+      mxDestroyArray(output);
+      return result;
     }
 
   return RequestResult();
