@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Apr 18 14:59:00 2001
+// written: Wed Apr 18 15:01:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -68,6 +68,8 @@ DOTRACE("SimplexOptimizer::SimplexOptimizer");
 
   minimalSort();
 }
+
+SimplexOptimizer::~SimplexOptimizer() {}
 
 void SimplexOptimizer::printIter()
 {
