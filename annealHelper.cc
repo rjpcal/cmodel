@@ -381,7 +381,7 @@ DOTRACE("MannealVisitParameters");
 
     return output;
   }
-  catch (ErrorWithMsg& err) {
+  catch (Util::Error& err) {
     mexErrMsgTxt(err.msg_cstr());
   }
   catch (...) {
@@ -506,7 +506,7 @@ DOTRACE("doFuncEvals");
           prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
         }
 
-        fixed_string cmd_name = MxWrapper::extractString(func);
+        fstring cmd_name = MxWrapper::extractString(func);
 
         int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
