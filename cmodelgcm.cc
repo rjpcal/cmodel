@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Wed Mar 14 15:21:33 2001
+// written: Fri Mar 16 17:49:45 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,8 +22,12 @@
 
 
 CModelGcm::CModelGcm(const Mtx& objParams,
-							const Mtx& observedIncidence) :
-  CModelExemplar(objParams, observedIncidence, countCategory(objParams,0))
+							const Mtx& observedIncidence,
+							TransferFunction transferFunc) :
+  CModelExemplar(objParams,
+					  observedIncidence,
+					  countCategory(objParams,0),
+					  transferFunc)
 {
 DOTRACE("CModelGcm::CModelGcm");
 }

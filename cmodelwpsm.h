@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Wed Mar 14 15:21:13 2001
+// written: Fri Mar 16 17:49:59 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,7 +24,8 @@ private:
 
 public:
   CModelWpsm(const Mtx& objParams,
-				 const Mtx& observedIncidence);
+				 const Mtx& observedIncidence,
+				 TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelWpsm();
 };

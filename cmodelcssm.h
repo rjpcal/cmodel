@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Wed Mar 14 16:49:30 2001
+// written: Fri Mar 16 17:50:55 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -23,6 +23,7 @@ private:
 public:
   CModelCssm(const Mtx& objParams,
 				 const Mtx& observedIncidence,
+				 TransferFunction transferFunc,
 				 int numStoredExemplars);
 
   virtual ~CModelCssm();

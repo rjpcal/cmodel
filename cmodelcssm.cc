@@ -24,8 +24,10 @@
 
 CModelCssm::CModelCssm(const Mtx& objParams,
 							  const Mtx& observedIncidence,
+							  TransferFunction transferFunc,
 							  int numStoredExemplars) :
-  CModelExemplar(objParams, observedIncidence, numStoredExemplars),
+  CModelExemplar(objParams, observedIncidence,
+					  numStoredExemplars, transferFunc),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
   itsStored2(numStoredExemplars, DIM_OBJ_PARAMS)
 {

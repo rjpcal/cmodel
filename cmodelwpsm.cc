@@ -22,8 +22,9 @@
 
 
 CModelWpsm::CModelWpsm(const Mtx& objParams,
-							  const Mtx& observedIncidence) :
-  CModelExemplar(objParams, observedIncidence, 1),
+							  const Mtx& observedIncidence,
+							  TransferFunction transferFunc) :
+  CModelExemplar(objParams, observedIncidence, 1, transferFunc),
   itsPrototype1(1, DIM_OBJ_PARAMS),
   itsPrototype2(1, DIM_OBJ_PARAMS)
 {
