@@ -655,20 +655,21 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
 class SimplexOptimizer {
 private:
   int itsIterCount;
-  int itsFuncCount;
+  FuncEvaluator& itsObjective;
+  Mtx itsBestParams;
+  double itsBestFval;
 
 public:
-  SimplexOptimizer() :
+  SimplexOptimizer(FuncEvaluator& objective) :
 	 itsIterCount(0),
-	 itsFuncCount(0)
+	 itsObjective(objective),
+	 itsBestParams(0,0)
   {}
 
-  void optimize(Mtx& best_x,
-					 double& best_fval,
+  virtual ~SimplexOptimizer() {}
+
+  void optimize(
 					 int& exitFlag,
-//  					 mxArray * * output,
-					 int nargout_,
-					 FuncEvaluator& objective,
 					 const Mtx& x_in,
 					 const int prnt,
 					 const double tolx,
@@ -677,22 +678,24 @@ public:
 					 const int maxfun,
 					 const int maxiter);
 
+  virtual Mtx bestParams()
+  { return itsBestParams; }
+
+  virtual double bestFval()
+  { return itsBestFval; }
+
   virtual int iterCount()
   { return itsIterCount; }
 
   virtual int funcCount()
-  { return itsFuncCount; }
+  { return itsObjective.evalCount(); }
 
   virtual const char* algorithm()
   { return "Nelder-Mead simplex direct search"; }
 };
 
-void SimplexOptimizer::optimize(Mtx& best_x,
-										  double& best_fval,
+void SimplexOptimizer::optimize(
 										  int& exitFlag,
-//  										  mxArray * * output,
-										  int nargout_,
-										  FuncEvaluator& objective,
 										  const Mtx& x_in,
 										  const int prnt,
 										  const double tolx,
@@ -719,7 +722,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
   // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
   theSimplex.column(0) = initialParams.column(0);
 
-  funcVals.at(0,0) = objective.evaluate(initialParams);
+  funcVals.at(0,0) = itsObjective.evaluate(initialParams);
 
   {
 	 // Following improvement suggested by L.Pfeffer at Stanford
@@ -738,7 +741,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 		  else
 			 theSimplex.at(j,j+1) = zero_term_delta;
 
-		  funcVals.at(0,j+1) = objective.evaluate(theSimplex.column(j+1));
+		  funcVals.at(0,j+1) = itsObjective.evaluate(theSimplex.column(j+1));
 		}
   }
 
@@ -752,13 +755,13 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 
   fixed_string how = "initial";
 
-  int itercount = 1;
+  itsIterCount = 1;
 
   if (prnt == 3)
 	 {
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
 		mexPrintf(" %5d        %5d     %12.6g         ",
-					 itercount, objective.evalCount(), double(funcVals.at(0,0)));
+					 itsIterCount, funcCount(), double(funcVals.at(0,0)));
 		mexPrintf(how.c_str());
 		mexPrintf("\n");
 	 }
@@ -767,7 +770,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 		mexPrintf("\n%s\n", how.c_str());
 		theSimplex.print("theSimplex");
 		funcVals.print("funcVals");
-		mexPrintf("func_evals: %d\n", objective.evalCount());
+		mexPrintf("func_evals: %d\n", funcCount());
 	 }
 
   exitFlag = 1;
@@ -784,7 +787,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 
   for (;;) { DOTRACE("Main algorithm");
 
-	 if ((objective.evalCount() >= maxfun) || (itercount >= maxiter))
+	 if ((funcCount() >= maxfun) || (itsIterCount >= maxiter))
 		break; // out of main loop
 
 	 if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
@@ -807,7 +810,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 	 // Calculate the reflection point
 	 Mtx xr = (xbar*(1.0+RHO) - theSimplex.columns(numModelParams,1) * RHO);
 
-	 double fxr = objective.evaluate(xr);
+	 double fxr = itsObjective.evaluate(xr);
 
 
 	 if (fxr < funcVals.at(0,0))
@@ -819,7 +822,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
 						(theSimplex.columns(numModelParams,1) * (RHO*CHI)));
 
-		  double fxe = objective.evaluate(xe);
+		  double fxe = itsObjective.evaluate(xe);
 
 		  if (fxe < fxr)
 			 {
@@ -854,7 +857,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 					 Mtx xc = (xbar*(1.0 + PSI*RHO) -
 								  (theSimplex.columns(numModelParams,1) *(PSI*RHO)));
 
-					 double fxc = objective.evaluate(xc);
+					 double fxc = itsObjective.evaluate(xc);
 
 					 if (fxc <= fxr)
 						{
@@ -873,7 +876,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 					 Mtx xcc = (xbar*(1.0-PSI) +
 									(theSimplex.columns(numModelParams,1)* PSI));
 
-					 double fxcc = objective.evaluate(xcc);
+					 double fxcc = itsObjective.evaluate(xcc);
 
 					 if (fxcc < funcVals.at(0,numModelParams))
 						{
@@ -896,7 +899,7 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 						  (theSimplex.columns(j,1) - theSimplex.columns(0,1)) * SIGMA;
 
 						funcVals.at(0,j) =
-						  objective.evaluate(theSimplex.columns(j,1));
+						  itsObjective.evaluate(theSimplex.columns(j,1));
 					 }
 				}
 		  }
@@ -923,12 +926,12 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 	 }
 
 
-	 ++itercount;
+	 ++itsIterCount;
 
 	 if (prnt == 3)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itercount, objective.evalCount(), double(funcVals.at(0,0)));
+						itsIterCount, funcCount(), double(funcVals.at(0,0)));
 		  mexPrintf(how.c_str());
 		  mexPrintf("\n");
 		}
@@ -937,45 +940,36 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 		  mexPrintf("\n%s\n", how.c_str());
 		  theSimplex.print("theSimplex");
 		  funcVals.print("funcVals");
-		  mexPrintf("func_evals: %d\n", objective.evalCount());
+		  mexPrintf("func_evals: %d\n", funcCount());
 		}
   }
 
-  best_x = theSimplex.column(0);
+  itsBestParams = theSimplex.column(0);
 
   // end Main algorithm
 
-//    mlfIndexAssign(output, ".iterations", mxCreateScalarDouble(itercount));
-  itsIterCount = itercount;
+  itsBestFval = funcVals.row(0).min();
 
-//    mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(objective.evalCount()));
-  itsFuncCount = objective.evalCount();
-
-  // output.algorithm = 'Nelder-Mead simplex direct search';
-//    mlfIndexAssign(output, ".algorithm", _mxarray63_);
-
-  best_fval = funcVals.row(0).min();
-
-  if (objective.evalCount() >= maxfun)
+  if (funcCount() >= maxfun)
 	 {
 		if (prnt > 0) {
 		  mexPrintf("\nExiting: Maximum number of function evaluations "
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxFunEvals option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						best_fval);
+						itsBestFval);
 		}
 
 		exitFlag = 0;
 	 }
-  else if (itercount >= maxiter)
+  else if (itsIterCount >= maxiter)
 	 {
 		if (prnt > 0) {
 		  mexPrintf("\nExiting: Maximum number of iterations "
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxIter option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						best_fval);
+						itsBestFval);
 		}
 
 		exitFlag = 0;
@@ -996,8 +990,6 @@ void SimplexOptimizer::optimize(Mtx& best_x,
 
 		exitFlag = 1;
   }
-
-//    mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
 }
 
 
@@ -1063,14 +1055,11 @@ DOTRACE("MdoSimplex");
 
   FuncEvaluator objective(funfcn_mx, varargin);
 
-  Mtx best_x(0,0);
-  double best_fval = 0.0;
   int exitFlag = 0;
 
-  SimplexOptimizer opt;
+  SimplexOptimizer opt(objective);
 
-  opt.optimize(best_x, best_fval, exitFlag, nargout_,
-					objective,
+  opt.optimize(exitFlag,
 					Mtx(x_in),
 					extractPrinttype(printtype_mx),
 					mxGetScalar(tolx_mx),
@@ -1080,7 +1069,7 @@ DOTRACE("MdoSimplex");
 					extractMaxIters(maxiter_mx, numModelParams)
 					);
 
-  *fval = mxCreateScalarDouble(best_fval);
+  *fval = mxCreateScalarDouble(opt.bestFval());
   *exitflag_mx = mxCreateScalarDouble(exitFlag);
 
   mlfIndexAssign(output, ".iterations",
@@ -1093,5 +1082,5 @@ DOTRACE("MdoSimplex");
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-  return best_x.makeMxArray();
+  return opt.bestParams().makeMxArray();
 }
