@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Fri Apr  6 12:41:31 2001
+// written: Mon Apr  9 15:10:34 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -43,7 +43,9 @@ namespace {
   int recentNumStored = -1;
 }
 
-void InitializeModule_classifier() {
+void InitializeModule_classifier()
+{
+DOTRACE("InitializeModule_classifier");
 #ifdef LOCAL_DEBUG
   mexPrintf("loading 'classifier' mex file\n");
 #endif
@@ -52,7 +54,9 @@ void InitializeModule_classifier() {
   recentIncidence = new Mtx(0,0);
 }
 
-void TerminateModule_classifier() {
+void TerminateModule_classifier()
+{
+DOTRACE("TerminateModule_classifier");
 #ifdef LOCAL_DEBUG
   mexPrintf("unloading 'classifier' mex file\n");
 #endif
@@ -62,8 +66,16 @@ void TerminateModule_classifier() {
   delete recentModel;
 }
 
+static mexFunctionTableEntry classifierFunctionTable[1] = {
+#ifndef LOCAL_DEBUG
+  { "classifier", mlxClassifier, 6, 1, &_local_function_table_classifier }
+#else
+  { "dclassifier", mlxClassifier, 6, 1, &_local_function_table_classifier }	 
+#endif
+};
+
 _mexLocalFunctionTable _local_function_table_classifier
-  = { 0, (mexFunctionTableEntry *)NULL };
+  = { 1, classifierFunctionTable };
 
 namespace Local {
   fixed_string getString(const mxArray* arr)
@@ -355,7 +367,8 @@ DOTRACE("mlfClassifier");
 ///////////////////////////////////////////////////////////////////////
 
 extern "C"
-void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
+void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
+{
 DOTRACE("mlxClassifier");
 
   const int NUM_OUTPUTS = 1;
@@ -402,22 +415,16 @@ DOTRACE("mlxClassifier");
 ///////////////////////////////////////////////////////////////////////
 
 extern "C"
-mex_information mexLibrary() {
-
-  static mexFunctionTableEntry function_table[1] = {
-#ifndef LOCAL_DEBUG
-	 { "classifier", mlxClassifier, 6, 1, &_local_function_table_classifier }
-#else
-	 { "dclassifier", mlxClassifier, 6, 1, &_local_function_table_classifier }	 
-#endif
-  };
+mex_information mexLibrary()
+{
+DOTRACE("mexLibrary");
 
   static _mexInitTermTableEntry init_term_table[1] = {
 	 { InitializeModule_classifier, TerminateModule_classifier },
   };
 
   static _mex_information _mex_info
-	 = { 1, 1, function_table, 0, NULL, 0, NULL, 1, init_term_table };
+	 = { 1, 1, classifierFunctionTable, 0, NULL, 0, NULL, 1, init_term_table };
 
   return &_mex_info;
 }
