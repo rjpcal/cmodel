@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:08:04 2002
+// written: Mon Feb 18 16:18:20 2002
 // $Id$
 //
 //
@@ -354,31 +354,43 @@ struct Astate
 {
   Astate(mxArray* arr, int numruns) :
     talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
+    canUseMatrix(mxGetScalar(Mx::getField(arr, "canUseMatrix")) != 0.0),
+    doNewton(mxGetScalar(Mx::getField(arr, "newton")) != 0.0),
     numTemps(int(mxGetScalar(Mx::getField(arr, "numTemps")))),
     tempRepeats(Mx::getField(arr, "x"), Mtx::COPY),
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
     numModelParams(int(mxGetScalar(Mx::getField(arr, "numModelParams")))),
     numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
+    valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
+    bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
+    deltas(Mx::getField(arr, "currentDeltas"), Mtx::COPY),
     numFunEvals(numruns, 1),
     bestCost(numruns, 1),
     modelHist(numModelParams, int(tempRepeats.sum())),
     mhat(numModelParams, numruns),
-    energy(int(tempRepeats.sum()), numruns)
+    energy(int(tempRepeats.sum()), numruns),
+    startValues(Mx::getField(arr, "centers"), Mtx::COPY)
   {
     energy.setAll(std::numeric_limits<double>::max());
   }
 
   const bool talking;
+  const bool canUseMatrix;
+  const bool doNewton;
   const int numTemps;
   const Mtx tempRepeats;
   const Mtx tempScales;
   const int numModelParams;
   const int numStartingPoints;
+  const Mtx valueScalingRange;
+  const Mtx bounds;
+  Mtx deltas;
   Mtx numFunEvals;
   Mtx bestCost;
   Mtx modelHist;
   Mtx mhat;
   Mtx energy;
+  Mtx startValues;
 };
 
 //---------------------------------------------------------------------
@@ -397,13 +409,7 @@ private:
   double itsCriticalTemp;
   Mtx itsMinUsedParams;
   Mtx itsMaxUsedParams;
-  Mtx itsDeltas;
-  const Mtx itsValueScalingRange;
-  const Mtx itsBounds;
-  const bool itsCanUseMatrix;
   fstring itsFunFunName;
-  const bool itsDoNewton;
-  Mtx itsStartValues;
   int itsNvararg;
   mxArray** itsPvararg;
 
@@ -422,16 +428,7 @@ public:
     itsCriticalTemp(std::numeric_limits<double>::max()),
     itsMinUsedParams(0,0),
     itsMaxUsedParams(0,0),
-    itsDeltas(Mx::getField(itsAstate_mx, "currentDeltas"), Mtx::REFER),
-    itsValueScalingRange(Mx::getField(itsAstate_mx, "valueScalingRange"),
-                         Mtx::BORROW),
-    itsBounds(Mx::getField(itsAstate_mx, "bounds"), Mtx::BORROW),
-    itsCanUseMatrix(mxGetScalar(Mx::getField(itsAstate_mx, "canUseMatrix"))
-                    != 0.0),
     itsFunFunName(funcName),
-    itsDoNewton(mxGetScalar(Mx::getField(itsAstate_mx, "newton")) != 0.0),
-
-    itsStartValues(Mx::getField(itsAstate_mx, "startValues"), Mtx::REFER),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
   {}
@@ -443,7 +440,7 @@ public:
 
   Mtx doFuncEvals(const Mtx& models)
   {
-    if (itsCanUseMatrix)
+    if (itsAstate.canUseMatrix)
       return doParallelFuncEvals(models, itsFunFunName,
                                  itsNvararg, itsPvararg);
 
@@ -461,8 +458,8 @@ public:
 
     for (int r = 0; r < models.mrows(); ++r)
       {
-        models.row(r) *= itsDeltas.at(r);
-        models.row(r) += itsStartValues.at(r);
+        models.row(r) *= itsAstate.deltas.at(r);
+        models.row(r) += itsAstate.startValues.at(r);
       }
 
     return models;
@@ -532,9 +529,9 @@ public:
 
   void updateDeltas()
   {
-    for (int i = 0; i < itsDeltas.nelems(); ++i)
+    for (int i = 0; i < itsAstate.deltas.nelems(); ++i)
       {
-        itsDeltas.at(i) =
+        itsAstate.deltas.at(i) =
           0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
       }
   }
@@ -589,8 +586,8 @@ public:
         for (int i = 0; i < mstar.nelems(); ++i)
           {
             double val = mstar.at(i);
-            if (val < itsBounds.at(i, 0)) { inBounds = false; break; }
-            if (val > itsBounds.at(i, 1)) { inBounds = false; break; }
+            if (val < itsAstate.bounds.at(i, 0)) { inBounds = false; break; }
+            if (val > itsAstate.bounds.at(i, 1)) { inBounds = false; break; }
           }
 
         if (inBounds)
@@ -622,17 +619,17 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
   Mtx costs(0,0);
 
   // for x = find(deltas' ~= 0)
-  for (int x = 0; x < itsDeltas.nelems(); ++x)
+  for (int x = 0; x < itsAstate.deltas.nelems(); ++x)
     {
-      const double delta = itsDeltas.at(x);
+      const double delta = itsAstate.deltas.at(x);
 
       if (delta == 0.0) continue;
 
       Mtx modelmatrix = makeTestModels(x,
                                        bestModel,
-                                       itsValueScalingRange,
+                                       itsAstate.valueScalingRange,
                                        delta,
-                                       itsBounds);
+                                       itsAstate.bounds);
 
       costs = doFuncEvals(modelmatrix);
 
@@ -714,9 +711,9 @@ DOTRACE("AnnealingRun::go");
 
   updateBests();
 
-  if (itsDoNewton) runSimplex();
+  if (itsAstate.doNewton) runSimplex();
 
-  itsStartValues.column(0) = itsAstate.mhat.column(itsRunNum);
+  itsAstate.startValues.column(0) = itsAstate.mhat.column(itsRunNum);
 
   return itsAstate_mx;
 }
