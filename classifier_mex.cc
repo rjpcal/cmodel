@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Fri Apr  6 12:41:31 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -213,7 +213,7 @@ DOTRACE("Mclassifier");
 	 validateInput(observedIncidence_mx);
 	 const Mtx observedIncidence(observedIncidence_mx);
 
-	 Mtx result(allModelParams.ncols(), 1);
+	 Mtx result(0,0);
 
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
@@ -238,6 +238,7 @@ DOTRACE("Mclassifier");
 
 	 if ( actionRequest == "ll" || actionRequest == "llc" )
 		{
+		  result.resize(allModelParams.ncols(), 1);
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
 				Slice modelParams(allModelParams.column(i));
@@ -246,6 +247,7 @@ DOTRACE("Mclassifier");
 		}
 	 else if ( actionRequest == "llf" )
 		{
+		  result.resize(allModelParams.ncols(), 1);
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
 				result.at(i) = multiplier * model->fullLogL();
@@ -253,10 +255,23 @@ DOTRACE("Mclassifier");
 		}
 	 else if ( actionRequest == "dev" )
 		{
+		  result.resize(allModelParams.ncols(), 1);
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
 				Slice modelParams(allModelParams.column(i));
 				result.at(i) = multiplier * model->deviance(modelParams);
+			 }
+		}
+	 else if ( actionRequest == "classify" )
+		{
+		  Mtx testObjects = Mtx::extractStructField(extraArgs_mx, "testObjects");
+
+		  result.resize(testObjects.mrows(), allModelParams.ncols());
+
+		  for (int i = 0; i < allModelParams.ncols(); ++i)
+			 {
+				Slice modelParams(allModelParams.column(i));
+				result.column(i) = model->classifyObjects(modelParams, testObjects);
 			 }
 		}
 	 else
