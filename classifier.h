@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 16:52:57 2001
+// written: Tue Apr 10 14:36:51 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,6 +14,8 @@
 #define CLASSIFIER_H_DEFINED
 
 #include "mtx.h"
+
+class fixed_string;
 
 class Classifier {
 public:
@@ -28,6 +30,23 @@ public:
   double fullLogL();
 
   double deviance(Slice& modelParams);
+
+  struct RequestResult {
+	 RequestResult() : requestHandled(false), result(0,0) {}
+
+	 RequestResult(Mtx res) :
+		requestHandled(true), result(res) {}
+
+	 const bool requestHandled;
+	 const Mtx result;
+  };
+
+  // Handles the request via chain-of-responsibility. Subclasses must
+  // be sure to call the superclass version before attempting to
+  // process the request.
+  virtual RequestResult handleRequest(fixed_string action,
+												  const Mtx& modelParams,
+												  mxArray* extraArgs_mx);
 
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }

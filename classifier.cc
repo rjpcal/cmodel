@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Apr 10 10:29:30 2001
+// written: Tue Apr 10 14:38:58 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -183,6 +183,82 @@ DOTRACE("Classifier::deviance");
   double llf = fullLogL();
 
   return -2 * (llc - llf);
+}
+
+Classifier::RequestResult Classifier::handleRequest(fixed_string action,
+																	 const Mtx& allModelParams,
+																	 mxArray* extraArgs_mx)
+{
+DOTRACE("Classifier::handleRequest");
+
+  int multiplier = 1;
+  // check for minus sign
+  if (action.c_str()[0] == '-')
+	 {
+		multiplier = -1;
+		fixed_string trimmed = action.c_str() + 1;
+		action = trimmed;
+	 }
+
+
+  //---------------------------------------------------------------------
+  //
+  // Call the requested computational function for each set of model
+  // params
+  //
+  //---------------------------------------------------------------------
+
+  if ( action == "ll" || action == "llc" )
+	 {
+		Mtx result(allModelParams.ncols(), 1);
+		for (int i = 0; i < allModelParams.ncols(); ++i)
+		  {
+			 Slice modelParams(allModelParams.column(i));
+			 result.at(i) = multiplier * this->currentLogL(modelParams);
+		  }
+
+		return result;
+	 }
+
+  if ( action == "llf" )
+	 {
+		Mtx result(allModelParams.ncols(), 1);
+		for (int i = 0; i < allModelParams.ncols(); ++i)
+		  {
+			 result.at(i) = multiplier * this->fullLogL();
+		  }
+
+		return result;
+	 }
+
+  if ( action == "dev" )
+	 {
+		Mtx result(allModelParams.ncols(), 1);
+		for (int i = 0; i < allModelParams.ncols(); ++i)
+		  {
+			 Slice modelParams(allModelParams.column(i));
+			 result.at(i) = multiplier * this->deviance(modelParams);
+		  }
+
+		return result;
+	 }
+
+  if ( action == "classify" )
+	 {
+		Mtx testObjects = Mtx::extractStructField(extraArgs_mx, "testObjects");
+
+		Mtx result(testObjects.mrows(), allModelParams.ncols());
+
+		for (int i = 0; i < allModelParams.ncols(); ++i)
+		  {
+			 Slice modelParams(allModelParams.column(i));
+			 result.column(i) = this->classifyObjects(modelParams, testObjects);
+		  }
+
+		return result;
+	 }
+
+  return RequestResult();
 }
 
 // Count the category training exemplars
