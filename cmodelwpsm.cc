@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Tue Mar 13 12:00:20 2001
+// written: Tue Mar 13 16:25:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -72,7 +72,7 @@ DOTRACE("CModelWpsm::findStoredExemplar");
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return Slice(); // can't happen, but placate the compiler
+  return ConstSlice(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelwpsm_cc[] = "$Header$";

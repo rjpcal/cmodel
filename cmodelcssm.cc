@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Fri Mar  9 14:34:46 2001
+// written: Tue Mar 13 16:24:55 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -80,7 +80,7 @@ ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return Slice(); // can't happen, but placate the compiler
+  return ConstSlice(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";
