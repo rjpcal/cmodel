@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 14:53:19 2002
+// written: Mon Feb 18 15:04:09 2002
 // $Id$
 //
 //
@@ -397,11 +397,13 @@ private:
 public:
   AnnealingRun(mxArray* old_astate_mx,
                const fstring& funcName,
+               int runNum,
                int nvararg,
                mxArray** pvararg)
     :
     itsAstate_mx(mxDuplicateArray(old_astate_mx)),
-    itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
+//     itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
+    itsRunNum(runNum),
     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
@@ -746,6 +748,39 @@ DOTRACE("AnnealingRun::go");
   return itsAstate_mx;
 }
 
+///////////////////////////////////////////////////////////////////////
+//
+// class Annealer
+//
+///////////////////////////////////////////////////////////////////////
+
+class Annealer
+{
+public:
+
+  mxArray* go(mxArray* astate_mx,
+              const fstring& func_name,
+              int nvararg,
+              mxArray** pvararg)
+  {
+    int numruns = int(mxGetScalar(Mx::getField(astate_mx, "numruns")));
+
+    // So we own a copy of astate_mx
+    astate_mx = mxDuplicateArray(astate_mx);
+
+    for (int i = 0; i < numruns; ++i)
+      {
+        AnnealingRun ar(astate_mx, func_name, i, nvararg, pvararg);
+
+        mxDestroyArray(astate_mx);
+
+        astate_mx = ar.go();
+      }
+
+    return astate_mx;
+  }
+};
+
 /*
  * The function "mlxAnnealHelper" contains the feval interface for the
  * "annealHelper" M-function from file
@@ -779,13 +814,12 @@ DOTRACE("mlxAnnealHelper");
 
   try
     {
-      AnnealingRun ar
-        (prhs[0], // astate
-         MxWrapper::extractString(prhs[1]), // funcName
-         nvararg,
-         pvararg);
+      Annealer a;
 
-      plhs[0] = ar.go();
+      plhs[0] = a.go(prhs[0], // astate
+                     MxWrapper::extractString(prhs[1]), // funcName
+                     nvararg,
+                     pvararg);
     }
   catch (Util::Error& err)
     {
