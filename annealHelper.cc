@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:19:56 2002
+// written: Fri Feb 15 14:25:22 2002
 // $Id$
 //
 //
@@ -432,7 +432,7 @@ DOTRACE("annealHelper");
    }
 #endif
 
-  mxArray* astate_mx = mxDuplicateArray(old_astate_mx);
+  mxArray* const astate_mx = mxDuplicateArray(old_astate_mx);
 
   const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
 
@@ -447,8 +447,8 @@ DOTRACE("annealHelper");
   const bool astate_talk =
     (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
 
-  const Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
-                        Mtx::BORROW);
+  Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
+                  Mtx::REFER);
 
   const Mtx energy(mxGetField(astate_mx, 0, "energy"));
 
@@ -476,6 +476,9 @@ DOTRACE("annealHelper");
 
   mxSetField(astate_mx, 0, "bestModel",
              mxDuplicateArray(mxGetField(output, 0, "newModel")));
+
+  numFunEvals.at(k_onebased-1) =
+    numFunEvals.at(k_onebased-1) + mxGetScalar(mxGetField(output, 0, "nevals"));
 
   mxSetFieldByNumber(output, 0,
                      mxAddField(output, "new_astate"),
