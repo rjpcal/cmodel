@@ -12,17 +12,17 @@
 #include "rutil.h"
 
 #include "libmatlbm.h"
+#include <fstream.h>
 
-#define LOCAL_DEBUG
-#include "debug.h"
+#include "trace.h"
 
 
-static mxArray * _mxarray20_;
-static mxArray * _mxarray21_;
-static mxArray * _mxarray22_;
-static mxArray * _mxarray23_;
+static mxArray* _mxarray20_;
+static mxArray* _mxarray21_;
+static mxArray* _mxarray22_;
+static mxArray* _mxarray23_;
 
-static mxArray * _mxarray26_;
+static mxArray* _mxarray26_;
 
 void InitializeModule_annealVisitParameters(void) {
     _mxarray20_ = mclInitializeDouble(0.0);
@@ -40,35 +40,35 @@ void TerminateModule_annealVisitParameters(void) {
     mxDestroyArray(_mxarray20_);
 }
 
-static mxArray * MannealVisitParameters(int nargout_,
-                                        mxArray * bestModel,
-                                        mxArray * valueScalingRange,
-                                        mxArray * deltas,
-                                        mxArray * bounds,
-                                        mxArray * canUseMatrix,
-                                        mxArray * FUN,
-                                        mxArray * temp,
-                                        mxArray * varargin);
+mxArray* MannealVisitParameters(int nargout_,
+										  mxArray* bestModel,
+										  mxArray* valueScalingRange,
+										  mxArray* deltas,
+										  mxArray* bounds,
+										  mxArray* canUseMatrix,
+										  mxArray* FUN,
+										  mxArray* temp,
+										  mxArray* varargin);
 
-static mxArray * makeTestModels(mxArray * x,
-										  mxArray * bestModel,
-										  mxArray * valueScalingRange,
-										  mxArray * deltas,
-										  mxArray * bounds);
+mxArray* makeTestModels(mxArray* x,
+								mxArray* bestModel,
+								mxArray* valueScalingRange,
+								mxArray* deltas,
+								mxArray* bounds);
 
-static mxArray * doFuncEvals(mxArray * canUseMatrix,
-									  mxArray * models,
-									  mxArray * func,
-									  mxArray * varargin);
+mxArray* doFuncEvals(mxArray* canUseMatrix,
+							mxArray* models,
+							mxArray* func,
+							mxArray* varargin);
 
-static int sampleFromPdf_zerobased(mxArray * temp, mxArray * costs);
+int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 
 
-static mxArray * makePDF(mxArray * temp,
-								 mxArray * costs);
+mxArray* makePDF(mxArray* temp,
+					  mxArray* costs);
 
-static mxArray * eprob(mxArray * temp,
-							  mxArray * costs);
+mxArray* eprob(mxArray* temp,
+					mxArray* costs);
 
 static mexFunctionTableEntry local_function_table_[5]
   = { { "makeTestModels",
@@ -88,17 +88,18 @@ _mexLocalFunctionTable _local_function_table_annealVisitParameters
  * (lines 1-28). This function processes any input arguments and passes them to
  * the implementation version of the function, appearing above.
  */
-mxArray * mlfAnnealVisitParameters(mxArray * bestModel,
-                                   mxArray * valueScalingRange,
-                                   mxArray * deltas,
-                                   mxArray * bounds,
-                                   mxArray * canUseMatrix,
-                                   mxArray * FUN,
-                                   mxArray * temp,
+mxArray* mlfAnnealVisitParameters(mxArray* bestModel,
+                                   mxArray* valueScalingRange,
+                                   mxArray* deltas,
+                                   mxArray* bounds,
+                                   mxArray* canUseMatrix,
+                                   mxArray* FUN,
+                                   mxArray* temp,
                                    ...) {
-    mxArray * varargin = NULL;
+DOTRACE("mlfAnnealVisitParameters");
+    mxArray* varargin = NULL;
     int nargout = 1;
-    mxArray * S = mclGetUninitializedArray();
+    mxArray* S = mclGetUninitializedArray();
     mlfVarargin(&varargin, temp, 0);
     mlfEnterNewContext(
       0,
@@ -146,11 +147,12 @@ mxArray * mlfAnnealVisitParameters(mxArray * bestModel,
  * function, appearing above.
  */
 void mlxAnnealVisitParameters(int nlhs,
-                              mxArray * plhs[],
+                              mxArray* plhs[],
                               int nrhs,
-                              mxArray * prhs[]) {
-    mxArray * mprhs[8];
-    mxArray * mplhs[1];
+                              mxArray* prhs[]) {
+DOTRACE("mlxAnnealVisitParameters");
+    mxArray* mprhs[8];
+    mxArray* mplhs[1];
     int i;
     if (nlhs > 1) {
         mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
@@ -190,6 +192,7 @@ void mlxAnnealVisitParameters(int nlhs,
           mprhs[5],
           mprhs[6],
           mprhs[7]);
+
     mlfRestorePreviousContext(
       0,
       7,
@@ -201,7 +204,7 @@ void mlxAnnealVisitParameters(int nlhs,
       mprhs[5],
       mprhs[6]);
     plhs[0] = mplhs[0];
-    mxDestroyArray(mprhs[7]);
+	 mxDestroyArray(mprhs[7]);
 }
 
 /*
@@ -220,22 +223,38 @@ void mlxAnnealVisitParameters(int nlhs,
      * varargin)
  */
 
-static mxArray * MannealVisitParameters(int nargout_,
-                                        mxArray * bestModel_mx,
-                                        mxArray * valueScalingRange_mx,
-                                        mxArray * deltas_mx,
-                                        mxArray * bounds_mx,
-                                        mxArray * canUseMatrix_mx,
-                                        mxArray * FUN_mx,
-                                        mxArray * temp_mx,
-                                        mxArray * varargin_mx)
+mxArray* MannealVisitParameters(int nargout_,
+										  mxArray* bestModel_mx,
+										  mxArray* valueScalingRange_mx,
+										  mxArray* deltas_mx,
+										  mxArray* bounds_mx,
+										  mxArray* canUseMatrix_mx,
+										  mxArray* FUN_mx,
+										  mxArray* temp_mx,
+										  mxArray* varargin_mx)
 {
+DOTRACE("MannealVisitParameters");
+
+
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+  if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1) {
+	 ofstream ofs("profdata.out");
+	 Util::Prof::printAllProfData(ofs);
+	 return mxCreateScalarDouble(-1.0);
+  }
+
+  if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2) {
+	 Util::Prof::resetAllProfData();
+	 return mxCreateScalarDouble(-2.0);
+  }
+#endif
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * costs_mx = mclGetUninitializedArray();
-  mxArray * modelmatrix_mx = mclGetUninitializedArray();
-  mxArray * x_mx = mclGetUninitializedArray();
+  mxArray* costs_mx = mclGetUninitializedArray();
+  mxArray* modelmatrix_mx = mclGetUninitializedArray();
+  mxArray* x_mx = mclGetUninitializedArray();
 
   validateInput(bestModel_mx);
   mclCopyArray(&bestModel_mx);
@@ -358,17 +377,19 @@ static mxArray * MannealVisitParameters(int nargout_,
 /*
  * function models = makeTestModels(x, bestModel, valueScalingRange, deltas, bounds)
  */
-static mxArray * makeTestModels(mxArray * x_mx,
-										  mxArray * bestModel_mx,
-										  mxArray * valueScalingRange_mx,
-										  mxArray * deltas_mx,
-										  mxArray * bounds_mx)
+mxArray* makeTestModels(mxArray* x_mx,
+								mxArray* bestModel_mx,
+								mxArray* valueScalingRange_mx,
+								mxArray* deltas_mx,
+								mxArray* bounds_mx)
 {
+DOTRACE("makeTestModels");
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * models = mclGetUninitializedArray();
-  mxArray * xv = mclGetUninitializedArray();
+  mxArray* models = mclGetUninitializedArray();
+  mxArray* xv = mclGetUninitializedArray();
 
   // xv = bestModel(x) + valueScalingRange*deltas(x);
   mlfAssign(
@@ -427,17 +448,19 @@ static mxArray * makeTestModels(mxArray * x_mx,
  * function costs = doFuncEvals(canUseMatrix, models, func, varargin)
  */
 
-static mxArray * doFuncEvals(mxArray * canUseMatrix_mx,
-									  mxArray * models,
-									  mxArray * func,
-									  mxArray * varargin_mx)
+mxArray* doFuncEvals(mxArray* canUseMatrix_mx,
+							mxArray* models,
+							mxArray* func,
+							mxArray* varargin_mx)
 {
+DOTRACE("doFuncEvals");
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * costs_mx = mclGetUninitializedArray();
-  mxArray * e = mclGetUninitializedArray();
-  mxArray * NM = mclGetUninitializedArray();
+  mxArray* costs_mx = mclGetUninitializedArray();
+  mxArray* e = mclGetUninitializedArray();
+  mxArray* NM = mclGetUninitializedArray();
   mclCopyArray(&canUseMatrix_mx);
   mclCopyArray(&models);
   mclCopyArray(&func);
@@ -522,14 +545,17 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix_mx,
 /*
  * function s = sampleFromPdf(temp, costs)
  */
-static int sampleFromPdf_zerobased(mxArray * temp_mx, mxArray * costs_mx)
+
+int sampleFromPdf_zerobased(mxArray* temp_mx, mxArray* costs_mx)
 {
+DOTRACE("sampleFromPdf_zerobased");
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * s_mx = mclGetUninitializedArray();
-  mxArray * cutoff = mclGetUninitializedArray();
-  mxArray * dist = mclGetUninitializedArray();
+  mxArray* s_mx = mclGetUninitializedArray();
+  mxArray* cutoff = mclGetUninitializedArray();
+  mxArray* dist = mclGetUninitializedArray();
   mclCopyArray(&temp_mx);
   mclCopyArray(&costs_mx);
 
@@ -571,16 +597,18 @@ static int sampleFromPdf_zerobased(mxArray * temp_mx, mxArray * costs_mx)
 /*
  * function pdf = makePDF(temp, costs)
  */
-static mxArray * makePDF(mxArray * temp_mx, mxArray * costs_mx)
+mxArray* makePDF(mxArray* temp_mx, mxArray* costs_mx)
 {
+DOTRACE("makePDF");
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * pdf = mclGetUninitializedArray();
-  mxArray * ans = mclGetUninitializedArray();
-  mxArray * w = mclGetUninitializedArray();
-  mxArray * good = mclGetUninitializedArray();
-  mxArray * bad = mclGetUninitializedArray();
+  mxArray* pdf = mclGetUninitializedArray();
+  mxArray* ans = mclGetUninitializedArray();
+  mxArray* w = mclGetUninitializedArray();
+  mxArray* good = mclGetUninitializedArray();
+  mxArray* bad = mclGetUninitializedArray();
   mclCopyArray(&temp_mx);
   mclCopyArray(&costs_mx);
 
@@ -640,15 +668,17 @@ static mxArray * makePDF(mxArray * temp_mx, mxArray * costs_mx)
 /*
  * function pdf = eprob(temp, costs)
  */
-static mxArray * eprob(mxArray * temp_mx, mxArray * costs_mx)
+mxArray* eprob(mxArray* temp_mx, mxArray* costs_mx)
 {
+DOTRACE("eprob");
+
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * pdf = mclGetUninitializedArray();
-  mxArray * scale = mclGetUninitializedArray();
-  mxArray * mpdf = mclGetUninitializedArray();
-  mxArray * toobig = mclGetUninitializedArray();
+  mxArray* pdf = mclGetUninitializedArray();
+  mxArray* scale = mclGetUninitializedArray();
+  mxArray* mpdf = mclGetUninitializedArray();
+  mxArray* toobig = mclGetUninitializedArray();
   mclCopyArray(&temp_mx);
   mclCopyArray(&costs_mx);
 
