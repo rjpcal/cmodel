@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Tue Mar  5 14:07:52 2002
+// written: Wed Jul 31 15:04:22 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,10 @@
 #ifndef CMODELSPC_CC_DEFINED
 #define CMODELSPC_CC_DEFINED
 
-#include "cmodelspc.h"
+#include "cmodel/cmodelspc.h"
 
-#include "eucbinder.h"
+#include "cmodel/cmodelutil.h"
+#include "cmodel/eucbinder.h"
 
 #include "util/error.h"
 #include "util/strings.h"
@@ -25,67 +26,11 @@
 
 #include "util/trace.h"
 
-namespace
-{
-  void clampRows(Mtx& src, int firstrow, int nrows,
-                 const Mtx& hilo)
-  {
-    DOTRACE("<cmodelspc.cc>::clampRows");
-
-    for (int c = 0; c < src.ncols(); ++c)
-      {
-        double clo = hilo.at(0, c);
-        double chi = hilo.at(1, c);
-        for (int r = 0; r < nrows; ++r)
-          {
-            double v = src.at(firstrow+r,c);
-            if (v < clo) src.at(firstrow+r,c) = clo;
-            if (v > chi) src.at(firstrow+r,c) = chi;
-          }
-      }
-  }
-
-  Mtx getStoredExemplars(Slice& allModelParams, int nstored,
-                         const Mtx& hilo0, const Mtx& hilo1)
-  {
-    DOTRACE("<cmodelspc.cc>::getStoredExemplars");
-
-    Slice otherParams =
-      allModelParams(range(Classifier::DIM_OBJ_PARAMS+2,
-                           allModelParams.nelems()));
-
-    // reshape params into a stored exemplar matrix
-
-    Mtx storedExemplars =
-      Mtx(otherParams).as_shape(2*nstored, Classifier::DIM_OBJ_PARAMS);
-
-    clampRows(storedExemplars, 0, nstored, hilo0);
-
-    clampRows(storedExemplars, nstored, nstored, hilo1);
-
-    return storedExemplars;
-  }
-
-  Mtx getHiLo(const Mtx& src)
-  {
-    DOTRACE("<cmodelspc.cc>::getHiLo");
-    Mtx result(2, src.ncols());
-
-    for (int i = 0; i < src.ncols(); ++i)
-      {
-        result.at(0, i) = src.column(i).min();
-        result.at(1, i) = src.column(i).max();
-      }
-
-    return result;
-  }
-}
-
 CModelSPC::CModelSPC(const Mtx& objParams, int numStoredExemplars) :
   Classifier(objParams),
   itsNumStoredExemplars(numStoredExemplars),
-  itsHiLo0(getHiLo(objectsOfCategory(0))),
-  itsHiLo1(getHiLo(objectsOfCategory(1)))
+  itsHiLo0(CModelUtil::getHiLo(objectsOfCategory(0))),
+  itsHiLo1(CModelUtil::getHiLo(objectsOfCategory(1)))
 {}
 
 CModelSPC::~CModelSPC() {}
@@ -105,10 +50,11 @@ DOTRACE("CmodelSPC::handleRequest");
 
       Slice modelParams = allModelParams.column(0);
 
-      Mtx storedExemplars = getStoredExemplars(modelParams,
-                                               itsNumStoredExemplars,
-                                               itsHiLo0,
-                                               itsHiLo1);
+      Mtx storedExemplars =
+        CModelUtil::getStoredExemplars(modelParams,
+                                       itsNumStoredExemplars,
+                                       itsHiLo0,
+                                       itsHiLo1);
 
       if (category == 0)
         return storedExemplars(row_range_n(0, itsNumStoredExemplars));
@@ -138,10 +84,11 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   attWeights.apply(std::abs);
 
-  const Mtx storedExemplars = getStoredExemplars(modelParams,
-                                                 itsNumStoredExemplars,
-                                                 itsHiLo0,
-                                                 itsHiLo1);
+  const Mtx storedExemplars =
+    CModelUtil::getStoredExemplars(modelParams,
+                                   itsNumStoredExemplars,
+                                   itsHiLo0,
+                                   itsHiLo1);
 
   {DOTRACE("<cmodelspc.cc>::loop");
 
