@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Wed Jul 31 15:04:22 2002
+// written: Wed Jul 31 16:28:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -84,8 +84,12 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   attWeights.apply(std::abs);
 
+  const Slice otherParams =
+    modelParams(range(Classifier::DIM_OBJ_PARAMS+2,
+                      modelParams.nelems()));
+
   const Mtx storedExemplars =
-    CModelUtil::getStoredExemplars(modelParams,
+    CModelUtil::getStoredExemplars(otherParams,
                                    itsNumStoredExemplars,
                                    itsHiLo0,
                                    itsHiLo1);
