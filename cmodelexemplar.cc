@@ -29,10 +29,10 @@
 // time in the time-critical inner loop.
 //
 
-class MinkDistBinder {
+class MinkowskiBinder {
 public:
-  MinkDistBinder(MtxConstIter attWeights, MtxConstIter x2,
-					  double r = 2.0, double r_inv = 0.5) :
+  MinkowskiBinder(MtxConstIter attWeights, MtxConstIter x2,
+						 double r = 2.0, double r_inv = 0.5) :
 	 itsAttWeights(attWeights),
 	 itsX2(x2),
 	 itsR(r),
@@ -63,7 +63,7 @@ public:
 		{
 		  wt_sum += (*wt) * ((*x1) - (*x2)) * ((*x1) - (*x2));
 		}
-	 return sqrt(wt_sum);	 
+	 return sqrt(wt_sum);
   }
 
 private:
@@ -82,12 +82,14 @@ private:
 
 CModelExemplar::CModelExemplar(const Mtx& objParams,
 										 const Mtx& observedIncidence,
-										 int numStoredExemplars) :
+										 int numStoredExemplars,
+										 TransferFunction transferFunc) :
   Classifier(objParams, observedIncidence),
   itsNumTrainingExemplars(countCategory(objParams,0)),
   itsTraining1(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
   itsTraining2(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
-  itsNumStoredExemplars(numStoredExemplars)
+  itsNumStoredExemplars(numStoredExemplars),
+  itsTransferFunc(transferFunc)
 {
   int num2 = countCategory(objParams, 1);
 
@@ -173,26 +175,31 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 exemplars.push_back(exemplar(yy).begin());
   }
 
-  double sim1, sim2;
+  double dist1, dist2;
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-	 MinkDistBinder binder1(attWts, stored1.rowIter(x),
-									minkPower, minkPowerInv);
-	 MinkDistBinder binder2(attWts, stored2.rowIter(x),
-									minkPower, minkPowerInv);
+	 MinkowskiBinder binder1(attWts, stored1.rowIter(x),
+									 minkPower, minkPowerInv);
+	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
+									 minkPower, minkPowerInv);
 
 	 for (int y = 0; y < numAllExemplars(); ++y) {
 
 		if (minkPower == 2.0) {
-		  sim1 = binder1.minkDist2(exemplars[y]);
-		  sim2 = binder2.minkDist2(exemplars[y]);
+		  dist1 = binder1.minkDist2(exemplars[y]);
+		  dist2 = binder2.minkDist2(exemplars[y]);
 		}
 		else {
-		  sim1 = binder1.minkDist(exemplars[y]);
-		  sim2 = binder2.minkDist(exemplars[y]);
+		  dist1 = binder1.minkDist(exemplars[y]);
+		  dist2 = binder2.minkDist(exemplars[y]);
 		}
-		diffEvidence(y) += exp(-sim1) - exp(-sim2);
+		if (EXP_DECAY == itsTransferFunc) {
+		  diffEvidence(y) += exp(-dist1) - exp(-dist2);
+		}
+		else if (LINEAR_DECAY == itsTransferFunc) {
+		  diffEvidence(y) += -dist1 + dist2;
+		}
 	 }
   }
 }
