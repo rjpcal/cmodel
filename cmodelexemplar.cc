@@ -175,7 +175,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
         if (minkPower == 2.0) {
           if (EXP_DECAY == itsTransferFunc) {
-            *iter1 = Num::fastexp7(-binder1.minkDist2(exemplars.at(y)));
+            *iter1 = exp(-binder1.minkDist2(exemplars.at(y)));
           }
           else if (LINEAR_DECAY == itsTransferFunc) {
             *iter1 = -binder1.minkDist2(exemplars.at(y));
@@ -183,7 +183,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
         }
         else {
           if (EXP_DECAY == itsTransferFunc) {
-            *iter1 = Num::fastexp7(-binder1.minkDist(exemplars.at(y)));
+            *iter1 = exp(-binder1.minkDist(exemplars.at(y)));
           }
           else if (LINEAR_DECAY == itsTransferFunc) {
             *iter1 = -binder1.minkDist(exemplars.at(y));
@@ -207,7 +207,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
       for (mtx_iter iter2 = distrust2; iter2.has_more(); ++y, ++iter2) {
         if (minkPower == 2.0) {
           if (EXP_DECAY == itsTransferFunc) {
-            *iter2 = Num::fastexp7(-binder2.minkDist2(exemplars.at(y)));
+            *iter2 = exp(-binder2.minkDist2(exemplars.at(y)));
           }
           else if (LINEAR_DECAY == itsTransferFunc) {
             *iter2 = -binder2.minkDist2(exemplars.at(y));
@@ -215,7 +215,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
         }
         else {
           if (EXP_DECAY == itsTransferFunc) {
-            *iter2 = Num::fastexp7(-binder2.minkDist(exemplars.at(y)));
+            *iter2 = exp(-binder2.minkDist(exemplars.at(y)));
           }
           else if (LINEAR_DECAY == itsTransferFunc) {
             *iter2 = -binder2.minkDist(exemplars.at(y));
