@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:12 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:51:18 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,10 +21,11 @@
 // time in the time-critical inner loop.
 //
 
-class MinkowskiBinder {
+class MinkowskiBinder
+{
 public:
   MinkowskiBinder(MtxConstIter attWeights, MtxConstIter x2,
-                   double r = 2.0, double r_inv = 0.5) :
+                  double r = 2.0, double r_inv = 0.5) :
     itsAttWeights(attWeights),
     itsX2(x2),
     itsR(r),

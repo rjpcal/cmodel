@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:50:33 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,8 @@
 
 #include "mtx.h"
 
-class CModelExemplar : public Classifier {
+class CModelExemplar : public Classifier
+{
 public:
 
   enum Category { CAT1, CAT2 };

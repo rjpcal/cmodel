@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:52:54 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -20,7 +20,8 @@
 
 class fstring;
 
-class SimplexOptimizer {
+class SimplexOptimizer
+{
 public:
   enum PrintType { NONE, NOTIFY, FINAL, ITER, SIMPLEX };
 
@@ -68,7 +69,15 @@ private:
 
   int itsIterCount;
 
-  enum IterType { INITIAL, EXPAND, REFLECT, CONTRACT_OUTSIDE, CONTRACT_INSIDE, SHRINK };
+  enum IterType
+    {
+      INITIAL,
+      EXPAND,
+      REFLECT,
+      CONTRACT_OUTSIDE,
+      CONTRACT_INSIDE,
+      SHRINK
+    };
 
   IterType itsCurIter;
 
@@ -172,14 +181,15 @@ private:
     if (funcCount() < itsMaxFevals)
       return false;
 
-    if (itsPrnt != NONE) {
-      std::cerr << "\nExiting: Maximum number of function evaluations "
-                << "has been exceeded\n"
-                << "         - increase MaxFunEvals option.\n"
-                << "         Current function value: "
-                << bestFval()
-                << "\n\n";
-    }
+    if (itsPrnt != NONE)
+      {
+        std::cerr << "\nExiting: Maximum number of function evaluations "
+                  << "has been exceeded\n"
+                  << "         - increase MaxFunEvals option.\n"
+                  << "         Current function value: "
+                  << bestFval()
+                  << "\n\n";
+      }
 
     return true;
   }
@@ -189,14 +199,15 @@ private:
     if (itsIterCount < itsMaxIters)
       return false;
 
-    if (itsPrnt != NONE) {
-      std::cerr << "\nExiting: Maximum number of iterations "
-                << "has been exceeded\n"
-                << "         - increase MaxIter option.\n"
-                << "         Current function value: "
-                << bestFval()
-                << "\n\n";
-    }
+    if (itsPrnt != NONE)
+      {
+        std::cerr << "\nExiting: Maximum number of iterations "
+                  << "has been exceeded\n"
+                  << "         - increase MaxIter option.\n"
+                  << "         Current function value: "
+                  << bestFval()
+                  << "\n\n";
+      }
 
     return true;
   }

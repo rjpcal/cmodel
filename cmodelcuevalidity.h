@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:50:19 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,8 @@
 
 #include "classifier.h"
 
-class CModelCueValidity : public Classifier {
+class CModelCueValidity : public Classifier
+{
 public:
   enum Flag { FREQ_WEIGHT, NO_FREQ_WEIGHT };
 
@@ -25,7 +26,7 @@ public:
 
 protected:
   virtual void computeDiffEv(const Mtx& objects,
-                                                                          Slice& modelParams, Mtx& diffEvOut);
+                             Slice& modelParams, Mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 

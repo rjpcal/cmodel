@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:50:56 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,8 @@
 
 #include "cmodelexemplar.h"
 
-class CModelWpsm : public CModelExemplar {
+class CModelWpsm : public CModelExemplar
+{
 private:
   Mtx itsPrototype1;
   Mtx itsPrototype2;
@@ -24,7 +25,7 @@ private:
 
 public:
   CModelWpsm(const Mtx& objParams,
-                                 TransferFunction transferFunc = EXP_DECAY);
+             TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelWpsm();
 };

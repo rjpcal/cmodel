@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:55:51 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -354,11 +354,13 @@ DOTRACE("Classifier::objectsOfCategory");
   return result;
 }
 
-int Classifier::exemplarCategory(int i) const {
+int Classifier::exemplarCategory(int i) const
+{
   return int(itsObjCategories.at(i));
 }
 
-Slice Classifier::exemplar(int i) const {
+Slice Classifier::exemplar(int i) const
+{
   return itsObjects.row(i);
 }
 

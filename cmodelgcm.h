@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 13:50:42 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,8 @@
 
 #include "cmodelexemplar.h"
 
-class CModelGcm : public CModelExemplar {
+class CModelGcm : public CModelExemplar
+{
 private:
   virtual const Mtx& getStoredExemplars(Category cat);
 
