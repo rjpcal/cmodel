@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Apr 10 11:19:43 2001
+// written: Tue Apr 10 14:40:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -238,68 +238,16 @@ DOTRACE("Mclassifier");
 	 validateInput(observedIncidence_mx);
 	 const Mtx observedIncidence(observedIncidence_mx);
 
-	 Mtx result(0,0);
-
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
 																  observedIncidence,
 																  extraArgs_mx);
 
-	 int multiplier = 1;
-	 // check for minus sign
-	 if (actionRequest.c_str()[0] == '-')
-		{
-		  multiplier = -1;
-		  fixed_string trimmed = actionRequest.c_str() + 1;
-		  actionRequest = trimmed;
-		}
+	 Classifier::RequestResult res = model->handleRequest(actionRequest,
+																			allModelParams,
+																			extraArgs_mx);
 
-	 //---------------------------------------------------------------------
-	 //
-	 // Call the requested computational function for each set of model
-	 // params
-	 //
-	 //---------------------------------------------------------------------
-
-	 if ( actionRequest == "ll" || actionRequest == "llc" )
-		{
-		  result.resize(allModelParams.ncols(), 1);
-		  for (int i = 0; i < allModelParams.ncols(); ++i)
-			 {
-				Slice modelParams(allModelParams.column(i));
-				result.at(i) = multiplier * model->currentLogL(modelParams);
-			 }
-		}
-	 else if ( actionRequest == "llf" )
-		{
-		  result.resize(allModelParams.ncols(), 1);
-		  for (int i = 0; i < allModelParams.ncols(); ++i)
-			 {
-				result.at(i) = multiplier * model->fullLogL();
-			 }
-		}
-	 else if ( actionRequest == "dev" )
-		{
-		  result.resize(allModelParams.ncols(), 1);
-		  for (int i = 0; i < allModelParams.ncols(); ++i)
-			 {
-				Slice modelParams(allModelParams.column(i));
-				result.at(i) = multiplier * model->deviance(modelParams);
-			 }
-		}
-	 else if ( actionRequest == "classify" )
-		{
-		  Mtx testObjects = Mtx::extractStructField(extraArgs_mx, "testObjects");
-
-		  result.resize(testObjects.mrows(), allModelParams.ncols());
-
-		  for (int i = 0; i < allModelParams.ncols(); ++i)
-			 {
-				Slice modelParams(allModelParams.column(i));
-				result.column(i) = model->classifyObjects(modelParams, testObjects);
-			 }
-		}
-	 else
+	 if ( !res.requestHandled )
 		{
 		  ErrorWithMsg err("unknown model action: ");
 		  err.appendMsg(actionRequest.c_str());
@@ -314,7 +262,7 @@ DOTRACE("Mclassifier");
 
 	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-	 return result.makeMxArray();
+	 return res.result.makeMxArray();
   }
   catch (ErrorWithMsg& err) {
 	 mexErrMsgTxt(err.msg_cstr());
