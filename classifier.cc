@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Apr 18 16:45:46 2001
+// written: Thu Apr 26 19:16:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,16 +29,19 @@
 
 class LLEvaluator : public MultivarFunction {
   Classifier& itsC;
+  const Mtx& itsObjs;
+  const Mtx& itsInc;
 
 protected:
   virtual double doEvaluate(const Mtx& x)
   {
 	 Slice params(x.column(0));
-	 return -itsC.currentLogL(params);
+	 return -itsC.currentLogL(params, itsObjs, itsInc);
   }
 
 public:
-  LLEvaluator(Classifier& c) : itsC(c) {}
+  LLEvaluator(Classifier& c, const Mtx& objs, const Mtx& inc) :
+	 itsC(c), itsObjs(objs), itsInc(inc) {}
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -47,13 +50,12 @@ public:
 //
 ///////////////////////////////////////////////////////////////////////
 
-Classifier::Classifier(const Mtx& objParams,
-							  const Mtx& observedIncidence) :
+Classifier::Classifier(const Mtx& objParams) :
   itsObjCategories(objParams.columns(0, 1)),
   itsObjects(objParams.columns(1, DIM_OBJ_PARAMS)),
   itsNumAllExemplars(objParams.mrows()),
-  itsObservedIncidence(observedIncidence),
   itsDiffEvidence(itsNumAllExemplars,1),
+  itsObservedIncidenceCache(0,0),
   itsCachedLogL_1_2(0.0)
 {}
 
@@ -93,15 +95,19 @@ DOTRACE("Classifier::forwardProbit");
 //
 //---------------------------------------------------------------------
 
-double Classifier::computeLogL(const Mtx& predictedProbability)
+double Classifier::computeLogL(const Mtx& predictedProbability,
+										 const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::computeLogL");
 
-  if (itsCachedLogL_1_2 == 0.0)
+  if (observedIncidence != itsObservedIncidenceCache ||
+		itsCachedLogL_1_2 == 0.0)
 	 {
-		for(int k = 0; k < itsNumAllExemplars; ++k) {
-		  double oi1 = itsObservedIncidence.at(k,0);
-		  double oi2 = itsObservedIncidence.at(k,1);
+		itsCachedLogL_1_2 = 0.0;
+
+		for(int k = 0; k < observedIncidence.mrows(); ++k) {
+		  double oi1 = observedIncidence.at(k,0);
+		  double oi2 = observedIncidence.at(k,1);
 
 		  // term 1
 		  itsCachedLogL_1_2 += Num::gammaln(1.0 + oi1 + oi2);
@@ -110,14 +116,16 @@ DOTRACE("Classifier::computeLogL");
 		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi1);
 		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi2);
 		}
+
+		itsObservedIncidenceCache = observedIncidence;
 	 }
 
   double logL_3 = 0.0;
 
   const double LOG_10_MINUS_50 = -115.1293;
 
-  MtxConstIter oi1iter = itsObservedIncidence.columnIter(0);
-  MtxConstIter oi2iter = itsObservedIncidence.columnIter(1);
+  MtxConstIter oi1iter = observedIncidence.columnIter(0);
+  MtxConstIter oi2iter = observedIncidence.columnIter(1);
 
   MtxConstIter ppiter = predictedProbability.columnIter(0);
 
@@ -141,13 +149,13 @@ DOTRACE("Classifier::computeLogL");
 }
 
 // Returns the classification probability for each of 'objects'
-Mtx Classifier::classifyObjects(Slice& modelParams, const Mtx& objects)
+Mtx Classifier::classifyObjects(Slice& modelParams, const Mtx& testObjects)
 {
 DOTRACE("Classifier::classifyObjects");
 
-  itsDiffEvidence.resize(objects.mrows(), 1);
+  itsDiffEvidence.resize(testObjects.mrows(), 1);
 
-  computeDiffEv(objects, modelParams, itsDiffEvidence);
+  computeDiffEv(testObjects, modelParams, itsDiffEvidence);
 
   //---------------------------------------------------------------------
   //
@@ -166,40 +174,44 @@ DOTRACE("Classifier::classifyObjects");
   return forwardProbit(itsDiffEvidence, thresh, sigmaNoise);
 }
 
-double Classifier::currentLogL(Slice& modelParams)
+double Classifier::currentLogL(Slice& modelParams,
+										 const Mtx& testObjects,
+										 const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::currentLogL");
 
-  Mtx pp = classifyObjects(modelParams, itsObjects);
+  Mtx pp = classifyObjects(modelParams, testObjects);
 
   // Compute the loglikelihood based on the predicted probabilities
   // and the observed incidences.
 
-  return computeLogL(pp);
+  return computeLogL(pp, observedIncidence);
 }
 
-double Classifier::fullLogL()
+double Classifier::fullLogL(const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::fullLogL");
 
   Mtx observedProb(numAllExemplars(), 1);
   MtxIter opiter = observedProb.columnIter(0);
 
-  MtxConstIter oi1iter = itsObservedIncidence.columnIter(0);
-  MtxConstIter oi2iter = itsObservedIncidence.columnIter(1);
+  MtxConstIter oi1iter = observedIncidence.columnIter(0);
+  MtxConstIter oi2iter = observedIncidence.columnIter(1);
 
   for (; opiter.hasMore(); ++opiter, ++oi1iter, ++oi2iter)
 	 *opiter = (*oi1iter / (*oi1iter + *oi2iter));
 
-  return computeLogL(observedProb);
+  return computeLogL(observedProb, observedIncidence);
 }
 
-double Classifier::deviance(Slice& modelParams)
+double Classifier::deviance(Slice& modelParams,
+									 const Mtx& testObjects,
+									 const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::deviance");
 
-  double llc = currentLogL(modelParams);
-  double llf = fullLogL();
+  double llc = currentLogL(modelParams, testObjects, observedIncidence);
+  double llf = fullLogL(observedIncidence);
 
   return -2 * (llc - llf);
 }
@@ -227,13 +239,17 @@ DOTRACE("Classifier::handleRequest");
   //
   //---------------------------------------------------------------------
 
+  Mtx testObjects = extraArgs.getStructField("testObjects").getMtx();
+  Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
   if ( action == "ll" || action == "llc" )
 	 {
 		Mtx result(allModelParams.ncols(), 1);
 		for (int i = 0; i < allModelParams.ncols(); ++i)
 		  {
 			 Slice modelParams(allModelParams.column(i));
-			 result.at(i) = multiplier * this->currentLogL(modelParams);
+			 result.at(i) = multiplier *
+				currentLogL(modelParams, testObjects, observedIncidence);
 		  }
 
 		return result;
@@ -244,7 +260,7 @@ DOTRACE("Classifier::handleRequest");
 		Mtx result(allModelParams.ncols(), 1);
 		for (int i = 0; i < allModelParams.ncols(); ++i)
 		  {
-			 result.at(i) = multiplier * this->fullLogL();
+			 result.at(i) = multiplier * fullLogL(observedIncidence);
 		  }
 
 		return result;
@@ -256,7 +272,8 @@ DOTRACE("Classifier::handleRequest");
 		for (int i = 0; i < allModelParams.ncols(); ++i)
 		  {
 			 Slice modelParams(allModelParams.column(i));
-			 result.at(i) = multiplier * this->deviance(modelParams);
+			 result.at(i) = multiplier *
+				deviance(modelParams, testObjects, observedIncidence);
 		  }
 
 		return result;
@@ -264,8 +281,6 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "classify" )
 	 {
-		Mtx testObjects = extraArgs.getStructField("testObjects").getMtx();
-
 		Mtx result(testObjects.mrows(), allModelParams.ncols());
 
 		for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -279,7 +294,7 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "simplex" )
 	 {
-		LLEvaluator objective(*this);
+		LLEvaluator objective(*this, testObjects, observedIncidence);
 
 		SimplexOptimizer opt(objective,
 									allModelParams.asColumn(),
