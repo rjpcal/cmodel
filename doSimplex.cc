@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 16:45:44 2002
 // $Id$
 //
 //
@@ -98,22 +98,33 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
   return int(mxGetScalar(arr));
 }
 
-namespace {
+namespace
+{
   MexBuf* mexBuf = 0;
+
+  std::streambuf* coutOrigBuf = 0;
+  std::streambuf* cerrOrigBuf = 0;
 }
 
-void InitializeModule_doSimplex(void) {
+void InitializeModule_doSimplex(void)
+{
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
   cout = mexBuf;
   cerr = mexBuf;
 #else
-  cout.rdbuf(mexBuf);
-  cerr.rdbuf(mexBuf);
+  coutOrigBuf = cout.rdbuf(mexBuf);
+  cerrOrigBuf = cerr.rdbuf(mexBuf);
 #endif
 }
 
-void TerminateModule_doSimplex(void) {
+void TerminateModule_doSimplex(void)
+{
+  Util::Prof::printAtExit(false);
+
+  cout.rdbuf(coutOrigBuf);
+  cerr.rdbuf(cerrOrigBuf);
+
   delete mexBuf;
 }
 

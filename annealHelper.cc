@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 18:14:46 2002
-// written: Thu Feb  7 13:54:49 2002
+// written: Thu Feb  7 16:44:37 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -46,6 +46,9 @@ static mxArray* _mxarray26_;
 namespace
 {
   MexBuf* mexBuf = 0;
+
+  std::streambuf* coutOrigBuf = 0;
+  std::streambuf* cerrOrigBuf = 0;
 }
 
 void InitializeModule_annealVisitParameters()
@@ -55,8 +58,8 @@ void InitializeModule_annealVisitParameters()
   cout = mexBuf;
   cerr = mexBuf;
 #else
-  cout.rdbuf(mexBuf);
-  cerr.rdbuf(mexBuf);
+  coutOrigBuf = cout.rdbuf(mexBuf);
+  cerrOrigBuf = cerr.rdbuf(mexBuf);
 #endif
 
   _mxarray20_ = mclInitializeDouble(0.0);
@@ -68,6 +71,11 @@ void InitializeModule_annealVisitParameters()
 
 void TerminateModule_annealVisitParameters()
 {
+  Util::Prof::printAtExit(false);
+
+  cout.rdbuf(coutOrigBuf);
+  cerr.rdbuf(cerrOrigBuf);
+
   delete mexBuf;
 
   mxDestroyArray(_mxarray26_);
