@@ -109,9 +109,11 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   for (int i = 0; i < objParams.mrows(); ++i)
 	 {
 		if (int(objParams.at(i,0)) == 0)
-		  itsTraining1[c1++] = objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS);
+		  itsTraining1[c1++].rebind(
+						objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS));
 		else if (int(objParams.at(i,0)) == 1)
-		  itsTraining2[c2++] = objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS);
+		  itsTraining2[c2++].rebind(
+						objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS));
 	 }
 }
 

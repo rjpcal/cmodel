@@ -69,17 +69,18 @@ DOTRACE("CModelCssm::loadModelParams");
 
   scaleWeights(modelParams);
 
-  itsScaledWeights = modelParams;
+  itsScaledWeights.rebind(modelParams);
 }
 
 ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
-		Num::linearCombo(numTrainingExemplars(),
-							  itsScaledWeights.data()+n,
-							  2*numStoredExemplars(),
-							  &training1()[0], DIM_OBJ_PARAMS,
+		Num::linearCombo(ConstSlice(itsScaledWeights.data()+n,
+											 2*numStoredExemplars(),
+											 numTrainingExemplars()),
+							  &training1()[0],
+							  training1().size(),
 							  &itsStored1[0]);
 
 		return Slice(&itsStored1[0], 1, DIM_OBJ_PARAMS);
@@ -87,10 +88,11 @@ ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 
   else if (CAT2 == cat)
 	 {
-		Num::linearCombo(numTrainingExemplars(),
-							  itsScaledWeights.data()+n+numStoredExemplars(),
-							  2*numStoredExemplars(),
-							  &training2()[0], DIM_OBJ_PARAMS,
+		Num::linearCombo(ConstSlice(itsScaledWeights.data()+n+numStoredExemplars(),
+											 2*numStoredExemplars(),
+											 numTrainingExemplars()),
+							  &training2()[0],
+							  training2().size(),
 							  &itsStored2[0]);
 
 		return Slice(&itsStored2[0], 1, DIM_OBJ_PARAMS);

@@ -136,16 +136,14 @@ DOTRACE("Mclassifier");
 	 mexLocalFunctionTable save_local_function_table_ =
 		mclSetCurrentLocalFunctionTable(&_local_function_table_classifier);
 
-	 mclCopyArray(&modelParams_mx); // THIS IS REQUIRED
 	 validateInput(modelParams_mx);
+	 Mtx allModelParams(modelParams_mx); // The Mtx gets a copy of the data
 
 	 validateInput(objParams_mx);
 	 const Mtx objParams(objParams_mx);
 
 	 validateInput(observedIncidence_mx);
 	 const Mtx observedIncidence(observedIncidence_mx);
-
-	 Mtx allModelParams(modelParams_mx);
 
 	 Mtx result(allModelParams.ncols(), 1);
 
@@ -206,8 +204,6 @@ DOTRACE("Mclassifier");
 	 // Clean up
 	 //
 	 //---------------------------------------------------------------------
-
-	 mxDestroyArray(modelParams_mx);
 
 	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
