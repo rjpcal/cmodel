@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Jul 31 15:08:07 2002
+// written: Tue Sep 28 12:22:57 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,13 +22,12 @@
 #include "mx/mxwrapper.h"
 
 #include "util/error.h"
-#include "util/minivec.h"
 #include "util/strings.h"
 
 #include "util/trace.h"
 
 #include <cmath>
-
+#include <vector>
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -146,7 +145,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   MtxConstIter attWts = attWeights.begin();
 
-  minivec<MtxConstIter> exemplars;
+  std::vector<MtxConstIter> exemplars;
 
   for (int yy = 0; yy < objects.mrows(); ++yy) {
     exemplars.push_back(objects.rowIter(yy));
