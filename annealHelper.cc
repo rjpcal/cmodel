@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:30:29 2002
+// written: Mon Feb 18 16:37:02 2002
 // $Id$
 //
 //
@@ -404,13 +404,10 @@ class AnnealingRun
 private:
   Astate& itsAstate;
   int itsRunNum;
-  int itsNvisits;
   double itsCriticalTemp;
-  Mtx itsMinUsedParams;
-  Mtx itsMaxUsedParams;
-  fstring itsFunFunName;
-  int itsNvararg;
-  mxArray** itsPvararg;
+  const fstring itsFunFunName;
+  const int itsNvararg;
+  mxArray** const itsPvararg;
 
 public:
   AnnealingRun(const fstring& funcName,
@@ -420,10 +417,7 @@ public:
     :
     itsAstate(astate),
     itsRunNum(0),
-    itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
-    itsMinUsedParams(0,0),
-    itsMaxUsedParams(0,0),
     itsFunFunName(funcName),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
@@ -480,9 +474,6 @@ public:
 
     Mtx startingModel = startingModels.column(startingPos);
 
-    itsMinUsedParams = startingModel;
-    itsMaxUsedParams = startingModel;
-
     return startingModel;
   }
 
@@ -509,27 +500,6 @@ public:
       mexPrintf("%f ", model.at(i));
     mexPrintf("\ncost: %7.4f", cost);
     mexPrintf("\n");
-  }
-
-  void updateUsedParams(const Mtx& model)
-  {
-    for (int i = 0; i < model.nelems(); ++i)
-      {
-        itsMinUsedParams.at(i) = std::min(double(itsMinUsedParams.at(i)),
-                                          model.at(i));
-
-        itsMaxUsedParams.at(i) = std::max(double(itsMaxUsedParams.at(i)),
-                                          model.at(i));
-      }
-  }
-
-  void updateDeltas()
-  {
-    for (int i = 0; i < itsAstate.deltas.nelems(); ++i)
-      {
-        itsAstate.deltas.at(i) =
-          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
-      }
   }
 
   void updateBests()
@@ -671,12 +641,14 @@ DOTRACE("AnnealingRun::oneRun");
     }
 #endif
 
-  itsNvisits = 0;
+//   itsNvisits = 0;
+  int nvisits = 0;
   itsCriticalTemp = std::numeric_limits<double>::max();
-  itsMinUsedParams = Mtx(0,0);
-  itsMaxUsedParams = Mtx(0,0);
 
   Mtx bestModel = createStartingModel();
+
+  Mtx minUsedParams = bestModel;
+  Mtx maxUsedParams = bestModel;
 
   for (int temps_i = 0; temps_i < itsAstate.numTemps; ++temps_i)
     {
@@ -689,9 +661,9 @@ DOTRACE("AnnealingRun::oneRun");
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
-          ++itsNvisits;
+          ++nvisits;
 
-          if (itsAstate.talking && (itsNvisits % 10 == 0))
+          if (itsAstate.talking && (nvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
                         int(itsAstate.numFunEvals.at(itsRunNum)),
@@ -699,16 +671,31 @@ DOTRACE("AnnealingRun::oneRun");
                         itsAstate.energy.column(itsRunNum).min());
             }
 
-          itsAstate.energy.at(itsNvisits-1,itsRunNum) =
+          itsAstate.energy.at(nvisits-1,itsRunNum) =
             visitParameters(bestModel, temp);
 
-          updateUsedParams(bestModel);
+          for (int i = 0; i < bestModel.nelems(); ++i)
+            {
+              minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
+                                             double(bestModel.at(i)));
 
-          itsAstate.modelHist.column(itsNvisits-1) = bestModel;
+              maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
+                                             double(bestModel.at(i)));
+            }
+
+          itsAstate.modelHist.column(nvisits-1) = bestModel;
         }
     }
 
-  updateDeltas();
+
+  // Update deltas
+  {
+    for (int i = 0; i < itsAstate.deltas.nelems(); ++i)
+      {
+        itsAstate.deltas.at(i) =
+          0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
+      }
+  }
 
   updateBests();
 
