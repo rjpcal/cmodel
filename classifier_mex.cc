@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Wed Jul 31 15:06:35 2002
+// written: Wed Jul 31 15:21:59 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,6 +22,7 @@
 #include "cmodel/cmodelcuevalidity.h"
 #include "cmodel/cmodelgcm.h"
 #include "cmodel/cmodelpbi.h"
+#include "cmodel/cmodelrxm.h"
 #include "cmodel/cmodelspc.h"
 #include "cmodel/cmodelwpsm.h"
 
@@ -50,12 +51,14 @@ namespace
   public:
     MyMexPkg(ExitFcn f) :
       MexPkg(MEXFUNCNAME, f),
-      recentModel(0)
+      recentCssm(0),
+      recentRxm(0)
     {}
 
     virtual ~MyMexPkg() {}
 
-    shared_ptr<CModelCssm> recentModel;
+    shared_ptr<CModelCssm> recentCssm;
+    shared_ptr<CModelRxm> recentRxm;
   };
 
   MyMexPkg* mexPkg = 0;
@@ -68,37 +71,70 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   DOTRACE("makeClassifier");
   if (whichType == "cssm" || whichType == "rxmlin")
     {
-      CModelExemplar::TransferFunction tfunc =
+      const CModelExemplar::TransferFunction tfunc =
         whichType == "cssm"
         ? CModelExemplar::EXP_DECAY
         : CModelExemplar::LINEAR_DECAY;
 
-      int numStoredExemplars =
+      const int numStoredExemplars =
         Mx::getIntField(extraArgs_mx, "numStoredExemplars");
 
-      if ( mexPkg->recentModel.get() != 0 &&
-           numStoredExemplars == mexPkg->recentModel->numStoredExemplars() &&
-           objParams == mexPkg->recentModel->objParams() &&
-           tfunc == mexPkg->recentModel->transferFunction() )
+      if ( mexPkg->recentCssm.get() != 0 &&
+           numStoredExemplars == mexPkg->recentCssm->numStoredExemplars() &&
+           objParams == mexPkg->recentCssm->objParams() &&
+           tfunc == mexPkg->recentCssm->transferFunction() )
         {
-          DOTRACE("use old");
+          DOTRACE("use old cssm");
 
-          return mexPkg->recentModel;
+          return mexPkg->recentCssm;
         }
       else
         {
-          DOTRACE("make new");
+          DOTRACE("make new cssm");
 
           // To avoid relying on transient matlab storage:
           Mtx uniqObjParams = objParams;
           uniqObjParams.makeUnique();
 
-          mexPkg->recentModel.reset
+          mexPkg->recentCssm.reset
             (new CModelCssm(uniqObjParams,
                             tfunc,
                             numStoredExemplars));
 
-          return mexPkg->recentModel;
+          return mexPkg->recentCssm;
+        }
+    }
+  else if (whichType == "rxm")
+    {
+      const CModelExemplar::TransferFunction tfunc =
+        CModelExemplar::LINEAR_DECAY;
+
+      const int numStoredExemplars =
+        Mx::getIntField(extraArgs_mx, "numStoredExemplars");
+
+      if ( mexPkg->recentRxm.get() != 0 &&
+           numStoredExemplars == mexPkg->recentRxm->numStoredExemplars() &&
+           objParams == mexPkg->recentRxm->objParams() &&
+           tfunc == mexPkg->recentRxm->transferFunction() )
+        {
+          DOTRACE("use old rxm");
+
+          return mexPkg->recentRxm;
+        }
+      else
+        {
+          DOTRACE("make new rxm");
+
+          // To avoid relying on transient matlab storage:
+          Mtx uniqObjParams = objParams;
+          uniqObjParams.makeUnique();
+
+          mexPkg->recentRxm.reset
+            (new CModelRxm(uniqObjParams,
+                           tfunc,
+                           numStoredExemplars));
+
+          return mexPkg->recentRxm;
         }
     }
   else if (whichType == "gcm")
