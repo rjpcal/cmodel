@@ -25,7 +25,7 @@ public:
 
   virtual RequestResult handleRequest(fstring action,
                                       const mtx& allModelParams,
-                                      const MxWrapper& extraArgs);
+                                      const mx_wrapper& extraArgs);
 
 protected:
   virtual int fillModelParamsBounds(mtx& bounds, int startRow) const;

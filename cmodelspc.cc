@@ -45,13 +45,13 @@ DOTRACE("CModelSPC::numModelParams");
 Classifier::RequestResult
 CModelSPC::handleRequest(fstring action,
                          const mtx& allModelParams,
-                         const MxWrapper& extraArgs)
+                         const mx_wrapper& extraArgs)
 {
 DOTRACE("CmodelSPC::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      mtx category_ = extraArgs.getField("category").asMtx();
+      mtx category_ = extraArgs.get_field("category").as_mtx();
 
       int category = int(category_.at(0));
 

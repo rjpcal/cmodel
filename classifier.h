@@ -51,11 +51,11 @@ public:
     RequestResult(mtx res) :
       requestHandled(true), result(res) {}
 
-    RequestResult(MxWrapper res) :
+    RequestResult(mx_wrapper res) :
       requestHandled(true), result(res) {}
 
     const bool requestHandled;
-    MxWrapper result;
+    mx_wrapper result;
   };
 
   /// Handles the request via chain-of-responsibility.
@@ -63,7 +63,7 @@ public:
       attempting to process the request. */
   virtual RequestResult handleRequest(fstring action,
                                       const mtx& modelParams,
-                                      const MxWrapper& extraArgs);
+                                      const mx_wrapper& extraArgs);
 
   static const int DIM_OBJ_PARAMS = 4;
 

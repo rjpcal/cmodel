@@ -29,7 +29,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 {
   if (mxIsChar(arr))
     {
-      if (Mx::getString(arr) == "200*numberofvariables")
+      if (Mx::as_string(arr) == "200*numberofvariables")
         {
           return 200*numModelParams;
         }
@@ -40,7 +40,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
         }
     }
 
-  return Mx::getInt(arr);
+  return Mx::as_int(arr);
 }
 
 void doSimplex(int nlhs, mxArray* plhs[],
@@ -70,7 +70,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
   const int numModelParams = x.nelems();
 
   // Setup the objective function
-  MatlabFunction objective(Mx::getString(funfcn_mx),
+  MatlabFunction objective(Mx::as_string(funfcn_mx),
                            nvararg,
                            pvararg,
                            false);
@@ -78,12 +78,12 @@ void doSimplex(int nlhs, mxArray* plhs[],
   // Create the optimizer...
   SimplexOptimizer opt(objective,
                        mtx(x_in),
-                       Mx::getString(printtype_mx),
+                       Mx::as_string(printtype_mx),
                        numModelParams,
                        extractMaxIters(maxfun_mx, numModelParams),
                        extractMaxIters(maxiter_mx, numModelParams),
-                       Mx::getDouble(tolx_mx),
-                       Mx::getDouble(tolf_mx)
+                       Mx::as_double(tolx_mx),
+                       Mx::as_double(tolf_mx)
                        );
 
   // ... and let it do its optimization
@@ -96,16 +96,12 @@ void doSimplex(int nlhs, mxArray* plhs[],
   plhs[1] = mxCreateScalarDouble(opt.bestFval());
   plhs[2] = mxCreateScalarDouble(exitFlag);
 
-  MxWrapper output_wrapper(plhs[3]);
+  mx_wrapper output;
+  output.set_int_field("iterations", opt.iterCount());
+  output.set_int_field("funcCount", opt.funcCount());
+  output.set_string_field("algorithm", opt.algorithm());
 
-  output_wrapper.setField("iterations",
-                          mxCreateScalarDouble(opt.iterCount()));
-
-  output_wrapper.setField("funcCount",
-                          mxCreateScalarDouble(opt.funcCount()));
-
-  output_wrapper.setField("algorithm",
-                          mxCreateString(opt.algorithm()));
+  plhs[3] = output.release();
 }
 
 

@@ -37,7 +37,7 @@ public:
   // process the request.
   virtual RequestResult handleRequest(fstring action,
                                       const mtx& modelParams,
-                                      const MxWrapper& extraArgs);
+                                      const mx_wrapper& extraArgs);
 
   int numStoredExemplars() const { return itsNumStoredExemplars; }
 

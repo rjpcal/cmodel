@@ -31,9 +31,9 @@ DOTRACE("annealHelper");
   int nvararg = nrhs - NDECLARED;
   const mxArray** pvararg = prhs + NDECLARED;
 
-  AnnealOpts opts((MxWrapper(prhs[0])));
+  AnnealOpts opts((mx_wrapper(prhs[0])));
 
-  MatlabFunction objective(Mx::getString(prhs[1]), // funcName
+  MatlabFunction objective(Mx::as_string(prhs[1]), // funcName
                            nvararg,
                            pvararg,
                            opts.canUseMatrix);

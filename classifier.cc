@@ -273,9 +273,9 @@ DOTRACE("Classifier::deviance");
 
 namespace
 {
-  mtx getTestObjects(const MxWrapper& extraArgs)
+  mtx getTestObjects(const mx_wrapper& extraArgs)
   {
-    mtx result = extraArgs.getField("testObjects").asMtx();
+    mtx result = extraArgs.get_field("testObjects").as_mtx();
 
     if (result.ncols() != Classifier::DIM_OBJ_PARAMS)
       {
@@ -301,7 +301,7 @@ namespace
 Classifier::RequestResult
 Classifier::handleRequest(fstring action,
                           const mtx& allModelParams,
-                          const MxWrapper& extraArgs)
+                          const mx_wrapper& extraArgs)
 {
 DOTRACE("Classifier::handleRequest");
 
@@ -332,7 +332,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llc");
 
-      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -353,7 +353,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llf");
 
-      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
 
       checkModelParams(allModelParams, numModelParams());
 
@@ -370,7 +370,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-dev");
 
-      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -410,7 +410,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-simplex");
 
-      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -422,20 +422,20 @@ DOTRACE("Classifier::handleRequest");
                            allModelParams.as_column(),
                            "notify",
                            allModelParams.nelems(),
-                           extraArgs.getField("maxfun").asInt(),
-                           extraArgs.getField("maxiter").asInt()
+                           extraArgs.get_field("maxfun").as_int(),
+                           extraArgs.get_field("maxiter").as_int()
                            );
 
       int exitFlag = opt.optimize();
 
-      MxWrapper result;
+      mx_wrapper result;
 
-      result.setField("bestParams", opt.bestParams());
-      result.setField("bestFval", opt.bestFval());
-      result.setField("exitFlag", exitFlag);
-      result.setField("iterations", opt.iterCount());
-      result.setField("funcCount", opt.funcCount());
-      result.setField("algorithm", opt.algorithm());
+      result.set_field("bestParams", opt.bestParams());
+      result.set_field("bestFval", opt.bestFval());
+      result.set_field("exitFlag", exitFlag);
+      result.set_field("iterations", opt.iterCount());
+      result.set_field("funcCount", opt.funcCount());
+      result.set_field("algorithm", opt.algorithm());
 
       return result;
     }
@@ -444,13 +444,13 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-anneal");
 
-      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
 
       const mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
-      AnnealOpts opts(extraArgs.getField("annealOpts"));
+      AnnealOpts opts(extraArgs.get_field("annealOpts"));
 
       AnnealingOptimizer ar(objective, opts);
 
