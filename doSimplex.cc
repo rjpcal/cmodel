@@ -654,29 +654,47 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
 
 class SimplexOptimizer {
 private:
-  int itsIterCount;
   FuncEvaluator& itsObjective;
+
+  const Mtx itsInitialGuess;
+  const int itsPrnt;
+  const double itsTolx;
+  const double itsTolf;
+  const int itsNumModelParams;
+  const int itsMaxFevals;
+  const int itsMaxIters;
+
+  int itsIterCount;
   Mtx itsBestParams;
   double itsBestFval;
 
 public:
-  SimplexOptimizer(FuncEvaluator& objective) :
-	 itsIterCount(0),
+  SimplexOptimizer(FuncEvaluator& objective,
+						 const Mtx& x_in,
+						 const int prnt,
+						 const double tolx,
+						 const double tolf,
+						 const int numModelParams,
+						 const int maxfun,
+						 const int maxiter) :
 	 itsObjective(objective),
-	 itsBestParams(0,0)
+
+	 itsInitialGuess(x_in),
+	 itsPrnt(prnt),
+	 itsTolx(tolx),
+	 itsTolf(tolf),
+	 itsNumModelParams(numModelParams),
+	 itsMaxFevals(maxfun),
+	 itsMaxIters(maxiter),
+
+	 itsIterCount(0),
+	 itsBestParams(0,0),
+	 itsBestFval(0.0)
   {}
 
   virtual ~SimplexOptimizer() {}
 
-  void optimize(
-					 int& exitFlag,
-					 const Mtx& x_in,
-					 const int prnt,
-					 const double tolx,
-					 const double tolf,
-					 const int numModelParams,
-					 const int maxfun,
-					 const int maxiter);
+  int optimize();
 
   virtual Mtx bestParams()
   { return itsBestParams; }
@@ -694,15 +712,7 @@ public:
   { return "Nelder-Mead simplex direct search"; }
 };
 
-void SimplexOptimizer::optimize(
-										  int& exitFlag,
-										  const Mtx& x_in,
-										  const int prnt,
-										  const double tolx,
-										  const double tolf,
-										  const int numModelParams,
-										  const int maxfun,
-										  const int maxiter)
+int SimplexOptimizer::optimize()
 {
 
 // HOME
@@ -713,11 +723,11 @@ void SimplexOptimizer::optimize(
   const double SIGMA = 0.5;
 
   // Set up a simplex near the initial guess.
-  Mtx initialParams(x_in.asColumn());
+  Mtx initialParams(itsInitialGuess.asColumn());
 
-  Mtx theSimplex(numModelParams,numModelParams+1);
+  Mtx theSimplex(itsNumModelParams,itsNumModelParams+1);
 
-  Mtx funcVals(1,numModelParams+1);
+  Mtx funcVals(1,itsNumModelParams+1);
 
   // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
   theSimplex.column(0) = initialParams.column(0);
@@ -732,7 +742,7 @@ void SimplexOptimizer::optimize(
 	 // Even smaller delta for zero elements of x
 	 const double zero_term_delta = 0.00025;
 
-	 for (int j = 0; j < numModelParams; ++j)
+	 for (int j = 0; j < itsNumModelParams; ++j)
 		{
 		  theSimplex.column(j+1) = initialParams;
 
@@ -757,7 +767,7 @@ void SimplexOptimizer::optimize(
 
   itsIterCount = 1;
 
-  if (prnt == 3)
+  if (itsPrnt == 3)
 	 {
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
 		mexPrintf(" %5d        %5d     %12.6g         ",
@@ -765,7 +775,7 @@ void SimplexOptimizer::optimize(
 		mexPrintf(how.c_str());
 		mexPrintf("\n");
 	 }
-  else if (prnt == 4)
+  else if (itsPrnt == 4)
 	 {
 		mexPrintf("\n%s\n", how.c_str());
 		theSimplex.print("theSimplex");
@@ -773,12 +783,12 @@ void SimplexOptimizer::optimize(
 		mexPrintf("func_evals: %d\n", funcCount());
 	 }
 
-  exitFlag = 1;
+  int exitFlag = 1;
 
   //---------------------------------------------------------------------
   //
-  // Iterate until the diameter of the simplex is less than tolx AND
-  // the function values differ from the min by less than tolf, or
+  // Iterate until the diameter of the simplex is less than itsTolx AND
+  // the function values differ from the min by less than itsTolf, or
   // the max function evaluations are exceeded. (Cannot use OR
   // instead of AND.)
   //
@@ -787,28 +797,28 @@ void SimplexOptimizer::optimize(
 
   for (;;) { DOTRACE("Main algorithm");
 
-	 if ((funcCount() >= maxfun) || (itsIterCount >= maxiter))
+	 if ((funcCount() >= itsMaxFevals) || (itsIterCount >= itsMaxIters))
 		break; // out of main loop
 
-	 if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
+	 if (withinTolf(funcVals, itsTolf) && withinTolx(theSimplex, itsTolx))
 		break; // out of main loop
 
 	 how = "";
 
-	 // xbar = average of the numModelParams (NOT numModelParams+1) best points
+	 // xbar = average of the itsNumModelParams (NOT itsNumModelParams+1) best points
 
-	 Mtx xbar(numModelParams,1);
-	 const Mtx simplex_1_n(theSimplex.columns(0,numModelParams));
+	 Mtx xbar(itsNumModelParams,1);
+	 const Mtx simplex_1_n(theSimplex.columns(0,itsNumModelParams));
 
-	 const double numparams_inv = 1.0/numModelParams;
+	 const double numparams_inv = 1.0/itsNumModelParams;
 	 MtxIter xbar_itr = xbar.columnIter(0);
 
-	 for (int r = 0; r < numModelParams; ++r, ++xbar_itr)
+	 for (int r = 0; r < itsNumModelParams; ++r, ++xbar_itr)
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
 
 
 	 // Calculate the reflection point
-	 Mtx xr = (xbar*(1.0+RHO) - theSimplex.columns(numModelParams,1) * RHO);
+	 Mtx xr = (xbar*(1.0+RHO) - theSimplex.columns(itsNumModelParams,1) * RHO);
 
 	 double fxr = itsObjective.evaluate(xr);
 
@@ -820,20 +830,20 @@ void SimplexOptimizer::optimize(
 		  // Calculate the expansion point
 		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*theSimplex(:,end);
 		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
-						(theSimplex.columns(numModelParams,1) * (RHO*CHI)));
+						(theSimplex.columns(itsNumModelParams,1) * (RHO*CHI)));
 
 		  double fxe = itsObjective.evaluate(xe);
 
 		  if (fxe < fxr)
 			 {
-				theSimplex.column(numModelParams) = xe;
-				funcVals.at(0,numModelParams) = fxe;
+				theSimplex.column(itsNumModelParams) = xe;
+				funcVals.at(0,itsNumModelParams) = fxe;
 				how = "expand";
 			 }
 		  else
 			 {
-				theSimplex.column(numModelParams) = xr;
-				funcVals.at(0,numModelParams) = fxr;
+				theSimplex.column(itsNumModelParams) = xr;
+				funcVals.at(0,itsNumModelParams) = fxr;
 				how = "reflect";
 			 }
       }
@@ -841,28 +851,28 @@ void SimplexOptimizer::optimize(
 		{
 		  DOTRACE("fxr >= funcVals(:,1)");
 
-		  if (fxr < funcVals.at(0,numModelParams-1))
+		  if (fxr < funcVals.at(0,itsNumModelParams-1))
 			 {
-				theSimplex.column(numModelParams) = xr;
-				funcVals.at(0,numModelParams) = fxr;
+				theSimplex.column(itsNumModelParams) = xr;
+				funcVals.at(0,itsNumModelParams) = fxr;
 				how = "reflect";
 			 }
 		  else
 			 {
 				// Perform contraction
 
-				if (fxr < funcVals.at(0,numModelParams))
+				if (fxr < funcVals.at(0,itsNumModelParams))
 				  {
 					 // Perform an outside contraction
 					 Mtx xc = (xbar*(1.0 + PSI*RHO) -
-								  (theSimplex.columns(numModelParams,1) *(PSI*RHO)));
+								  (theSimplex.columns(itsNumModelParams,1) *(PSI*RHO)));
 
 					 double fxc = itsObjective.evaluate(xc);
 
 					 if (fxc <= fxr)
 						{
-						  theSimplex.column(numModelParams) = xc;
-						  funcVals.at(0,numModelParams) = fxc;
+						  theSimplex.column(itsNumModelParams) = xc;
+						  funcVals.at(0,itsNumModelParams) = fxc;
 						  how = "contract outside";
 						}
 					 else
@@ -874,14 +884,14 @@ void SimplexOptimizer::optimize(
 				  {
 					 // Perform an inside contraction
 					 Mtx xcc = (xbar*(1.0-PSI) +
-									(theSimplex.columns(numModelParams,1)* PSI));
+									(theSimplex.columns(itsNumModelParams,1)* PSI));
 
 					 double fxcc = itsObjective.evaluate(xcc);
 
-					 if (fxcc < funcVals.at(0,numModelParams))
+					 if (fxcc < funcVals.at(0,itsNumModelParams))
 						{
-						  theSimplex.column(numModelParams) = xcc;
-						  funcVals.at(0,numModelParams) = fxcc;
+						  theSimplex.column(itsNumModelParams) = xcc;
+						  funcVals.at(0,itsNumModelParams) = fxcc;
 						  how = "contract inside";
 						}
 					 else
@@ -892,7 +902,7 @@ void SimplexOptimizer::optimize(
 
 			 if (how == "shrink")
 				{
-				  for (int j = 1; j < numModelParams+1; ++j)
+				  for (int j = 1; j < itsNumModelParams+1; ++j)
 					 {
 						theSimplex.column(j) =
 						  theSimplex.columns(0,1) +
@@ -910,32 +920,32 @@ void SimplexOptimizer::optimize(
 	 Mtx index = funcVals.row(0).getSortOrder();
 
 	 const int smallest = int(index.at(0));
-	 const int largest = int(index.at(numModelParams));
-	 const int largest2 = int(index.at(numModelParams-1));
+	 const int largest = int(index.at(itsNumModelParams));
+	 const int largest2 = int(index.at(itsNumModelParams-1));
 
 	 // These swaps are smart enough to check if the column numbers
 	 // are the same before doing the swap
 
 	 funcVals.swapColumns(0, smallest);
-	 funcVals.swapColumns(largest, numModelParams);
-	 funcVals.swapColumns(largest2, numModelParams-1);
+	 funcVals.swapColumns(largest, itsNumModelParams);
+	 funcVals.swapColumns(largest2, itsNumModelParams-1);
 
 	 theSimplex.swapColumns(0, smallest);
-	 theSimplex.swapColumns(largest, numModelParams);
-	 theSimplex.swapColumns(largest2, numModelParams-1);
+	 theSimplex.swapColumns(largest, itsNumModelParams);
+	 theSimplex.swapColumns(largest2, itsNumModelParams-1);
 	 }
 
 
 	 ++itsIterCount;
 
-	 if (prnt == 3)
+	 if (itsPrnt == 3)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
 						itsIterCount, funcCount(), double(funcVals.at(0,0)));
 		  mexPrintf(how.c_str());
 		  mexPrintf("\n");
 		}
-	 else if (prnt == 4)
+	 else if (itsPrnt == 4)
 		{
 		  mexPrintf("\n%s\n", how.c_str());
 		  theSimplex.print("theSimplex");
@@ -950,9 +960,9 @@ void SimplexOptimizer::optimize(
 
   itsBestFval = funcVals.row(0).min();
 
-  if (funcCount() >= maxfun)
+  if (funcCount() >= itsMaxFevals)
 	 {
-		if (prnt > 0) {
+		if (itsPrnt > 0) {
 		  mexPrintf("\nExiting: Maximum number of function evaluations "
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxFunEvals option.\n");
@@ -962,9 +972,9 @@ void SimplexOptimizer::optimize(
 
 		exitFlag = 0;
 	 }
-  else if (itsIterCount >= maxiter)
+  else if (itsIterCount >= itsMaxIters)
 	 {
-		if (prnt > 0) {
+		if (itsPrnt > 0) {
 		  mexPrintf("\nExiting: Maximum number of iterations "
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxIter option.\n");
@@ -976,7 +986,7 @@ void SimplexOptimizer::optimize(
 	 }
   else
 	 {
-		if (prnt > 1)
+		if (itsPrnt > 1)
 		  {
 			 const char* format = 
 				"\nOptimization terminated successfully:\n"
@@ -985,11 +995,13 @@ void SimplexOptimizer::optimize(
 				" and F(X) satisfies the convergence criteria using "
 				"OPTIONS.TolFun of %e \n";
 
-			 mexPrintf(format, tolx, tolf);
+			 mexPrintf(format, itsTolx, itsTolf);
 		  }
 
 		exitFlag = 1;
   }
+
+  return exitFlag;
 }
 
 
@@ -1055,19 +1067,17 @@ DOTRACE("MdoSimplex");
 
   FuncEvaluator objective(funfcn_mx, varargin);
 
-  int exitFlag = 0;
+  SimplexOptimizer opt(objective,
+							  Mtx(x_in),
+							  extractPrinttype(printtype_mx),
+							  mxGetScalar(tolx_mx),
+							  mxGetScalar(tolf_mx),
+							  numModelParams,
+							  extractMaxIters(maxfun_mx, numModelParams),
+							  extractMaxIters(maxiter_mx, numModelParams)
+							  );
 
-  SimplexOptimizer opt(objective);
-
-  opt.optimize(exitFlag,
-					Mtx(x_in),
-					extractPrinttype(printtype_mx),
-					mxGetScalar(tolx_mx),
-					mxGetScalar(tolf_mx),
-					numModelParams,
-					extractMaxIters(maxfun_mx, numModelParams),
-					extractMaxIters(maxiter_mx, numModelParams)
-					);
+  int exitFlag = opt.optimize();
 
   *fval = mxCreateScalarDouble(opt.bestFval());
   *exitflag_mx = mxCreateScalarDouble(exitFlag);
