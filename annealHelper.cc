@@ -1,6 +1,6 @@
 ///////////////////////////////////////////////////////////////////////
 //
-// annealVisitParameters.cc
+// annealHelper.cc
 //
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
@@ -16,14 +16,14 @@
 // "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on"
 // "-O" "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex"
 // "-L" "C" "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h"
-// "annealVisitParameters"
+// "annealHelper"
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifndef ANNEALVISITPARAMETERS_CC_DEFINED
-#define ANNEALVISITPARAMETERS_CC_DEFINED
+#ifndef ANNEALHELPER_CC_DEFINED
+#define ANNEALHELPER_CC_DEFINED
 
-#include "annealVisitParameters.h"
+#include "annealHelper.h"
 
 #include "mexbuf.h"
 #include "mtx.h"
@@ -67,9 +67,9 @@ namespace
 #define mxDestroyArray(x)  debugDestroyArray(x, #x, __FILE__, __LINE__);
 #endif
 
-void InitializeModule_annealVisitParameters()
+void InitializeModule_annealHelper()
 {
-  mexPrintf("loading 'annealVisitParameters mex file\n");
+  mexPrintf("loading 'annealHelper mex file\n");
 
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
@@ -81,9 +81,9 @@ void InitializeModule_annealVisitParameters()
 #endif
 }
 
-void TerminateModule_annealVisitParameters()
+void TerminateModule_annealHelper()
 {
-  mexPrintf("unloading 'annealVisitParameters' mex file\n");
+  mexPrintf("unloading 'annealHelper' mex file\n");
 
   Util::Prof::printAtExit(false);
 
@@ -330,12 +330,6 @@ DOTRACE("sampleFromPdf");
   return s;
 }
 
-//---------------------------------------------------------------------
-//
-// annealVisitParameters()
-//
-//---------------------------------------------------------------------
-
 namespace
 {
   struct VisitResult
@@ -348,6 +342,12 @@ namespace
     double const cost;
   };
 }
+
+//---------------------------------------------------------------------
+//
+// class AnnealingRun
+//
+//---------------------------------------------------------------------
 
 class AnnealingRun
 {
@@ -578,22 +578,20 @@ DOTRACE("AnnealingRun::go");
 }
 
 /*
- * The function "mlxAnnealVisitParameters" contains the feval interface for the
- * "annealVisitParameters" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 1-28). The feval function calls the implementation version of
- * annealVisitParameters through this function. This function processes any
- * input arguments and passes them to the implementation version of the
- * function, appearing above.
+ * The function "mlxAnnealHelper" contains the feval interface for the
+ * "annealHelper" M-function from file
+ * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealHelper.m" (lines
+ * 1-28). The feval function calls the implementation version of annealHelper
+ * through this function. This function processes any input arguments and
+ * passes them to the implementation version of the function, appearing above.
  */
-void mlxAnnealVisitParameters(int nlhs, mxArray* plhs[],
-                              int nrhs, mxArray* prhs[])
+void mlxAnnealHelper(int nlhs, mxArray* plhs[], int nrhs, mxArray* prhs[])
 {
-DOTRACE("mlxAnnealVisitParameters");
+DOTRACE("mlxAnnealHelper");
 
   if (nlhs > 1)
     {
-      mexErrMsgTxt("Error: annealVisitParameters was called with more "
+      mexErrMsgTxt("Error: annealHelper was called with more "
                    "than the declared number of outputs (1).");
     }
 
@@ -601,7 +599,7 @@ DOTRACE("mlxAnnealVisitParameters");
 
   if (nrhs < NDECLARED)
     {
-      mexErrMsgTxt("Error: annealVisitParameters was called with fewer "
+      mexErrMsgTxt("Error: annealHelper was called with fewer "
                    "than the declared number of inputs (7).");
     }
 
@@ -632,5 +630,5 @@ DOTRACE("mlxAnnealVisitParameters");
   mlfRestorePreviousContext(0, NDECLARED, prhs[0], prhs[1]);
 }
 
-static const char vcid_annealVisitParameters_cc[] = "$Header$";
-#endif // !ANNEALVISITPARAMETERS_CC_DEFINED
+static const char vcid_annealHelper_cc[] = "$Header$";
+#endif // !ANNEALHELPER_CC_DEFINED
