@@ -34,14 +34,13 @@ Classifier::Classifier(const Mtx& objParams,
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
   itsDiffEvidence(itsNumAllExemplars,1),
-  itsPredictedProbability(numAllExemplars(), 1),
   itsCachedLogL_1_2(0.0)
 {}
 
 Classifier::~Classifier()
 {}
 
-void Classifier::forwardProbit(double thresh, double sigmaNoise)
+Mtx Classifier::forwardProbit(double thresh, double sigmaNoise) const
 {
 DOTRACE("Classifier::forwardProbit");
 
@@ -49,9 +48,10 @@ DOTRACE("Classifier::forwardProbit");
 
   MtxConstIter diffev = itsDiffEvidence.colIter(0);
 
-  MtxIter pp = itsPredictedProbability.colIter(0);
+  Mtx pp(numAllExemplars(), 1);
+  MtxIter ppiter = pp.colIter(0);
 
-  for (; pp.hasMore(); ++diffev, ++pp) {
+  for (; ppiter.hasMore(); ++diffev, ++ppiter) {
 	 double alpha_val = thresh - *diffev;
 
 	 //
@@ -60,8 +60,10 @@ DOTRACE("Classifier::forwardProbit");
 	 // p = 0.5 * erfc(alpha / sqrt(2))
 	 //
 
-	 *pp = 0.5*Num::erfc(alpha_val * divisor);
+	 *ppiter = 0.5*Num::erfc(alpha_val * divisor);
   }
+
+  return pp;
 }
 
 //---------------------------------------------------------------------
@@ -72,7 +74,7 @@ DOTRACE("Classifier::forwardProbit");
 //
 //---------------------------------------------------------------------
 
-double Classifier::computeLogL(LogLType type)
+double Classifier::computeLogL(const Mtx& predictedProbability)
 {
 DOTRACE("Classifier::computeLogL");
 
@@ -98,14 +100,14 @@ DOTRACE("Classifier::computeLogL");
   MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
   MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
 
-  MtxConstIter ppiter = itsPredictedProbability.colIter(0);
+  MtxConstIter ppiter = predictedProbability.colIter(0);
 
   for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter) {
 	 double oi1 = *oi1iter;
 	 double oi2 = *oi2iter;
 
 	 // term3
-	 double pp_val = (type == FULL) ? (oi1 / (oi1 + oi2)) : *ppiter;
+	 double pp_val = *ppiter;
 
 	 if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
 	 else                logL_3 += oi1 * log(pp_val);
@@ -138,7 +140,7 @@ DOTRACE("Classifier::currentLogL");
   const double sigmaNoise = computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]);
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
-  forwardProbit(thresh, sigmaNoise);
+  Mtx pp = forwardProbit(thresh, sigmaNoise);
 
 
   //---------------------------------------------------------------------
@@ -147,13 +149,23 @@ DOTRACE("Classifier::currentLogL");
   // and the observed incidences.
   //
 
-  return computeLogL(CURRENT);
+  return computeLogL(pp);
 }
 
 double Classifier::fullLogL()
 {
 DOTRACE("Classifier::fullLogL");
-  return computeLogL(FULL);
+
+  Mtx observedProb(numAllExemplars(), 1);
+  MtxIter opiter = observedProb.colIter(0);
+
+  MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
+  MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
+
+  for (; opiter.hasMore(); ++opiter, ++oi1iter, ++oi2iter)
+	 *opiter = (*oi1iter / (*oi1iter + *oi2iter));
+
+  return computeLogL(observedProb);
 }
 
 double Classifier::deviance(Slice& modelParams)

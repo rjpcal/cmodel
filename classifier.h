@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 11:47:39 2001
+// written: Fri Apr  6 12:11:51 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,7 +25,6 @@ public:
   double fullLogL();
 
   double deviance(Slice& modelParams);
-
 
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }
@@ -47,14 +46,11 @@ private:
   int itsNumAllExemplars;
   const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
-  Mtx itsPredictedProbability;
   double itsCachedLogL_1_2;
 
-  void forwardProbit(double thresh, double sigmaNoise);
+  Mtx forwardProbit(double thresh, double sigmaNoise) const;
 
-  enum LogLType { CURRENT, FULL };
-
-  double computeLogL(LogLType type);
+  double computeLogL(const Mtx& predictedProbability);
 
   // Count the number of objects with the given category
   int countCategory(int category) const;
