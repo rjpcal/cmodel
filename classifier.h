@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Feb 14 11:54:00 2002
+// written: Wed Feb 20 17:51:25 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CLASSIFIER_H_DEFINED
 #define CLASSIFIER_H_DEFINED
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 #include "mxwrapper.h"
 
 class fstring;

@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:15:55 2002
-// written: Tue Feb 19 09:23:46 2002
+// written: Wed Feb 20 17:53:11 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 #include "multivarfunction.h"
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 
 MultivarFunction::MultivarFunction() : itsEvalCount(0) {}
 

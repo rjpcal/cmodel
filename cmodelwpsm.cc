@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Thu Feb 14 11:58:31 2002
+// written: Wed Feb 20 17:52:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,8 +15,9 @@
 
 #include "cmodelwpsm.h"
 
+#include "mtx/mtx.h"
+
 #include "util/error.h"
-#include "mtx.h"
 
 #include "util/trace.h"
 

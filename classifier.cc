@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Feb 19 19:01:42 2002
+// written: Wed Feb 20 17:54:03 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,8 +18,9 @@
 #include "annealingoptimizer.h"
 #include "mxwrapper.h"
 #include "multivarfunction.h"
-#include "num.h"
 #include "simplexoptimizer.h"
+
+#include "mtx/num.h"
 
 #include "util/error.h"
 #include "util/strings.h"

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Tue Feb 19 14:55:16 2002
+// written: Wed Feb 20 17:52:28 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 #include "cmodelcuevalidity.h"
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 
 #include "util/trace.h"
 

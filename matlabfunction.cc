@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:10:06 2002
-// written: Tue Feb 19 11:06:38 2002
+// written: Wed Feb 20 17:53:08 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,8 +15,9 @@
 
 #include "matlabfunction.h"
 
-#include "mtx.h"
 #include "mx.h"
+
+#include "mtx/mtx.h"
 
 #include "util/error.h"
 

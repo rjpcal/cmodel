@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:12 2001
-// written: Tue Feb 19 14:55:00 2002
+// written: Wed Feb 20 17:51:55 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef MINKBINDER_H_DEFINED
 #define MINKBINDER_H_DEFINED
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 
 #include <cmath>
 

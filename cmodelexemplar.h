@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Thu Feb 14 11:54:28 2002
+// written: Wed Feb 20 17:51:36 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 #include "classifier.h"
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 
 class CModelExemplar : public Classifier
 {

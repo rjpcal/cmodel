@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Mon Feb 18 19:12:04 2002
+// written: Wed Feb 20 17:52:03 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,7 +15,7 @@
 
 #include <iostream>
 
-#include "mtx.h"
+#include "mtx/mtx.h"
 #include "multivarfunction.h"
 
 class fstring;

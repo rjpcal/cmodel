@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Tue Feb 19 14:56:01 2002
+// written: Wed Feb 20 17:54:09 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,8 +16,9 @@
 #include "cmodelcssm.h"
 
 #include "util/error.h"
-#include "num.h"
-#include "mtx.h"
+
+#include "mtx/mtx.h"
+#include "mtx/num.h"
 
 #include <cmath>
 
