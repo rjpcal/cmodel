@@ -25,20 +25,30 @@ static mxArray* _mxarray23_;
 
 static mxArray* _mxarray26_;
 
+namespace {
+  MexBuf* mexBuf = 0;
+}
+
 void InitializeModule_annealVisitParameters(void) {
-    _mxarray20_ = mclInitializeDouble(0.0);
-    _mxarray21_ = mclInitializeDouble(1.0);
-    _mxarray22_ = mclInitializeDouble(2.0);
-    _mxarray23_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
-    _mxarray26_ = mclInitializeDouble(708.3964185322641);
+  mexBuf = new MexBuf;
+  cout.rdbuf(mexBuf);
+  cerr.rdbuf(mexBuf);
+
+  _mxarray20_ = mclInitializeDouble(0.0);
+  _mxarray21_ = mclInitializeDouble(1.0);
+  _mxarray22_ = mclInitializeDouble(2.0);
+  _mxarray23_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
+  _mxarray26_ = mclInitializeDouble(708.3964185322641);
 }
 
 void TerminateModule_annealVisitParameters(void) {
-    mxDestroyArray(_mxarray26_);
-    mxDestroyArray(_mxarray23_);
-    mxDestroyArray(_mxarray22_);
-    mxDestroyArray(_mxarray21_);
-    mxDestroyArray(_mxarray20_);
+  delete mexBuf;
+
+  mxDestroyArray(_mxarray26_);
+  mxDestroyArray(_mxarray23_);
+  mxDestroyArray(_mxarray22_);
+  mxDestroyArray(_mxarray21_);
+  mxDestroyArray(_mxarray20_);
 }
 
 mxArray* MannealVisitParameters(int nargout_,
@@ -655,8 +665,8 @@ DOTRACE("makePDF");
 		// pdf(bad) = 0;
 		mclArrayAssign1(&pdf, _mxarray20_, bad);
 
-		mexPrintf("Warning: the cost function generated a NaN "
-					 "for one or more models.");
+		cerr << "Warning: the cost function generated a NaN "
+			  << "for one or more models.";
 	 }
 
   mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
