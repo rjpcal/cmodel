@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Wed Feb 20 17:52:28 2002
+// written: Mon Mar  4 12:02:04 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ void CModelCueValidity::computeDiffEv(const Mtx& objects,
 {
 DOTRACE("CModelCueValidity::computeDiffEv");
 
-  Mtx attWeights(modelParams.leftmost(DIM_OBJ_PARAMS));
+  Mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
   attWeights.apply(std::abs);
 
   double nTrainers = itsTraining1.mrows() + itsTraining2.mrows();

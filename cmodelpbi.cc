@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Wed Feb 20 17:52:47 2002
+// written: Mon Mar  4 12:01:03 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -31,7 +31,7 @@ void CModelPbi::computeDiffEv(const Mtx& objects,
 DOTRACE("CModelPbi::computeDiffEv");
 
   MtxConstIter attWeights =
-    static_cast<const Slice&>(modelParams.leftmost(DIM_OBJ_PARAMS)).begin();
+    static_cast<const Slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();
 
   int i = 0;
   MtxIter diffEv = diffEvOut.columnIter(0);

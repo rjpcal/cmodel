@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Sun Mar  3 14:16:59 2002
+// written: Mon Mar  4 12:05:21 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -51,8 +51,8 @@ namespace
     DOTRACE("<cmodelspc.cc>::getStoredExemplars");
 
     Slice otherParams =
-      allModelParams.rightmost(allModelParams.nelems()-
-                               (Classifier::DIM_OBJ_PARAMS+2));
+      allModelParams(range(Classifier::DIM_OBJ_PARAMS+2,
+                           allModelParams.nelems()));
 
     // reshape params into a stored exemplar matrix
 
@@ -135,7 +135,7 @@ DOTRACE("CModelSPC::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
+  Mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
 
   attWeights.apply(std::abs);
 
@@ -150,7 +150,7 @@ DOTRACE("CModelSPC::computeDiffEv");
   for (int r = 0; r < objects.mrows(); ++r)
     {
       EuclideanBinder<DIM_OBJ_PARAMS>
-        ebinder(attWeights.begin(), objects.rowIter(r));
+        ebinder(attWeights.columnIter(0), objects.rowIter(r));
 
       // compute distances between test object and stored exemplars, looking
       // for the nearest exemplar from each category

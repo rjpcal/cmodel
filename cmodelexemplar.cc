@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Feb 25 13:55:10 2002
+// written: Mon Mar  4 12:04:22 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -79,10 +79,10 @@ DOTRACE("CModelExemplar::handleRequest");
 
       int category = int(category_.at(0));
 
-      Slice modelParams = allModelParams.column(0);
-
-      Slice otherParams = modelParams.rightmost(modelParams.nelems()-
-                                                (DIM_OBJ_PARAMS+2));
+      Slice otherParams =
+        allModelParams
+        .column(0)
+        (range(DIM_OBJ_PARAMS+2, allModelParams.ncols()));
 
       loadModelParams(otherParams);
 
@@ -120,7 +120,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams(range(0, DIM_OBJ_PARAMS));
 
   attWeights.apply(std::abs);
 
@@ -128,8 +128,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   itsAttWtsCache.column(0) = attWeights;
 
-  Slice otherParams = modelParams.rightmost(modelParams.nelems()-
-                                            (DIM_OBJ_PARAMS+2));
+  Slice otherParams =
+    modelParams(range(DIM_OBJ_PARAMS+2, modelParams.nelems()));
 
   loadModelParams(otherParams);
 
