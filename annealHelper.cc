@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:05:57 2002
+// written: Mon Feb 18 17:12:33 2002
 // $Id$
 //
 //
@@ -353,34 +353,39 @@ DOTRACE("sampleFromPdf");
 struct AnnealOpts
 {
   AnnealOpts(mxArray* arr) :
+    bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
+    deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
+    centers(Mx::getField(arr, "centers"), Mtx::COPY),
     numRuns(int(mxGetScalar(Mx::getField(arr, "numruns")))),
     talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
     canUseMatrix(mxGetScalar(Mx::getField(arr, "canUseMatrix")) != 0.0),
     doNewton(mxGetScalar(Mx::getField(arr, "newton")) != 0.0),
-    numTemps(int(mxGetScalar(Mx::getField(arr, "numTemps")))),
-    tempRepeats(Mx::getField(arr, "x"), Mtx::COPY),
+    tempRepeats(Mx::getField(arr, "tempRepeats"), Mtx::COPY),
+    numTemps(tempRepeats.nelems()),
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
-    numModelParams(int(mxGetScalar(Mx::getField(arr, "numModelParams")))),
-    numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
-    valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
-    bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
-    deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
-    centers(Mx::getField(arr, "centers"), Mtx::COPY)
-  {}
+    numModelParams(bounds.mrows()),
+    numStartingPoints(std::max(100, 20*numModelParams)),
+    valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY)
+  {
+    if (bounds.ncols() != 2)
+      {
+        mexErrMsgTxt("'bounds' must have two columns (lo and hi bound)");
+      }
+  }
 
+  const Mtx bounds;
+  const Mtx deltas;
+  const Mtx centers;
   const int numRuns;
   const bool talking;
   const bool canUseMatrix;
   const bool doNewton;
-  const int numTemps;
   const Mtx tempRepeats;
+  const int numTemps;
   const Mtx tempScales;
   const int numModelParams;
   const int numStartingPoints;
   const Mtx valueScalingRange;
-  const Mtx bounds;
-  const Mtx deltas;
-  const Mtx centers;
 };
 
 //---------------------------------------------------------------------
