@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Feb 19 11:10:32 2002
+// written: Tue Feb 19 18:56:47 2002
 // $Id$
 //
 //
@@ -118,15 +118,14 @@ DOTRACE("mlxAnnealHelper");
   try
     {
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (nvararg > 0 && Mx::getInt(pvararg[0]) == -1)
+      if (nvararg > 0 && Mx::hasField(pvararg[0], "debugFlag"))
         {
-          Util::Prof::printAllProfData(std::cerr);
-          plhs[0] = mxCreateScalarDouble(-1.0);
-        }
-      if (nvararg > 0 && Mx::getInt(pvararg[0]) == -2)
-        {
-          Util::Prof::resetAllProfData();
-          plhs[0] = mxCreateScalarDouble(-2.0);
+          int debugFlag = Mx::getIntField(pvararg[0], "debugFlag");
+
+          if (debugFlag == -1)       Util::Prof::printAllProfData(std::cerr);
+          else if (debugFlag == -2)  Util::Prof::resetAllProfData();
+
+          plhs[0] = mxCreateScalarDouble(debugFlag);
         }
       else
         {
