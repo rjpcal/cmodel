@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Tue Apr 10 11:20:07 2001
+// written: Tue Apr 10 11:51:50 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,19 +19,17 @@
 
 #include "trace.h"
 
-#include "mex.h"
+#include <map>
 
-namespace {
-
-  int countCue(double cue, MtxConstIter itr)
+namespace
+{
+  void countCue(map<double, int>& counts, MtxConstIter src)
   {
-	 int result = 0;
-	 while (itr.hasMore())
+	 while (src.hasMore())
 		{
-		  if (*itr == cue) ++result;
-		  ++itr;
+		  counts[*src] += 1;
+		  ++src;
 		}
-	 return result;
   }
 }
 
@@ -51,42 +49,48 @@ void CModelCueValidity::computeDiffEv(const Mtx& objects,
 {
 DOTRACE("CModelCueValidity::computeDiffEv");
 
-  Mtx pCond(2,DIM_OBJ_PARAMS);
-
   Mtx attWeights(modelParams.leftmost(DIM_OBJ_PARAMS));
   attWeights.apply(abs);
 
   double nTrainers = itsTraining1.mrows() + itsTraining2.mrows();
 
-  for (int i = 0; i < objects.mrows(); ++i)
+  diffEvOut.setAll(0.0);
+
+  for (int d = 0; d < DIM_OBJ_PARAMS; ++d)
 	 {
-		const Slice currentObj = objects.row(i);
+		const MtxConstIter objectsColumn = objects.columnIter(d);
 
-		for (int d = 0; d < DIM_OBJ_PARAMS; ++d)
+		map<double, int> t1counts, t2counts, allcounts;
+		countCue(t1counts, itsTraining1.columnIter(d));
+		countCue(t2counts, itsTraining2.columnIter(d));
+		countCue(allcounts, objects.columnIter(d));
+
+		MtxConstIter objectIter = objectsColumn;
+
+		const double attWeight = attWeights.at(d,0);
+
+		MtxIter diffEvIter = diffEvOut.columnIter(0);
+
+		for (; objectIter.hasMore(); ++objectIter, ++diffEvIter)
 		  {
-			 int count1 = countCue(currentObj[d], itsTraining1.columnIter(d));
-			 int count2 = countCue(currentObj[d], itsTraining2.columnIter(d));
+			 const int count1 = t1counts[*objectIter];
+			 const int count2 = t2counts[*objectIter];
 
-			 double pJoint1 = double(count1) / nTrainers;
-			 double pJoint2 = double(count2) / nTrainers;
+			 const double pJoint1 = double(count1) / nTrainers;
+			 const double pJoint2 = double(count2) / nTrainers;
 
-			 double pPrior =
-				countCue(currentObj[d], objects.columnIter(d)) / nTrainers;
+			 const double pPrior =
+				double(allcounts[*objectIter]) / nTrainers;
 
-			 double pCond1 = pJoint1 / pPrior;
-			 double pCond2 = pJoint2 / pPrior;
-
-			 double weight = (itsFlags == NO_FREQ_WEIGHT) ?
+			 const double weight = (itsFlags == NO_FREQ_WEIGHT) ?
 				0.0 :
 				1.0 / (1.0+count1+count2);
 
-			 pCond.at(0,d) = 0.5*weight + pCond1*(1.0-weight);
-			 pCond.at(1,d) = 0.5*weight + pCond2*(1.0-weight);
+			 const double pCond1 = 0.5*weight + (1.0-weight) * pJoint1 / pPrior;
+			 const double pCond2 = 0.5*weight + (1.0-weight) * pJoint2 / pPrior;
+
+			 *diffEvIter += (attWeight * pCond1) - (attWeight * pCond2);
 		  }
-
-		Mtx cueValidity(2,1); cueValidity.assign_MMmul(pCond, attWeights);
-
-		diffEvOut.at(i,0) = cueValidity.at(0,0) - cueValidity.at(1,0);
 	 }
 }
 
