@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Wed Apr 18 14:58:27 2001
+// written: Wed Apr 18 15:02:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,6 +19,37 @@
 class fixed_string;
 
 class SimplexOptimizer {
+public:
+  enum PrintType { NONE, NOTIFY, FINAL, ITER, SIMPLEX };
+
+  SimplexOptimizer(MultivarFunction& objective,
+						 const Mtx& x_in,
+						 const fixed_string& printtype,
+						 const double tolx,
+						 const double tolf,
+						 const int nparams,
+						 const int maxfun,
+						 const int maxiter);
+
+  virtual ~SimplexOptimizer();
+
+  virtual int optimize();
+
+  virtual Mtx bestParams()
+  { return itsSimplex.column(0); }
+
+  virtual double bestFval()
+  { return itsFvals.at(0,0); }
+
+  virtual int iterCount()
+  { return itsIterCount; }
+
+  virtual int funcCount()
+  { return itsObjective.evalCount(); }
+
+  virtual const char* algorithm()
+  { return "Nelder-Mead simplex direct search"; }
+
 private:
   MultivarFunction& itsObjective;
 
@@ -211,36 +242,6 @@ private:
   void printIter();
 
   void printSimplex();
-
-public:
-  enum PrintType { NONE, NOTIFY, FINAL, ITER, SIMPLEX };
-
-  SimplexOptimizer(MultivarFunction& objective,
-						 const Mtx& x_in,
-						 const fixed_string& printtype,
-						 const double tolx,
-						 const double tolf,
-						 const int nparams,
-						 const int maxfun,
-						 const int maxiter);
-  virtual ~SimplexOptimizer() {}
-
-  int optimize();
-
-  virtual Mtx bestParams()
-  { return itsSimplex.column(0); }
-
-  virtual double bestFval()
-  { return itsFvals.at(0,0); }
-
-  virtual int iterCount()
-  { return itsIterCount; }
-
-  virtual int funcCount()
-  { return itsObjective.evalCount(); }
-
-  virtual const char* algorithm()
-  { return "Nelder-Mead simplex direct search"; }
 };
 
 static const char vcid_simplexoptimizer_h[] = "$Header$";
