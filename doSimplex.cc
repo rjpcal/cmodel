@@ -1,6 +1,6 @@
 /*
  * MATLAB Compiler: 2.1
- * Date: Sun Apr  1 19:31:17 2001
+ * Date: Sun Apr  1 19:52:50 2001
  * Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
  * "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
  * "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
@@ -317,6 +317,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * tolf,
                             mxArray * maxfun,
                             mxArray * maxiter,
+                            mxArray * debugFlags,
                             mxArray * varargin);
 
 _mexLocalFunctionTable _local_function_table_doSimplex
@@ -339,6 +340,7 @@ mxArray * mlfDoSimplex(mxArray * * fval,
                        mxArray * tolf,
                        mxArray * maxfun,
                        mxArray * maxiter,
+                       mxArray * debugFlags,
                        ...) {
     mxArray * varargin = NULL;
     int nargout = 1;
@@ -346,10 +348,10 @@ mxArray * mlfDoSimplex(mxArray * * fval,
     mxArray * fval__ = mclGetUninitializedArray();
     mxArray * exitflag__ = mclGetUninitializedArray();
     mxArray * output__ = mclGetUninitializedArray();
-    mlfVarargin(&varargin, maxiter, 0);
+    mlfVarargin(&varargin, debugFlags, 0);
     mlfEnterNewContext(
       3,
-      -8,
+      -9,
       fval,
       exitflag,
       output,
@@ -360,6 +362,7 @@ mxArray * mlfDoSimplex(mxArray * * fval,
       tolf,
       maxfun,
       maxiter,
+      debugFlags,
       varargin);
     if (fval != NULL) {
         ++nargout;
@@ -383,10 +386,11 @@ mxArray * mlfDoSimplex(mxArray * * fval,
           tolf,
           maxfun,
           maxiter,
+          debugFlags,
           varargin);
     mlfRestorePreviousContext(
       3,
-      7,
+      8,
       fval,
       exitflag,
       output,
@@ -396,7 +400,8 @@ mxArray * mlfDoSimplex(mxArray * * fval,
       tolx,
       tolf,
       maxfun,
-      maxiter);
+      maxiter,
+      debugFlags);
     mxDestroyArray(varargin);
     if (fval != NULL) {
         mclCopyOutputArg(fval, fval__);
@@ -425,7 +430,7 @@ mxArray * mlfDoSimplex(mxArray * * fval,
  * to the implementation version of the function, appearing above.
  */
 void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
-    mxArray * mprhs[8];
+    mxArray * mprhs[9];
     mxArray * mplhs[4];
     int i;
     if (nlhs > 4) {
@@ -434,24 +439,25 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     for (i = 0; i < 4; ++i) {
         mplhs[i] = mclGetUninitializedArray();
     }
-    for (i = 0; i < 7 && i < nrhs; ++i) {
+    for (i = 0; i < 8 && i < nrhs; ++i) {
         mprhs[i] = prhs[i];
     }
-    for (; i < 7; ++i) {
+    for (; i < 8; ++i) {
         mprhs[i] = NULL;
     }
     mlfEnterNewContext(
       0,
-      7,
+      8,
       mprhs[0],
       mprhs[1],
       mprhs[2],
       mprhs[3],
       mprhs[4],
       mprhs[5],
-      mprhs[6]);
-    mprhs[7] = NULL;
-    mlfAssign(&mprhs[7], mclCreateVararginCell(nrhs - 7, prhs + 7));
+      mprhs[6],
+      mprhs[7]);
+    mprhs[8] = NULL;
+    mlfAssign(&mprhs[8], mclCreateVararginCell(nrhs - 8, prhs + 8));
     mplhs[0]
       = MdoSimplex(
           &mplhs[1],
@@ -465,17 +471,19 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
           mprhs[4],
           mprhs[5],
           mprhs[6],
-          mprhs[7]);
+          mprhs[7],
+          mprhs[8]);
     mlfRestorePreviousContext(
       0,
-      7,
+      8,
       mprhs[0],
       mprhs[1],
       mprhs[2],
       mprhs[3],
       mprhs[4],
       mprhs[5],
-      mprhs[6]);
+      mprhs[6],
+      mprhs[7]);
     plhs[0] = mplhs[0];
     for (i = 1; i < 4 && i < nlhs; ++i) {
         plhs[i] = mplhs[i];
@@ -483,7 +491,7 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     for (; i < 4; ++i) {
         mxDestroyArray(mplhs[i]);
     }
-    mxDestroyArray(mprhs[7]);
+    mxDestroyArray(mprhs[8]);
 }
 
 /*
@@ -508,6 +516,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * tolf,
                             mxArray * maxfun,
                             mxArray * maxiter,
+                            mxArray * debugFlags,
                             mxArray * varargin) {
     mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
                                                          &_local_function_table_doSimplex);
@@ -553,9 +562,10 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mclCopyArray(&tolf);
     mclCopyArray(&maxfun);
     mclCopyArray(&maxiter);
+    mclCopyArray(&debugFlags);
     mclCopyArray(&varargin);
     /*
-     * doSimplex(funfcn,x,printtype,tolx,tolf,maxfun,maxiter,varargin)
+     * doSimplex(funfcn,x,printtype,tolx,tolf,maxfun,maxiter,debugFlags,varargin)
      * 
      * %   Copyright 1984-2000 The MathWorks, Inc. 
      * %   $Revision$  $Date$
@@ -1818,6 +1828,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxDestroyArray(msg);
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
+    mxDestroyArray(debugFlags);
     mxDestroyArray(maxiter);
     mxDestroyArray(maxfun);
     mxDestroyArray(tolf);
