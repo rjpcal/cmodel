@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 14 15:21:26 2001
+// written: Wed Mar 14 15:45:42 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,6 +18,8 @@
 #include "error.h"
 #include "mtx.h"
 #include "trace.h"
+
+#include "minivec.h"
 
 #include <cmath>
 
@@ -45,8 +47,8 @@ double minkDist(const ConstSlice& wts,
 
 class MinkDist2Binder {
 public:
-  MinkDist2Binder(const ConstSlice& attWeights,
-						const ConstSlice& x2) :
+  MinkDist2Binder(ConstSlice::ConstIterator attWeights,
+						ConstSlice::ConstIterator x2) :
 	 itsAttWeights(attWeights),
 	 itsX2(x2)
   {}
@@ -55,8 +57,8 @@ public:
   double minkDist2(Slice::ConstIterator x1) const
   {
 	 double wt_sum = 0.0;
-	 Slice::ConstIterator wt = itsAttWeights.begin();
-	 Slice::ConstIterator x2 = itsX2.begin();
+	 Slice::ConstIterator wt = itsAttWeights;
+	 Slice::ConstIterator x2 = itsX2;
 
 	 for (; wt.hasMore(); ++wt, ++x1, ++x2)
 		{
@@ -68,8 +70,8 @@ public:
   }
 
 private:
-  const ConstSlice& itsAttWeights;
-  const ConstSlice& itsX2;
+  const ConstSlice::ConstIterator itsAttWeights;
+  const ConstSlice::ConstIterator itsX2;
 };
 
 
@@ -157,31 +159,6 @@ DOTRACE("CModelExemplar::doDiffEvidence");
   }
 }
 
-
-void CModelExemplar::doDiffEvidence2(const ConstSlice& attWeights,
-												 const ConstSlice& storedExemplar1,
-												 const ConstSlice& storedExemplar2)
-{
-DOTRACE("CModelExemplar::doDiffEvidence2");
-
-  MinkDist2Binder binder1(attWeights, storedExemplar1);
-
-  MinkDist2Binder binder2(attWeights, storedExemplar2);
-
-  for (int y = 0; y < numAllExemplars(); ++y) {
-
-	 ConstSlice ex(exemplar(y));
-
-	 // compute similarity of ex-y to stored-1-x
-	 const double sim1 = binder1.minkDist2(ex.begin());
-
-	 // compute similarity of ex-y to stored-2-x
-	 const double sim2 = binder2.minkDist2(ex.begin());
-
-	 diffEvidence(y) += exp(-sim1) - exp(-sim2);
-  }
-}
-
 //---------------------------------------------------------------------
 //
 // compute the minus loglikelihood for the constrained summed
@@ -223,12 +200,38 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const Mtx& stored1(getStoredExemplars(CAT1));
   const Mtx& stored2(getStoredExemplars(CAT2));
 
-  for (int x = 0; x < itsNumStoredExemplars; ++x) {
+  if (minkPower == 2.0) {
+	 ConstSlice::ConstIterator attWts =
+		static_cast<ConstSlice&>(attWeights).begin();
 
-	 if (minkPower == 2.0) {
-		doDiffEvidence2(attWeights, stored1.row(x), stored2.row(x));
+	 minivec<ConstSlice::ConstIterator> exemplars;
+
+	 for (int yy = 0; yy < numAllExemplars(); ++yy) {
+		exemplars.push_back(exemplar(yy).begin());
 	 }
-	 else {
+
+	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
+		ConstSlice::ConstIterator storedExemplar1 = stored1.rowIter(x);
+		ConstSlice::ConstIterator storedExemplar2 = stored2.rowIter(x);
+
+		MinkDist2Binder binder1(attWts, storedExemplar1);
+
+		MinkDist2Binder binder2(attWts, storedExemplar2);
+
+		for (int y = 0; y < numAllExemplars(); ++y) {
+
+		  // compute similarity of ex-y to stored-1-x
+		  const double sim1 = binder1.minkDist2(exemplars[y]);
+
+		  // compute similarity of ex-y to stored-2-x
+		  const double sim2 = binder2.minkDist2(exemplars[y]);
+
+		  diffEvidence(y) += exp(-sim1) - exp(-sim2);
+		}
+	 }
+  }
+  else {
+	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
 		doDiffEvidence(attWeights, stored1.row(x), stored2.row(x),
 							minkPower, minkPowerInv);
 	 }

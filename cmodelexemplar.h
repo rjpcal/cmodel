@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Mar 14 15:21:04 2001
+// written: Wed Mar 14 15:40:18 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -51,10 +51,6 @@ private:
 							 const ConstSlice& storedExemplar2,
 							 double minkPower,
 							 double minkPowerInv);
-
-  void doDiffEvidence2(const ConstSlice& attWeights,
-							  const ConstSlice& storedExemplar1,
-							  const ConstSlice& storedExemplar2);
 
   virtual void computeDiffEv(Slice& modelParams);
   virtual double computeSigmaNoise(double rawSigma) const;
