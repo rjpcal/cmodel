@@ -810,12 +810,26 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
   // % sort so theSimplex(1,:) has the lowest function value 
   // [funcVals,j_mx] = sort(funcVals);
-  funcVals_dr.assignArray(mlfSort(&j_mx, funcVals_dr.asArray(), NULL));
+  {
+//  	 Mtx fvals_copy(funcVals_dr.asMtx());
+
+//    	 mxDestroyArray((mlfSort(&j_mx, funcVals_dr.asArray(), NULL)));
+
+//  	 Mtx index = fvals_copy.row(0).getSortOrder();
+//    	 fvals_copy.row(0).reorder(index);
+//  	 Mtx diff = fvals_copy - funcVals_dr.asMtx();
+//  	 diff.print();
+  }
+  {
+	 Mtx index = funcVals_dr.asMtx().row(0).getSortOrder();
+	 funcVals_dr.ncMtx().row(0).reorder(index);
+  	 theSimplex_dr.ncMtx().reorderColumns(index);
+  }
 
   // theSimplex = theSimplex(:,j_mx);
-  theSimplex_dr.assignArray(mclArrayRef2(theSimplex_dr.asArray(),
-													  mlfCreateColonIndex(),
-													  j_mx));
+//    theSimplex_dr.assignArray(mclArrayRef2(theSimplex_dr.asArray(),
+//    													  mlfCreateColonIndex(),
+//    													  j_mx));
 
   how = "initial";
 
@@ -1010,13 +1024,13 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  // zero based index
 				  for (int j = 1; j < numModelParams+1; ++j)
 					 {
-						// theSimplex(:,j_mx)=theSimplex(:,1)+sigma*(theSimplex(:,j_mx) - theSimplex(:,1));
+						// theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
 						theSimplex_dr.ncMtx().column(j) =
 						  theSimplex_dr.asMtx().columns(0,1) +
 						  (theSimplex_dr.asMtx().columns(j,1) -
 							theSimplex_dr.asMtx().columns(0,1)) * sigma;
 
-						// funcVals(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
+						// funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
 						funcVals_dr.ncMtx().at(0,j) =
 						  objective.evaluate(theSimplex_dr.asMtx()
 													.columns(j,1)
