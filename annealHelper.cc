@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 15:20:58 2002
+// written: Fri Feb 15 15:28:53 2002
 // $Id$
 //
 //
@@ -483,11 +483,12 @@ DOTRACE("annealHelper");
 
   energy.at(astate_c-1,k_onebased-1) = vresult.cost;
 
+  const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
+
   // Update the used parameter ranges
   {
     Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
     Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
-    const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
 
     if (minUsedParams.nelems() != bestModel.nelems()
         || maxUsedParams.nelems() != bestModel.nelems())
@@ -503,6 +504,13 @@ DOTRACE("annealHelper");
         maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
                                        bestModel.at(i));
       }
+  }
+
+  // Update the model history matrix
+  {
+    Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
+
+    modelHist.column(astate_c-1) = bestModel;
   }
 
   return astate_mx;
