@@ -24,14 +24,6 @@ namespace {
 	 t1 = t2;
 	 t2 = t1_;
   }
-
-  inline void memswap(double* buf1, double* buf2, double* tempbuf1,
-							 size_t nelems)
-  {
-	 memcpy(tempbuf1, buf1, nelems*sizeof(double));
-	 memcpy(buf1, buf2, nelems*sizeof(double));
-	 memcpy(buf2, tempbuf1, nelems*sizeof(double));
-  }
 }
 
 class FuncEvaluator {
@@ -695,8 +687,6 @@ DOTRACE("MdoSimplex");
 
     // numModelParams = prod(size(x));
 	 const int numModelParams = mxGetM(x) * mxGetN(x);
-
-  	 double* const parmBuffer = new double[numModelParams];
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
@@ -1444,7 +1434,6 @@ DOTRACE("MdoSimplex");
 
 		{DOTRACE("sort funcVals");
       // [funcVals,j] = sort(funcVals);
-//        mlfAssign(&funcVals, mlfSort(&j, funcVals, NULL));
 
 		// Throw away the actual sorted result; just keep the indices
 		mxDestroyArray(mlfSort(&j, funcVals, NULL));
@@ -1462,46 +1451,23 @@ DOTRACE("MdoSimplex");
 #else
 		{DOTRACE("reorder simplex");
 		Mtx jref(j, Mtx::BORROW);
-		int smallest = int(jref.at(0)) - 1;
-		int largest = int(jref.at(numModelParams)) - 1;
-		int largest2 = int(jref.at(numModelParams-1)) - 1;
+		const int smallest = int(jref.at(0)) - 1;
+		const int largest = int(jref.at(numModelParams)) - 1;
+		const int largest2 = int(jref.at(numModelParams-1)) - 1;
 
-		if (smallest != 0)
-		  {
-			 DOTRACE("hit smallest");
-			 localswap(mxGetPr(funcVals)[smallest],
-						  mxGetPr(funcVals)[0]);
+		Mtx simref(theSimplex, Mtx::REFER);
+		Mtx fvref(funcVals, Mtx::REFER);
 
-			 memswap(mxGetPr(theSimplex),
-						mxGetPr(theSimplex)+smallest*numModelParams,
-						parmBuffer,
-						numModelParams);
-		  }
+		// These swaps are smart enough to check if the column numbers
+		// are the same before doing the swap
 
-		if (largest != numModelParams)
-		  {
-			 DOTRACE("hit largest");
-			 localswap(mxGetPr(funcVals)[largest],
-						  mxGetPr(funcVals)[numModelParams]);
+		fvref.swapColumns(0, smallest);
+		fvref.swapColumns(largest, numModelParams);
+		fvref.swapColumns(largest2, numModelParams-1);
 
-			 memswap(mxGetPr(theSimplex)+largest*numModelParams,
-						mxGetPr(theSimplex)+numModelParams*numModelParams,
-						parmBuffer,
-						numModelParams);
-		  }
-
-		if (largest2 != numModelParams-1)
-		  {
-			 DOTRACE("hit largest2");
-			 localswap(mxGetPr(funcVals)[largest2],
-						  mxGetPr(funcVals)[numModelParams-1]);
-
-			 memswap(mxGetPr(theSimplex)+largest2*numModelParams,
-						mxGetPr(theSimplex)+(numModelParams-1)*numModelParams,
-						parmBuffer,
-						numModelParams);
-		  }
-
+		simref.swapColumns(0, smallest);
+		simref.swapColumns(largest, numModelParams);
+		simref.swapColumns(largest2, numModelParams-1);
 		}
 #endif
 
@@ -1686,8 +1652,6 @@ DOTRACE("MdoSimplex");
     mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
     mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
     mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
-
-  	 delete [] parmBuffer;
 
     mxDestroyArray(numModelParams_mx);
     mxDestroyArray(ans);
