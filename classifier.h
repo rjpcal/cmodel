@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 11:26:06 2001
+// written: Fri Apr  6 11:47:39 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -47,10 +47,10 @@ private:
   int itsNumAllExemplars;
   const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
-  double* const itsPredictedProbability;
+  Mtx itsPredictedProbability;
   double itsCachedLogL_1_2;
 
-  void forwardProbit(double thresh, double sigmaNoise) const;
+  void forwardProbit(double thresh, double sigmaNoise);
 
   enum LogLType { CURRENT, FULL };
 

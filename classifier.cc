@@ -34,16 +34,14 @@ Classifier::Classifier(const Mtx& objParams,
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
   itsDiffEvidence(itsNumAllExemplars,1),
-  itsPredictedProbability(new double[numAllExemplars()]),
+  itsPredictedProbability(numAllExemplars(), 1),
   itsCachedLogL_1_2(0.0)
 {}
 
 Classifier::~Classifier()
-{
-  delete [] itsPredictedProbability;
-}
+{}
 
-void Classifier::forwardProbit(double thresh, double sigmaNoise) const
+void Classifier::forwardProbit(double thresh, double sigmaNoise)
 {
 DOTRACE("Classifier::forwardProbit");
 
@@ -51,7 +49,9 @@ DOTRACE("Classifier::forwardProbit");
 
   MtxConstIter diffev = itsDiffEvidence.colIter(0);
 
-  for (int i = 0; i < itsNumAllExemplars; ++i, ++diffev) {
+  MtxIter pp = itsPredictedProbability.colIter(0);
+
+  for (; pp.hasMore(); ++diffev, ++pp) {
 	 double alpha_val = thresh - *diffev;
 
 	 //
@@ -60,7 +60,7 @@ DOTRACE("Classifier::forwardProbit");
 	 // p = 0.5 * erfc(alpha / sqrt(2))
 	 //
 
-	 itsPredictedProbability[i] = 0.5*Num::erfc(alpha_val * divisor);
+	 *pp = 0.5*Num::erfc(alpha_val * divisor);
   }
 }
 
@@ -98,14 +98,14 @@ DOTRACE("Classifier::computeLogL");
   MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
   MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
 
-  for(int k = 0; oi1iter.hasMore(); ++k, ++oi1iter, ++oi2iter) {
+  MtxConstIter ppiter = itsPredictedProbability.colIter(0);
+
+  for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter) {
 	 double oi1 = *oi1iter;
 	 double oi2 = *oi2iter;
 
 	 // term3
-	 double pp_val = (type == FULL) ?
-		(oi1 / (oi1 + oi2)) :
-		itsPredictedProbability[k];
+	 double pp_val = (type == FULL) ? (oi1 / (oi1 + oi2)) : *ppiter;
 
 	 if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
 	 else                logL_3 += oi1 * log(pp_val);
@@ -150,11 +150,15 @@ DOTRACE("Classifier::currentLogL");
   return computeLogL(CURRENT);
 }
 
-double Classifier::fullLogL() {
+double Classifier::fullLogL()
+{
+DOTRACE("Classifier::fullLogL");
   return computeLogL(FULL);
 }
 
-double Classifier::deviance(Slice& modelParams) {
+double Classifier::deviance(Slice& modelParams)
+{
+DOTRACE("Classifier::deviance");
 
   double llc = currentLogL(modelParams);
   double llf = fullLogL();
