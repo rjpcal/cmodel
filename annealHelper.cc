@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:30:16 2002
+// written: Mon Feb 18 18:33:32 2002
 // $Id$
 //
 //
@@ -264,13 +264,25 @@ private:
   mxArray** const itsPvararg;
   const bool itsCanUseMatrix;
 
-  enum { MAX_NRHS = 32 };
+  mxArray** itsPrhs;
 
-  typedef mxArray*   mxArrayPtr;
-  typedef mxArrayPtr mxArrayArr[MAX_NRHS];
+public:
+  Objective(const fstring& funcName, int nvararg, mxArray** pvararg,
+            bool canUseMatrix = false)
+    :
+    itsFuncName(funcName),
+    itsNvararg(nvararg),
+    itsPvararg(pvararg),
+    itsCanUseMatrix(canUseMatrix),
+    itsPrhs(new (mxArray*)[nvararg+1])
+  {}
 
-  mutable mxArrayArr itsPrhs;
+  virtual ~Objective()
+  {
+    delete [] itsPrhs;
+  }
 
+private:
   Mtx evaluateParallel(const Mtx& models) const
   {
     DOTRACE("doParallelFuncEvals");
@@ -285,7 +297,7 @@ private:
 
     int nrhs = 1;
 
-    for (int i = 0; i < itsNvararg && nrhs < MAX_NRHS; ++i)
+    for (int i = 0; i < itsNvararg; ++i)
       {
         itsPrhs[nrhs++] = mxDuplicateArray(itsPvararg[i]);
       }
@@ -315,13 +327,11 @@ private:
 
     mxArray* plhs[1] = { 0 };
 
-//     mxArray* prhs[MAX_NRHS];
-
     itsPrhs[0] = 0;
 
     int nrhs = 1;
 
-    for (int i = 0; i < itsNvararg && nrhs < MAX_NRHS; ++i)
+    for (int i = 0; i < itsNvararg; ++i)
       {
         itsPrhs[nrhs] = 0; mlfAssign(itsPrhs+nrhs, mxDuplicateArray(itsPvararg[i]));
         ++nrhs;
@@ -354,15 +364,6 @@ private:
   }
 
 public:
-  Objective(const fstring& funcName, int nvararg, mxArray** pvararg,
-            bool canUseMatrix = false)
-    :
-    itsFuncName(funcName),
-    itsNvararg(nvararg),
-    itsPvararg(pvararg),
-    itsCanUseMatrix(canUseMatrix)
-  {}
-
   Mtx evaluateEach(const Mtx& models) const
   {
     if (itsCanUseMatrix)
