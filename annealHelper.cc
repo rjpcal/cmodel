@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 19:48:48 2002
+// written: Mon Feb 18 19:49:09 2002
 // $Id$
 //
 //
@@ -100,7 +100,7 @@ namespace
 
 void InitializeModule_annealHelper()
 {
-  mexPrintf("loading 'annealHelper mex file\n");
+  mexPrintf("loading 'annealHelper' mex file\n");
 
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
