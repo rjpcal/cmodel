@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Mar  9 14:59:57 2001
+// written: Fri Mar  9 18:28:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,12 +18,11 @@
 #endif
 
 class Rat;
-
-class fixed_string;
-template <class T> class shared_ptr;
+class Slice;
 
 class Classifier {
 private:
+  const Rat& itsObjParams;
   int itsNumAllExemplars;
   const Rat& itsObservedIncidence;
   double* const itsDiffEvidence;
@@ -43,13 +42,8 @@ private:
 
   // Must be overridden by subclasses
   virtual void computeDiffEv(Rat& modelParams) = 0;
-  virtual double sigmaScalingFactor() const = 0;
 
-protected:
-  double& diffEvidence(int i) { return itsDiffEvidence[i]; }
-  int numAllExemplars() const { return itsNumAllExemplars; }
-
-  static const int DIM_OBJ_PARAMS = 4;
+  virtual double fetchSigmaNoise(const Rat& modelParams) const = 0;
 
 public:
   Classifier(const Rat& objParams, const Rat& observedIncidence);
@@ -60,6 +54,15 @@ public:
   double fullLogL();
 
   double deviance(Rat& modelParams);
+
+protected:
+  double& diffEvidence(int i) { return itsDiffEvidence[i]; }
+  int numAllExemplars() const { return itsNumAllExemplars; }
+
+  Slice exemplar(int i) const;
+  int exemplarCategory(int i) const;
+
+  static const int DIM_OBJ_PARAMS = 4;
 };
 
 static const char vcid_classifier_h[] = "$Header$";

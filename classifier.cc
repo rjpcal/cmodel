@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Mar  9 15:01:27 2001
+// written: Fri Mar  9 18:31:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -31,6 +31,7 @@
 
 Classifier::Classifier(const Rat& objParams,
 							  const Rat& observedIncidence) :
+  itsObjParams(objParams),
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
   itsDiffEvidence(new double[itsNumAllExemplars]),
@@ -126,11 +127,11 @@ DOTRACE("Classifier::currentLogL");
   // differences in diffEvidence.
   //
 
-  // thresh = modelParams(5);
-  const double thresh = modelParams.at(4);
+  // the threshold is right after the DIM_OBJ_PARAMS number of
+  // attentional weights
+  const double thresh = modelParams.at(DIM_OBJ_PARAMS);
 
-  // sigmaNoise = sqrt(n1+n2)*modelParams(6);
-  const double sigmaNoise = sigmaScalingFactor() * modelParams.at(5);
+  const double sigmaNoise = fetchSigmaNoise(modelParams);
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
   forwardProbit(thresh, sigmaNoise);
@@ -154,6 +155,16 @@ double Classifier::deviance(Rat& modelParams) {
   double llf = fullLogL();
 
   return -2 * (llc - llf);
+}
+
+int Classifier::exemplarCategory(int i) const {
+  return int(itsObjParams.at(i));
+}
+
+Slice Classifier::exemplar(int i) const {
+  // Skip the first column which contains category info
+  return Slice(itsObjParams.address(i,1),
+					itsNumAllExemplars);
 }
 
 static const char vcid_classifier_cc[] = "$Header$";

@@ -30,6 +30,15 @@ public:
   double operator*() const { return *data; }
 
   void bump() { data += stride; }
+
+  static double dot(const Slice& s1, const Slice& s2,
+						  int nelems)
+  {
+	 double result = 0.0;
+	 for (int i = 0; i < nelems; ++i)
+		result += s1[i] * s2[i];
+	 return result;
+  }
 };
 
 class Rat {

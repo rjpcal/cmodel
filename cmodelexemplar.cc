@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 17:42:35 2001
+// written: Fri Mar  9 18:29:13 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -236,9 +236,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
   }
 }
 
-double CModelExemplar::sigmaScalingFactor() const
+double CModelExemplar::fetchSigmaNoise(const Rat& modelParams) const
 {
-  return sqrt(itsNumStoredExemplars*2);
+  return modelParams.at(5) * sqrt(itsNumStoredExemplars*2);
 }
 
 static const char vcid_cmodelexemplar_cc[] = "$Header$";
