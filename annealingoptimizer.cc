@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Mar  5 19:17:55 2002
+// written: Tue Jul 30 18:17:57 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -260,8 +260,18 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
 
   // Update deltas
-  itsDeltas = maxUsedParams - minUsedParams;
-  itsDeltas *= 0.75;
+  const Mtx newDeltas = maxUsedParams - minUsedParams;
+
+  for (int i = 0; i < itsDeltas.nelems(); ++i)
+    {
+      double v = newDeltas.at(i) * 0.75;
+
+      if (v == 0.0)
+        v = itsDeltas.at(i) * 0.75;
+
+      if (v > 0.0)
+        itsDeltas.at(i) = v;
+    }
 
   // Update bests FIXME ought to use a smarter algorithm to keep track of the
   // best cost
