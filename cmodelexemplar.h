@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Mar 28 06:52:31 2001
+// written: Wed Mar 28 09:38:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -53,6 +53,8 @@ private:
 
   Mtx itsEvidence1Cache;
   Mtx itsEvidence2Cache;
+
+  Mtx itsAttWtsCache;
 
   const int itsNumStoredExemplars;
 
