@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 13:59:47 2002
+// written: Fri Feb 15 14:09:05 2002
 // $Id$
 //
 //
@@ -435,14 +435,18 @@ DOTRACE("annealHelper");
 
   mxArray* astate_mx = mxDuplicateArray(old_astate_mx);
 
+  const Mtx astate_T(mxGetField(astate_mx, 0, "T"), Mtx::BORROW);
+
+  const int w_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "w")));
+
+  const double temp = astate_T.at(w_onebased-1);
+
   int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
   ++astate_c;
   mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
 
   const bool astate_talk =
     (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
-
-  const double temp = mxGetScalar(mxGetField(astate_mx, 0, "temp"));
 
   const Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
                         Mtx::BORROW);
