@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Aug  1 09:48:07 2002
+// written: Thu Aug  1 11:02:15 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -86,9 +86,15 @@ protected:
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
   /// Each class fills in the bounds for its params.
-  /** Subclasses must call the base class version first. The return value
-      should be the number of params that were filled, so that the caller
-      can adjust "startRow" accordingly. */
+  /** Any subclass that overrides numModelParams() MUST also override this
+      function, at least to return a properly adjusted startRow. Subclasses
+      must call the base class version first. The return value should be
+      the number of params that were filled, so that the caller can adjust
+      "startRow" accordingly. The base class version defined here in
+      Classifier fills all rows in with extreme lower and upper bounds, so
+      if the subclass doesn't need to place any specific bounds on its
+      additional parameters, it can simply leave the bounds matrix alone,
+      and just return an adjusted startRow. */
   virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
 
 private:
