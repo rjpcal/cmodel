@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 15:09:49 2002
+// written: Thu Feb 14 15:16:22 2002
 // $Id$
 //
 //
@@ -233,7 +233,6 @@ DOTRACE("MannealVisitParameters");
 #endif
 
       mxArray* costs_mx = mclGetUninitializedArray();
-      mxArray* x_mx = mclGetUninitializedArray();
 
       mclCopyArray(&bestModel_mx);
 
@@ -249,52 +248,39 @@ DOTRACE("MannealVisitParameters");
       const Mtx bounds(bounds_mx, Mtx::BORROW);
 
       // for x = find(deltas' ~= 0)
-      {
-        mclForLoopIterator viter__;
-        for (mclForStart(&viter__,
-                         mlfFind(NULL,
-                                 NULL,
-                                 mclNe(mlfCtranspose(deltas_mx), _mxarray20_)),
-                         NULL,
-                         NULL);
-             mclForNext(&viter__, &x_mx);
-             )
-          {
+      for (int x_zerobased = 0; x_zerobased < deltas.nelems(); ++x_zerobased)
+        {
+          if (deltas.at(x_zerobased) == 0.0) continue;
 
-            int x_zerobased = int(mxGetScalar(x_mx)) - 1;
+          // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
+          // deltas, bounds);
+          Mtx modelmatrix = makeTestModels(x_zerobased,
+                                           bestModel,
+                                           valueScalingRange,
+                                           deltas,
+                                           bounds);
 
-            // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
-            // deltas, bounds);
-            Mtx modelmatrix = makeTestModels(x_zerobased,
-                                             bestModel,
-                                             valueScalingRange,
-                                             deltas,
-                                             bounds);
+          // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
+          mlfAssign(&costs_mx,
+                    doFuncEvals(canUseMatrix,
+                                modelmatrix,
+                                FUN_mx,
+                                mlfIndexRef(varargin_mx,
+                                            "{?}",
+                                            mlfCreateColonIndex())
+                                ));
 
-            // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-            mlfAssign(&costs_mx,
-                      doFuncEvals(canUseMatrix,
-                                  modelmatrix,
-                                  FUN_mx,
-                                  mlfIndexRef(varargin_mx,
-                                              "{?}",
-                                              mlfCreateColonIndex())
-                                  ));
+          // S.nevals = S.nevals + length(costs);
+          nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
+                      mxGetM(costs_mx) : mxGetN(costs_mx) );
 
-            // S.nevals = S.nevals + length(costs);
-            nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
-                        mxGetM(costs_mx) : mxGetN(costs_mx) );
+          // Sample from probability distribution
+          // s = sampleFromPdf(temp, costs);
+          s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
 
-            // Sample from probability distribution
-            // s = sampleFromPdf(temp, costs);
-            s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
-
-            // bestModel(x, 1) = modelmatrix(x, s);
-            bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
-          }
-
-        mclDestroyForLoopIterator(viter__);
-      }
+          // bestModel(x, 1) = modelmatrix(x, s);
+          bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
+        }
 
       const char* fieldNames[] = { "nevals", "newModel", "cost" };
       mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
@@ -309,7 +295,6 @@ DOTRACE("MannealVisitParameters");
       mxSetField(output, 0, "cost",
                  mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
 
-      mxDestroyArray(x_mx);
       mxDestroyArray(costs_mx);
 
       return output;
