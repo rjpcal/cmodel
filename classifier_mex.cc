@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Feb  7 11:12:53 2002
+// written: Thu Feb  7 15:05:55 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -42,6 +42,12 @@
 
 #include "util/trace.h"
 
+#ifdef LOCAL_DEBUG
+#define MEXFUNCNAME "dclassifier"
+#else
+#define MEXFUNCNAME "classifier"
+#endif
+
 namespace
 {
   shared_ptr<CModelCssm>* recentModel = 0;
@@ -49,6 +55,9 @@ namespace
   int recentNumStored = -1;
 
   MexBuf* mexBuf = 0;
+
+  std::streambuf* coutOrigBuf = 0;
+  std::streambuf* cerrOrigBuf = 0;
 }
 
 void InitializeModule_classifier()
@@ -59,15 +68,11 @@ void InitializeModule_classifier()
   cout = mexBuf;
   cerr = mexBuf;
 #else
-  cout.rdbuf(mexBuf);
-  cerr.rdbuf(mexBuf);
+  coutOrigBuf = cout.rdbuf(mexBuf);
+  cerrOrigBuf = cerr.rdbuf(mexBuf);
 #endif
 
-#ifndef LOCAL_DEBUG
-  mexPrintf("loading 'classifier' mex file\n");
-#else
-  mexPrintf("loading 'dclassifier' mex file\n");
-#endif
+  mexPrintf("loading '" MEXFUNCNAME "' mex file\n");
 
   recentModel = new shared_ptr<CModelCssm>(0);
   recentObjParams = new Mtx(0,0);
@@ -77,16 +82,21 @@ void TerminateModule_classifier()
 {
   DOTRACE("TerminateModule_classifier");
 
-#ifndef LOCAL_DEBUG
-  mexPrintf("unloading 'classifier' mex file\n");
-#else
-  mexPrintf("unloading 'dclassifier' mex file\n");
-#endif
+  Util::Prof::printAtExit(false);
 
+  mexPrintf("unloading '" MEXFUNCNAME "' mex file...\n");
+
+  mexPrintf("\tdeleting recentObjParams...\n");
   delete recentObjParams;
+
+  mexPrintf("\tdeleting recentModel...\n");
   delete recentModel;
 
+  mexPrintf("\tdeleting recentModel...\n");
+  cout.rdbuf(coutOrigBuf);
+  cerr.rdbuf(cerrOrigBuf);
   delete mexBuf;
+  mexPrintf("\tdone.\n");
 }
 
 static mexFunctionTableEntry classifierFunctionTable[1] = {
