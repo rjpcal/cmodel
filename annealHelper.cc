@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:17:40 2002
+// written: Mon Feb 18 18:24:55 2002
 // $Id$
 //
 //
@@ -178,110 +178,6 @@ DOTRACE("makeTestModels");
 
 //---------------------------------------------------------------------
 //
-// doParallelFuncEvals()
-//
-//---------------------------------------------------------------------
-
-Mtx doParallelFuncEvals(const Mtx& models,
-                        const fstring& func_name,
-                        int nvararg,
-                        mxArray** pvararg)
-{
-DOTRACE("doParallelFuncEvals");
-
-  mxArray* costs_mx = 0;
-  mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
-
-  const int MAX_NRHS = 32;
-  mxArray* prhs[MAX_NRHS];
-
-  // We don't need to call mxDuplicateArray, since models_mx is a bound
-  // variable due to the mlfAssign() above; that's also why we have to
-  // explicitly destroy it later on
-  prhs[0] = models_mx;
-
-  int nrhs = 1;
-
-  for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
-    {
-      prhs[nrhs++] = mxDuplicateArray(pvararg[i]);
-    }
-
-  // costs = feval(func, models, varargin{:});
-  int result = mexCallMATLAB(1, &costs_mx, nrhs, prhs, func_name.c_str());
-
-  if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doParallelFuncEvals");
-
-  Mtx costs(costs_mx, Mtx::COPY);
-
-  mxDestroyArray(models_mx);
-  mxDestroyArray(costs_mx);
-
-  return costs;
-}
-
-//---------------------------------------------------------------------
-//
-// doSerialFuncEvals()
-//
-//---------------------------------------------------------------------
-
-Mtx doSerialFuncEvals(const Mtx& models,
-                      const fstring& func_name,
-                      int nvararg,
-                      mxArray** pvararg)
-{
-DOTRACE("doSerialFuncEvals");
-
-  mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
-
-  const int NM = models.ncols();
-
-  Mtx costs(NM, 1);
-
-  mxArray* plhs[1] = { 0 };
-
-  const int MAX_NRHS = 32;
-  mxArray* prhs[MAX_NRHS];
-
-  prhs[0] = 0;
-
-  int nrhs = 1;
-
-  for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
-    {
-      prhs[nrhs] = 0; mlfAssign(prhs+nrhs, mxDuplicateArray(pvararg[i]));
-      ++nrhs;
-    }
-
-  for (int e = 0; e < NM; ++e)
-    {
-      //costs(e) = feval(func, models(:,e), varargin{:});
-      prhs[0] = mclArrayRef2(models_mx,
-                             mlfCreateColonIndex(),
-                             mlfScalar(e+1));
-
-      int result = mexCallMATLAB(1, plhs, nrhs, prhs, func_name.c_str());
-
-      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doSerialFuncEvals");
-
-      costs.at(e) = mxGetScalar(plhs[0]);
-
-      mxDestroyArray(plhs[0]);
-    }
-
-  while (--nrhs >= 1)
-    {
-      mxDestroyArray(prhs[nrhs]);
-    }
-
-  mxDestroyArray(models_mx);
-
-  return costs;
-}
-
-//---------------------------------------------------------------------
-//
 // makePDF()
 //
 //---------------------------------------------------------------------
@@ -368,6 +264,92 @@ private:
   mxArray** const itsPvararg;
   const bool itsCanUseMatrix;
 
+  Mtx evaluateParallel(const Mtx& models) const
+  {
+    DOTRACE("doParallelFuncEvals");
+
+    mxArray* costs_mx = 0;
+    mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
+
+    const int MAX_NRHS = 32;
+    mxArray* prhs[MAX_NRHS];
+
+    // We don't need to call mxDuplicateArray, since models_mx is a bound
+    // variable due to the mlfAssign() above; that's also why we have to
+    // explicitly destroy it later on
+    prhs[0] = models_mx;
+
+    int nrhs = 1;
+
+    for (int i = 0; i < itsNvararg && nrhs < MAX_NRHS; ++i)
+      {
+        prhs[nrhs++] = mxDuplicateArray(itsPvararg[i]);
+      }
+
+    // costs = feval(func, models, varargin{:});
+    int result = mexCallMATLAB(1, &costs_mx, nrhs, prhs, itsFuncName.c_str());
+
+    if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
+
+    Mtx costs(costs_mx, Mtx::COPY);
+
+    mxDestroyArray(models_mx);
+    mxDestroyArray(costs_mx);
+
+    return costs;
+  }
+
+  Mtx evaluateSerial(const Mtx& models) const
+  {
+    DOTRACE("doSerialFuncEvals");
+
+    mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
+
+    const int NM = models.ncols();
+
+    Mtx costs(NM, 1);
+
+    mxArray* plhs[1] = { 0 };
+
+    const int MAX_NRHS = 32;
+    mxArray* prhs[MAX_NRHS];
+
+    prhs[0] = 0;
+
+    int nrhs = 1;
+
+    for (int i = 0; i < itsNvararg && nrhs < MAX_NRHS; ++i)
+      {
+        prhs[nrhs] = 0; mlfAssign(prhs+nrhs, mxDuplicateArray(itsPvararg[i]));
+        ++nrhs;
+      }
+
+    for (int e = 0; e < NM; ++e)
+      {
+        //costs(e) = feval(func, models(:,e), varargin{:});
+        prhs[0] = mclArrayRef2(models_mx,
+                               mlfCreateColonIndex(),
+                               mlfScalar(e+1));
+
+        int result = mexCallMATLAB(1, plhs, nrhs, prhs, itsFuncName.c_str());
+
+        if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
+
+        costs.at(e) = mxGetScalar(plhs[0]);
+
+        mxDestroyArray(plhs[0]);
+      }
+
+    while (--nrhs >= 1)
+      {
+        mxDestroyArray(prhs[nrhs]);
+      }
+
+    mxDestroyArray(models_mx);
+
+    return costs;
+  }
+
 public:
   Objective(const fstring& funcName, int nvararg, mxArray** pvararg,
             bool canUseMatrix = false)
@@ -381,11 +363,9 @@ public:
   Mtx evaluateEach(const Mtx& models) const
   {
     if (itsCanUseMatrix)
-      return doParallelFuncEvals(models, itsFuncName,
-                                 itsNvararg, itsPvararg);
+      return evaluateParallel(models);
 
-    return doSerialFuncEvals(models, itsFuncName,
-                             itsNvararg, itsPvararg);
+    return evaluateSerial(models);
   }
 
   virtual double doEvaluate(const Mtx& model)
