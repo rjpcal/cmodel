@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar  9 16:50:26 2001
+// written: Fri Mar  9 17:32:54 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,6 +16,8 @@
 #include "classifier.h"
 
 class Slice;
+
+#include "util/arrays.h"
 
 class CModelExemplar : public Classifier {
 public:
@@ -33,8 +35,21 @@ protected:
   // Count the category training exemplars
   static int countCategory(const Rat& params, int category);
 
+  typedef const double* constDblPtr;
+
+  const fixed_block<constDblPtr>& training1() const { return itsTraining1; }
+  const fixed_block<constDblPtr>& training2() const { return itsTraining2; }
+
+  int numTrainingExemplars() const { return itsNumTrainingExemplars; }
+
 private:
   const Rat& itsObjParams;
+
+  const int itsNumTrainingExemplars;
+
+  fixed_block<constDblPtr> itsTraining1;
+  fixed_block<constDblPtr> itsTraining2;
+
   const int itsNumStoredExemplars;
 
   void doDiffEvidence(const double* attWeights,

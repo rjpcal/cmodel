@@ -15,17 +15,8 @@
 
 #include "cmodelexemplar.h"
 
-#include "util/arrays.h"
-
 class CModelCssm : public CModelExemplar {
 private:
-  const int itsNumTrainingExemplars;
-
-  typedef const double* constDblPtr;
-
-  fixed_block<constDblPtr> itsCat1;
-  fixed_block<constDblPtr> itsCat2;
-
   // These will change depending on the most recent call to
   // findStoredExemplar
   double itsStored1[DIM_OBJ_PARAMS];

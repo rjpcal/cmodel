@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Fri Mar  9 16:51:17 2001
+// written: Fri Mar  9 17:29:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,17 +15,8 @@
 
 #include "cmodelexemplar.h"
 
-#include "util/arrays.h"
-
 class CModelGcm : public CModelExemplar {
 private:
-  const int itsNumTrainingExemplars;
-
-  typedef const double* constDblPtr;
-
-  fixed_block<constDblPtr> itsCat1;
-  fixed_block<constDblPtr> itsCat2;
-
   virtual void loadModelParams(Rat& modelParams);
 
   // The result of this function is only valid until the next call to

@@ -26,27 +26,9 @@ CModelCssm::CModelCssm(const Rat& objParams,
 							  const Rat& observedIncidence,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
-  itsNumTrainingExemplars(countCategory(objParams,0)),
-  itsCat1(itsNumTrainingExemplars),
-  itsCat2(itsNumTrainingExemplars),
   itsScaledWeights(0)
 {
-  int num2 = countCategory(objParams, 1);
-
-  if (itsNumTrainingExemplars != num2) {
-	 throw ErrorWithMsg("the two categories must have the "
-							  "same number of training exemplars");
-  }
-
-  // Find the category 1 and category 2 training exemplars
-  int c1=0,c2=0;
-  for (int i = 0; i < objParams.mrows(); ++i)
-	 {
-		if (int(objParams.at(i,0)) == 0)
-		  itsCat1[c1++] = objParams.address(i,1);
-		else if (int(objParams.at(i,0)) == 1)
-		  itsCat2[c2++] = objParams.address(i,1);
-	 }
+DOTRACE("CModelCssm::CModelCssm");
 }
 
 CModelCssm::~CModelCssm() {}
@@ -56,7 +38,7 @@ void CModelCssm::scaleWeights(double* weights, int numRawWeights)
 DOTRACE("CModelCssm::scaleWeights");
 
   int mrows = numStoredExemplars()*2;
-  int ncols = itsNumTrainingExemplars;
+  int ncols = numTrainingExemplars();
 
   if ( numRawWeights != (mrows*ncols) )
 	 throw ErrorWithMsg("weights must have "
@@ -81,7 +63,7 @@ void CModelCssm::loadModelParams(Rat& modelParams)
 DOTRACE("CModelCssm::loadModelParams");
 
   if (modelParams.length() !=
-		(2*itsNumTrainingExemplars*numStoredExemplars() + 6)) {
+		(2*numTrainingExemplars()*numStoredExemplars() + 6)) {
     throw ErrorWithMsg("wrong number of model parameters");
   }
 
@@ -101,10 +83,10 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
-		Num::linearCombo(itsNumTrainingExemplars,
+		Num::linearCombo(numTrainingExemplars(),
 							  itsScaledWeights+n,
 							  2*numStoredExemplars(),
-							  &itsCat1[0], numAllExemplars(), DIM_OBJ_PARAMS,
+							  &training1()[0], numAllExemplars(), DIM_OBJ_PARAMS,
 							  &itsStored1[0]);
 
 		return Slice(&itsStored1[0], 1);
@@ -112,10 +94,10 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 
   else if (CAT2 == cat)
 	 {
-		Num::linearCombo(itsNumTrainingExemplars,
+		Num::linearCombo(numTrainingExemplars(),
 							  itsScaledWeights+n+numStoredExemplars(),
 							  2*numStoredExemplars(),
-							  &itsCat2[0], numAllExemplars(), DIM_OBJ_PARAMS,
+							  &training2()[0], numAllExemplars(), DIM_OBJ_PARAMS,
 							  &itsStored2[0]);
 
 		return Slice(&itsStored2[0], 1);

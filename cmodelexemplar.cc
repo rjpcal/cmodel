@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 17:12:58 2001
+// written: Fri Mar  9 17:32:54 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -88,13 +88,31 @@ CModelExemplar::CModelExemplar(const Rat& objParams,
   Classifier(objParams,
 				 observedIncidence),
   itsObjParams(objParams),
+  itsNumTrainingExemplars(countCategory(objParams,0)),
+  itsTraining1(itsNumTrainingExemplars),
+  itsTraining2(itsNumTrainingExemplars),
   itsNumStoredExemplars(numStoredExemplars)
 {
+  int num2 = countCategory(objParams, 1);
+
+  if (itsNumTrainingExemplars != num2) {
+	 throw ErrorWithMsg("the two categories must have the "
+							  "same number of training exemplars");
+  }
+
+  // Find the category 1 and category 2 training exemplars
+  int c1=0,c2=0;
+  for (int i = 0; i < objParams.mrows(); ++i)
+	 {
+		if (int(objParams.at(i,0)) == 0)
+		  itsTraining1[c1++] = objParams.address(i,1);
+		else if (int(objParams.at(i,0)) == 1)
+		  itsTraining2[c2++] = objParams.address(i,1);
+	 }
 }
 
 CModelExemplar::~CModelExemplar()
-{
-}
+{}
 
 // Count the category training exemplars
 int CModelExemplar::countCategory(const Rat& params, int category) {
