@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Oct 30 11:46:42 2001
+// written: Mon Feb  4 13:55:29 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -123,47 +123,46 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
 
           recentNumStored = numStoredExemplars;
 
-          recentModel->reset(
-                             new CModelCssm(*recentObjParams,
-                                            CModelExemplar::EXP_DECAY, recentNumStored));
+          recentModel->reset
+            (new CModelCssm(*recentObjParams,
+                            CModelExemplar::EXP_DECAY, recentNumStored));
 
           return *recentModel;
         }
     }
   else if (whichType == "gcm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelGcm(objParams, CModelExemplar::EXP_DECAY));
+      return shared_ptr<Classifier>
+        (new CModelGcm(objParams, CModelExemplar::EXP_DECAY));
     }
   else if (whichType == "adm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelGcm(objParams, CModelExemplar::LINEAR_DECAY));
+      return shared_ptr<Classifier>
+        (new CModelGcm(objParams, CModelExemplar::LINEAR_DECAY));
     }
   else if (whichType == "pbi")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelPbi(objParams));
+      return shared_ptr<Classifier>(new CModelPbi(objParams));
     }
   else if (whichType == "wpsm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelWpsm(objParams, CModelExemplar::EXP_DECAY));
+      return shared_ptr<Classifier>
+        (new CModelWpsm(objParams, CModelExemplar::EXP_DECAY));
     }
   else if (whichType == "wpm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelWpsm(objParams, CModelExemplar::LINEAR_DECAY));
+      return shared_ptr<Classifier>
+        (new CModelWpsm(objParams, CModelExemplar::LINEAR_DECAY));
     }
   else if (whichType == "wcvm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelCueValidity(objParams, CModelCueValidity::NO_FREQ_WEIGHT));
+      return shared_ptr<Classifier>
+        (new CModelCueValidity(objParams, CModelCueValidity::NO_FREQ_WEIGHT));
     }
   else if (whichType == "wfcvm")
     {
-      return shared_ptr<Classifier>(
-                                    new CModelCueValidity(objParams, CModelCueValidity::FREQ_WEIGHT));
+      return shared_ptr<Classifier>
+        (new CModelCueValidity(objParams, CModelCueValidity::FREQ_WEIGHT));
     }
   else
     {
@@ -179,80 +178,83 @@ static mxArray* Mclassifier(int /* nargout_ */,
 {
   DOTRACE("Mclassifier");
 
-  try {
+  try
+    {
+      fstring modelName = MxWrapper::extractString(modelName_mx);
 
-    fstring modelName = MxWrapper::extractString(modelName_mx);
-
-    fstring actionRequest = MxWrapper::extractString(actionRequest_mx);
+      fstring actionRequest = MxWrapper::extractString(actionRequest_mx);
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-    if (extraArgs_mx && mxIsStruct(extraArgs_mx))
-      {
-        mxArray* debugFlag = mxGetField(extraArgs_mx, 0, "debugFlag");
+      if (extraArgs_mx && mxIsStruct(extraArgs_mx))
+        {
+          mxArray* debugFlag = mxGetField(extraArgs_mx, 0, "debugFlag");
 
-        if (debugFlag)
-          {
-            if (mxGetScalar(debugFlag) == -1) {
-              Util::Prof::printAllProfData(cerr);
-              return mxCreateScalarDouble(-1.0);
-            }
+          if (debugFlag)
+            {
+              if (mxGetScalar(debugFlag) == -1) {
+                Util::Prof::printAllProfData(cerr);
+                return mxCreateScalarDouble(-1.0);
+              }
 
-            if (mxGetScalar(debugFlag) == -2) {
-              Util::Prof::resetAllProfData();
-              return mxCreateScalarDouble(-2.0);
+              if (mxGetScalar(debugFlag) == -2) {
+                Util::Prof::resetAllProfData();
+                return mxCreateScalarDouble(-2.0);
+              }
             }
-          }
-      }
+        }
 #endif
 
-    //---------------------------------------------------------------------
-    //
-    // Set up
-    //
-    //---------------------------------------------------------------------
+      //---------------------------------------------------------------------
+      //
+      // Set up
+      //
+      //---------------------------------------------------------------------
 
-    mexLocalFunctionTable save_local_function_table_ =
-      mclSetCurrentLocalFunctionTable(&_local_function_table_classifier);
+      mexLocalFunctionTable save_local_function_table_ =
+        mclSetCurrentLocalFunctionTable(&_local_function_table_classifier);
 
-    validateInput(modelParams_mx);
-    // This Mtx will copy the data leaving the original mxArray untouched
-    Mtx allModelParams(modelParams_mx);
+      validateInput(modelParams_mx);
+      // This Mtx will copy the data leaving the original mxArray untouched
+      Mtx allModelParams(modelParams_mx);
 
-    const Mtx objParams(MxWrapper::extractStructField(extraArgs_mx,
-                                                      "objParams"));
+      const Mtx objParams(MxWrapper::extractStructField(extraArgs_mx,
+                                                        "objParams"));
 
-    shared_ptr<Classifier> model =
-      makeClassifier(modelName, objParams, extraArgs_mx);
+      shared_ptr<Classifier> model =
+        makeClassifier(modelName, objParams, extraArgs_mx);
 
-    Classifier::RequestResult res = model->handleRequest(actionRequest,
-                                                         allModelParams,
-                                                         extraArgs_mx);
+      Classifier::RequestResult res = model->handleRequest(actionRequest,
+                                                           allModelParams,
+                                                           extraArgs_mx);
 
-    if ( !res.requestHandled )
-      {
-        fstring msg("unknown model action: ", actionRequest);
-        mexWarnMsgTxt(msg.c_str());
-      }
+      if ( !res.requestHandled )
+        {
+          fstring msg("unknown model action: ", actionRequest);
+          mexWarnMsgTxt(msg.c_str());
+        }
 
-    //---------------------------------------------------------------------
-    //
-    // Clean up
-    //
-    //---------------------------------------------------------------------
+      //---------------------------------------------------------------------
+      //
+      // Clean up
+      //
+      //---------------------------------------------------------------------
 
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
+      mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-    return res.result.release();
-  }
-  catch (Util::Error& err) {
-    mexErrMsgTxt(err.msg_cstr());
-  }
-  catch (std::exception& err) {
-    mexErrMsgTxt(err.what());
-  }
-  catch (...) {
-    mexErrMsgTxt("an unknown C++ exception occurred.");
-  }
+      return res.result.release();
+    }
+  catch (Util::Error& err)
+    {
+      mexErrMsgTxt(err.msg_cstr());
+    }
+  catch (std::exception& err)
+    {
+      mexErrMsgTxt(err.what());
+    }
+  catch (...)
+    {
+      mexErrMsgTxt("an unknown C++ exception occurred.");
+    }
 
   return (mxArray*) 0; // can't happen, but placate compiler
 }
@@ -317,25 +319,30 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
   mxArray * mprhs[CLASSIFIER_NARGIN];
   mxArray * mplhs[NUM_OUTPUTS];
   int i;
-  if (nlhs > NUM_OUTPUTS) {
-    mexErrMsgTxt("Run-time Error: "
-                 "The function \"classifier\" was called with more "
-                 "than the declared number of outputs (1).");
-  }
-  if (nrhs > CLASSIFIER_NARGIN) {
-    mexErrMsgTxt("Run-time Error: "
-                 "The function \"classifier\" was called with more "
-                 "than the declared number of inputs.");
-  }
-  for (i = 0; i < NUM_OUTPUTS; ++i) {
-    mplhs[i] = mclGetUninitializedArray();
-  }
-  for (i = 0; i < CLASSIFIER_NARGIN && i < nrhs; ++i) {
-    mprhs[i] = prhs[i];
-  }
-  for (; i < CLASSIFIER_NARGIN; ++i) {
-    mprhs[i] = NULL;
-  }
+  if (nlhs > NUM_OUTPUTS)
+    {
+      mexErrMsgTxt("Run-time Error: "
+                   "The function \"classifier\" was called with more "
+                   "than the declared number of outputs (1).");
+    }
+  if (nrhs > CLASSIFIER_NARGIN)
+    {
+      mexErrMsgTxt("Run-time Error: "
+                   "The function \"classifier\" was called with more "
+                   "than the declared number of inputs.");
+    }
+  for (i = 0; i < NUM_OUTPUTS; ++i)
+    {
+      mplhs[i] = mclGetUninitializedArray();
+    }
+  for (i = 0; i < CLASSIFIER_NARGIN && i < nrhs; ++i)
+    {
+      mprhs[i] = prhs[i];
+    }
+  for (; i < CLASSIFIER_NARGIN; ++i)
+    {
+      mprhs[i] = NULL;
+    }
 
   mplhs[0] = mlfClassifier(mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
 
