@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 25 14:20:36 2002
+// written: Mon Feb 25 14:31:06 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -49,37 +49,30 @@
 
 namespace
 {
-  shared_ptr<CModelCssm>* recentModel = 0;
-  Mtx* recentObjParams = 0;
-  int recentNumStored = -1;
+  class MyMexPkg : public MexPkg
+  {
+  public:
+    MyMexPkg() :
+      MexPkg(MEXFUNCNAME),
+      recentNumStored(-1),
+      recentModel(0),
+      recentObjParams(0,0)
+    {}
 
-  MexPkg* mexPkg = 0;
+    virtual ~MyMexPkg() {}
+
+    int recentNumStored;
+    shared_ptr<CModelCssm> recentModel;
+    Mtx recentObjParams;
+  };
+
+  MyMexPkg* mexPkg = 0;
 }
 
-void InitializeModule_classifier()
-{
-  DOTRACE("InitializeModule_classifier");
-
-  mexPrintf("loading '" MEXFUNCNAME "' mex file\n");
-
-  recentModel = new shared_ptr<CModelCssm>(0);
-  recentObjParams = new Mtx(0,0);
-}
+void InitializeModule_classifier() {}
 
 void TerminateModule_classifier()
 {
-  DOTRACE("TerminateModule_classifier");
-
-  Util::Prof::printAtExit(false);
-
-  mexPrintf("unloading '" MEXFUNCNAME "' mex file...\n");
-
-  mexPrintf("\tdeleting recentObjParams...\n");
-  delete recentObjParams;
-
-  mexPrintf("\tdeleting recentModel...\n");
-  delete recentModel;
-
   mexPrintf("\tdeleting mexPkg...\n");
   delete mexPkg;
   mexPrintf("\tdone.\n");
@@ -96,27 +89,28 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
       int numStoredExemplars =
         Mx::getIntField(extraArgs_mx, "numStoredExemplars");
 
-      if ( (numStoredExemplars == recentNumStored) &&
-           (objParams == *recentObjParams) )
+      if ( (numStoredExemplars == mexPkg->recentNumStored) &&
+           (objParams == mexPkg->recentObjParams) )
         {
           DOTRACE("use old");
 
-          return *recentModel;
+          return mexPkg->recentModel;
         }
       else
         {
           DOTRACE("make new");
 
-          *recentObjParams = objParams;
-          recentObjParams->makeUnique();
+          mexPkg->recentObjParams = objParams;
+          mexPkg->recentObjParams.makeUnique();
 
-          recentNumStored = numStoredExemplars;
+          mexPkg->recentNumStored = numStoredExemplars;
 
-          recentModel->reset
-            (new CModelCssm(*recentObjParams,
-                            CModelExemplar::EXP_DECAY, recentNumStored));
+          mexPkg->recentModel.reset
+            (new CModelCssm(mexPkg->recentObjParams,
+                            CModelExemplar::EXP_DECAY,
+                            mexPkg->recentNumStored));
 
-          return *recentModel;
+          return mexPkg->recentModel;
         }
     }
   else if (whichType == "gcm")
@@ -293,7 +287,7 @@ mex_information mexLibrary()
   DOTRACE("mexLibrary");
 
   if (mexPkg == 0)
-    mexPkg = new MexPkg;
+    mexPkg = new MyMexPkg;
 
   static _mexInitTermTableEntry init_term_table[1] =
     { { InitializeModule_classifier, TerminateModule_classifier }, };
