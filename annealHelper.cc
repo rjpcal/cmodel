@@ -9,282 +9,27 @@
 #include "annealVisitParameters.h"
 #include "libmatlbm.h"
 
-static mxChar _array1_[160] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', ' ', 'L',
-                                'i', 'n', 'e', ':', ' ', '1', ' ', 'C', 'o',
-                                'l', 'u', 'm', 'n', ':', ' ', '1', ' ', 'T',
-                                'h', 'e', ' ', 'f', 'u', 'n', 'c', 't', 'i',
-                                'o', 'n', ' ', '"', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', '"', ' ',
-                                'w', 'a', 's', ' ', 'c', 'a', 'l', 'l', 'e',
-                                'd', ' ', 'w', 'i', 't', 'h', ' ', 'm', 'o',
-                                'r', 'e', ' ', 't', 'h', 'a', 'n', ' ', 't',
-                                'h', 'e', ' ', 'd', 'e', 'c', 'l', 'a', 'r',
-                                'e', 'd', ' ', 'n', 'u', 'm', 'b', 'e', 'r',
-                                ' ', 'o', 'f', ' ', 'o', 'u', 't', 'p', 'u',
-                                't', 's', ' ', '(', '1', ')', '.' };
-static mxArray * _mxarray0_;
-
-static mxChar _array3_[191] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                'a', 'k', 'e', 'T', 'e', 's', 't', 'M', 'o',
-                                'd', 'e', 'l', 's', ' ', 'L', 'i', 'n', 'e',
-                                ':', ' ', '2', '8', ' ', 'C', 'o', 'l', 'u',
-                                'm', 'n', ':', ' ', '1', ' ', 'T', 'h', 'e',
-                                ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
-                                ' ', '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V',
-                                'i', 's', 'i', 't', 'P', 'a', 'r', 'a', 'm',
-                                'e', 't', 'e', 'r', 's', '/', 'm', 'a', 'k',
-                                'e', 'T', 'e', 's', 't', 'M', 'o', 'd', 'e',
-                                'l', 's', '"', ' ', 'w', 'a', 's', ' ', 'c',
-                                'a', 'l', 'l', 'e', 'd', ' ', 'w', 'i', 't',
-                                'h', ' ', 'm', 'o', 'r', 'e', ' ', 't', 'h',
-                                'a', 'n', ' ', 't', 'h', 'e', ' ', 'd', 'e',
-                                'c', 'l', 'a', 'r', 'e', 'd', ' ', 'n', 'u',
-                                'm', 'b', 'e', 'r', ' ', 'o', 'f', ' ', 'o',
-                                'u', 't', 'p', 'u', 't', 's', ' ', '(', '1',
-                                ')', '.' };
-static mxArray * _mxarray2_;
-
-static mxChar _array5_[190] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                'a', 'k', 'e', 'T', 'e', 's', 't', 'M', 'o',
-                                'd', 'e', 'l', 's', ' ', 'L', 'i', 'n', 'e',
-                                ':', ' ', '2', '8', ' ', 'C', 'o', 'l', 'u',
-                                'm', 'n', ':', ' ', '1', ' ', 'T', 'h', 'e',
-                                ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
-                                ' ', '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V',
-                                'i', 's', 'i', 't', 'P', 'a', 'r', 'a', 'm',
-                                'e', 't', 'e', 'r', 's', '/', 'm', 'a', 'k',
-                                'e', 'T', 'e', 's', 't', 'M', 'o', 'd', 'e',
-                                'l', 's', '"', ' ', 'w', 'a', 's', ' ', 'c',
-                                'a', 'l', 'l', 'e', 'd', ' ', 'w', 'i', 't',
-                                'h', ' ', 'm', 'o', 'r', 'e', ' ', 't', 'h',
-                                'a', 'n', ' ', 't', 'h', 'e', ' ', 'd', 'e',
-                                'c', 'l', 'a', 'r', 'e', 'd', ' ', 'n', 'u',
-                                'm', 'b', 'e', 'r', ' ', 'o', 'f', ' ', 'i',
-                                'n', 'p', 'u', 't', 's', ' ', '(', '5', ')',
-                                '.' };
-static mxArray * _mxarray4_;
-
-static mxChar _array7_[185] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'd',
-                                'o', 'F', 'u', 'n', 'c', 'E', 'v', 'a', 'l',
-                                's', ' ', 'L', 'i', 'n', 'e', ':', ' ', '3',
-                                '5', ' ', 'C', 'o', 'l', 'u', 'm', 'n', ':',
-                                ' ', '1', ' ', 'T', 'h', 'e', ' ', 'f', 'u',
-                                'n', 'c', 't', 'i', 'o', 'n', ' ', '"', 'a',
-                                'n', 'n', 'e', 'a', 'l', 'V', 'i', 's', 'i',
-                                't', 'P', 'a', 'r', 'a', 'm', 'e', 't', 'e',
-                                'r', 's', '/', 'd', 'o', 'F', 'u', 'n', 'c',
-                                'E', 'v', 'a', 'l', 's', '"', ' ', 'w', 'a',
-                                's', ' ', 'c', 'a', 'l', 'l', 'e', 'd', ' ',
-                                'w', 'i', 't', 'h', ' ', 'm', 'o', 'r', 'e',
-                                ' ', 't', 'h', 'a', 'n', ' ', 't', 'h', 'e',
-                                ' ', 'd', 'e', 'c', 'l', 'a', 'r', 'e', 'd',
-                                ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ', 'o',
-                                'f', ' ', 'o', 'u', 't', 'p', 'u', 't', 's',
-                                ' ', '(', '1', ')', '.' };
-static mxArray * _mxarray6_;
-
-static mxChar _array9_[189] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                'a', 'm', 'e', 't', 'e', 'r', 's', '/', 's',
-                                'a', 'm', 'p', 'l', 'e', 'F', 'r', 'o', 'm',
-                                'P', 'd', 'f', ' ', 'L', 'i', 'n', 'e', ':',
-                                ' ', '4', '8', ' ', 'C', 'o', 'l', 'u', 'm',
-                                'n', ':', ' ', '1', ' ', 'T', 'h', 'e', ' ',
-                                'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
-                                '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V', 'i',
-                                's', 'i', 't', 'P', 'a', 'r', 'a', 'm', 'e',
-                                't', 'e', 'r', 's', '/', 's', 'a', 'm', 'p',
-                                'l', 'e', 'F', 'r', 'o', 'm', 'P', 'd', 'f',
-                                '"', ' ', 'w', 'a', 's', ' ', 'c', 'a', 'l',
-                                'l', 'e', 'd', ' ', 'w', 'i', 't', 'h', ' ',
-                                'm', 'o', 'r', 'e', ' ', 't', 'h', 'a', 'n',
-                                ' ', 't', 'h', 'e', ' ', 'd', 'e', 'c', 'l',
-                                'a', 'r', 'e', 'd', ' ', 'n', 'u', 'm', 'b',
-                                'e', 'r', ' ', 'o', 'f', ' ', 'o', 'u', 't',
-                                'p', 'u', 't', 's', ' ', '(', '1', ')', '.' };
-static mxArray * _mxarray8_;
-
-static mxChar _array11_[188] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                 'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 's',
-                                 'a', 'm', 'p', 'l', 'e', 'F', 'r', 'o', 'm',
-                                 'P', 'd', 'f', ' ', 'L', 'i', 'n', 'e', ':',
-                                 ' ', '4', '8', ' ', 'C', 'o', 'l', 'u', 'm',
-                                 'n', ':', ' ', '1', ' ', 'T', 'h', 'e', ' ',
-                                 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
-                                 '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V', 'i',
-                                 's', 'i', 't', 'P', 'a', 'r', 'a', 'm', 'e',
-                                 't', 'e', 'r', 's', '/', 's', 'a', 'm', 'p',
-                                 'l', 'e', 'F', 'r', 'o', 'm', 'P', 'd', 'f',
-                                 '"', ' ', 'w', 'a', 's', ' ', 'c', 'a', 'l',
-                                 'l', 'e', 'd', ' ', 'w', 'i', 't', 'h', ' ',
-                                 'm', 'o', 'r', 'e', ' ', 't', 'h', 'a', 'n',
-                                 ' ', 't', 'h', 'e', ' ', 'd', 'e', 'c', 'l',
-                                 'a', 'r', 'e', 'd', ' ', 'n', 'u', 'm', 'b',
-                                 'e', 'r', ' ', 'o', 'f', ' ', 'i', 'n', 'p',
-                                 'u', 't', 's', ' ', '(', '2', ')', '.' };
-static mxArray * _mxarray10_;
-
-static mxChar _array13_[177] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                 'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                 'a', 'k', 'e', 'P', 'D', 'F', ' ', 'L', 'i',
-                                 'n', 'e', ':', ' ', '5', '5', ' ', 'C', 'o',
-                                 'l', 'u', 'm', 'n', ':', ' ', '1', ' ', 'T',
-                                 'h', 'e', ' ', 'f', 'u', 'n', 'c', 't', 'i',
-                                 'o', 'n', ' ', '"', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                 'a', 'k', 'e', 'P', 'D', 'F', '"', ' ', 'w',
-                                 'a', 's', ' ', 'c', 'a', 'l', 'l', 'e', 'd',
-                                 ' ', 'w', 'i', 't', 'h', ' ', 'm', 'o', 'r',
-                                 'e', ' ', 't', 'h', 'a', 'n', ' ', 't', 'h',
-                                 'e', ' ', 'd', 'e', 'c', 'l', 'a', 'r', 'e',
-                                 'd', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ',
-                                 'o', 'f', ' ', 'o', 'u', 't', 'p', 'u', 't',
-                                 's', ' ', '(', '1', ')', '.' };
-static mxArray * _mxarray12_;
-
-static mxChar _array15_[176] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                 'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                 'a', 'k', 'e', 'P', 'D', 'F', ' ', 'L', 'i',
-                                 'n', 'e', ':', ' ', '5', '5', ' ', 'C', 'o',
-                                 'l', 'u', 'm', 'n', ':', ' ', '1', ' ', 'T',
-                                 'h', 'e', ' ', 'f', 'u', 'n', 'c', 't', 'i',
-                                 'o', 'n', ' ', '"', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'm',
-                                 'a', 'k', 'e', 'P', 'D', 'F', '"', ' ', 'w',
-                                 'a', 's', ' ', 'c', 'a', 'l', 'l', 'e', 'd',
-                                 ' ', 'w', 'i', 't', 'h', ' ', 'm', 'o', 'r',
-                                 'e', ' ', 't', 'h', 'a', 'n', ' ', 't', 'h',
-                                 'e', ' ', 'd', 'e', 'c', 'l', 'a', 'r', 'e',
-                                 'd', ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ',
-                                 'o', 'f', ' ', 'i', 'n', 'p', 'u', 't', 's',
-                                 ' ', '(', '2', ')', '.' };
-static mxArray * _mxarray14_;
-
-static mxChar _array17_[173] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                 'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'e',
-                                 'p', 'r', 'o', 'b', ' ', 'L', 'i', 'n', 'e',
-                                 ':', ' ', '7', '2', ' ', 'C', 'o', 'l', 'u',
-                                 'm', 'n', ':', ' ', '1', ' ', 'T', 'h', 'e',
-                                 ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
-                                 ' ', '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V',
-                                 'i', 's', 'i', 't', 'P', 'a', 'r', 'a', 'm',
-                                 'e', 't', 'e', 'r', 's', '/', 'e', 'p', 'r',
-                                 'o', 'b', '"', ' ', 'w', 'a', 's', ' ', 'c',
-                                 'a', 'l', 'l', 'e', 'd', ' ', 'w', 'i', 't',
-                                 'h', ' ', 'm', 'o', 'r', 'e', ' ', 't', 'h',
-                                 'a', 'n', ' ', 't', 'h', 'e', ' ', 'd', 'e',
-                                 'c', 'l', 'a', 'r', 'e', 'd', ' ', 'n', 'u',
-                                 'm', 'b', 'e', 'r', ' ', 'o', 'f', ' ', 'o',
-                                 'u', 't', 'p', 'u', 't', 's', ' ', '(', '1',
-                                 ')', '.' };
-static mxArray * _mxarray16_;
-
-static mxChar _array19_[172] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                 'l', 'e', ':', ' ', 'a', 'n', 'n', 'e', 'a',
-                                 'l', 'V', 'i', 's', 'i', 't', 'P', 'a', 'r',
-                                 'a', 'm', 'e', 't', 'e', 'r', 's', '/', 'e',
-                                 'p', 'r', 'o', 'b', ' ', 'L', 'i', 'n', 'e',
-                                 ':', ' ', '7', '2', ' ', 'C', 'o', 'l', 'u',
-                                 'm', 'n', ':', ' ', '1', ' ', 'T', 'h', 'e',
-                                 ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o', 'n',
-                                 ' ', '"', 'a', 'n', 'n', 'e', 'a', 'l', 'V',
-                                 'i', 's', 'i', 't', 'P', 'a', 'r', 'a', 'm',
-                                 'e', 't', 'e', 'r', 's', '/', 'e', 'p', 'r',
-                                 'o', 'b', '"', ' ', 'w', 'a', 's', ' ', 'c',
-                                 'a', 'l', 'l', 'e', 'd', ' ', 'w', 'i', 't',
-                                 'h', ' ', 'm', 'o', 'r', 'e', ' ', 't', 'h',
-                                 'a', 'n', ' ', 't', 'h', 'e', ' ', 'd', 'e',
-                                 'c', 'l', 'a', 'r', 'e', 'd', ' ', 'n', 'u',
-                                 'm', 'b', 'e', 'r', ' ', 'o', 'f', ' ', 'i',
-                                 'n', 'p', 'u', 't', 's', ' ', '(', '2', ')',
-                                 '.' };
-static mxArray * _mxarray18_;
 static mxArray * _mxarray20_;
 static mxArray * _mxarray21_;
 static mxArray * _mxarray22_;
 static mxArray * _mxarray23_;
 
-static mxChar _array25_[65] = { 'W', 'a', 'r', 'n', 'i', 'n', 'g', ':', ' ',
-                                't', 'h', 'e', ' ', 'c', 'o', 's', 't', ' ',
-                                'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
-                                'g', 'e', 'n', 'e', 'r', 'a', 't', 'e', 'd',
-                                ' ', 'a', ' ', 'N', 'a', 'N', ' ', 'f', 'o',
-                                'r', ' ', 'o', 'n', 'e', ' ', 'o', 'r', ' ',
-                                'm', 'o', 'r', 'e', ' ', 'm', 'o', 'd', 'e',
-                                'l', 's' };
-static mxArray * _mxarray24_;
 static mxArray * _mxarray26_;
 
 void InitializeModule_annealVisitParameters(void) {
-    _mxarray0_ = mclInitializeString(160, _array1_);
-    _mxarray2_ = mclInitializeString(191, _array3_);
-    _mxarray4_ = mclInitializeString(190, _array5_);
-    _mxarray6_ = mclInitializeString(185, _array7_);
-    _mxarray8_ = mclInitializeString(189, _array9_);
-    _mxarray10_ = mclInitializeString(188, _array11_);
-    _mxarray12_ = mclInitializeString(177, _array13_);
-    _mxarray14_ = mclInitializeString(176, _array15_);
-    _mxarray16_ = mclInitializeString(173, _array17_);
-    _mxarray18_ = mclInitializeString(172, _array19_);
     _mxarray20_ = mclInitializeDouble(0.0);
     _mxarray21_ = mclInitializeDouble(1.0);
     _mxarray22_ = mclInitializeDouble(2.0);
     _mxarray23_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
-    _mxarray24_ = mclInitializeString(65, _array25_);
     _mxarray26_ = mclInitializeDouble(708.3964185322641);
 }
 
 void TerminateModule_annealVisitParameters(void) {
     mxDestroyArray(_mxarray26_);
-    mxDestroyArray(_mxarray24_);
     mxDestroyArray(_mxarray23_);
     mxDestroyArray(_mxarray22_);
     mxDestroyArray(_mxarray21_);
     mxDestroyArray(_mxarray20_);
-    mxDestroyArray(_mxarray18_);
-    mxDestroyArray(_mxarray16_);
-    mxDestroyArray(_mxarray14_);
-    mxDestroyArray(_mxarray12_);
-    mxDestroyArray(_mxarray10_);
-    mxDestroyArray(_mxarray8_);
-    mxDestroyArray(_mxarray6_);
-    mxDestroyArray(_mxarray4_);
-    mxDestroyArray(_mxarray2_);
-    mxDestroyArray(_mxarray0_);
 }
 
 static mxArray * mlfAnnealVisitParameters_makeTestModels(mxArray * x,
@@ -435,7 +180,10 @@ void mlxAnnealVisitParameters(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray0_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
+							"Column: 1 The function \"annealVisitParameters\" was "
+							"called with more than the declared number of outputs "
+							"(1).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -525,10 +273,16 @@ static void mlxAnnealVisitParameters_makeTestModels(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray2_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/makeTestModels "
+							"Line: 28 Column: 1 The function "
+							"\"annealVisitParameters/makeTestModels\" was called with "
+							"more than the declared number of outputs (1).");
     }
     if (nrhs > 5) {
-        mlfError(_mxarray4_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/makeTestModels "
+							"Line: 28 Column: 1 The function "
+							"\"annealVisitParameters/makeTestModels\" was called with "
+							"more than the declared number of inputs (5).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -589,7 +343,10 @@ static void mlxAnnealVisitParameters_doFuncEvals(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray6_);
+		mexErrMsgTxt("Run-time Error: File: annealVisitParameters/doFuncEvals "
+						 "Line: 35 Column: 1 The function "
+						 "\"annealVisitParameters/doFuncEvals\" was called with "
+						 "more than the declared number of outputs (1).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -645,10 +402,16 @@ static void mlxAnnealVisitParameters_sampleFromPdf(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray8_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/sampleFromPdf "
+							"Line: 48 Column: 1 The function "
+							"\"annealVisitParameters/sampleFromPdf\" was called with "
+							"more than the declared number of outputs (1).");
     }
     if (nrhs > 2) {
-        mlfError(_mxarray10_);
+        mexErrMsgTxt("Run-time  Error: File: annealVisitParameters/sampleFromPdf "
+							"Line: 48 Column: 1 The function "
+							"\"annealVisitParameters/sampleFromPdf\" was called with "
+							"more than the declared number of inputs (2).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -699,10 +462,16 @@ static void mlxAnnealVisitParameters_makePDF(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray12_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/makePDF "
+							"Line: 55 Column: 1 The function "
+							"\"annealVisitParameters/makePDF\" was called with "
+							"more than the declared number of outputs (1).");
     }
     if (nrhs > 2) {
-        mlfError(_mxarray14_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/makePDF "
+							"Line: 55 Column: 1 The function "
+							"\"annealVisitParameters/makePDF\" was called with "
+							"more than the declared number of inputs (2).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -753,10 +522,16 @@ static void mlxAnnealVisitParameters_eprob(int nlhs,
     mxArray * mplhs[1];
     int i;
     if (nlhs > 1) {
-        mlfError(_mxarray16_);
+        mexErrMsgTxt("Run-time  Error: File: annealVisitParameters/eprob "
+							"Line: 72 Column: 1 The function "
+							"\"annealVisitParameters/eprob\" was called with "
+							"more than the declared number of outputs (1).");
     }
     if (nrhs > 2) {
-        mlfError(_mxarray18_);
+        mexErrMsgTxt("Run-time Error: File: annealVisitParameters/eprob "
+							"Line: 72 Column: 1 The function "
+							"\"annealVisitParameters/eprob\" was called with "
+							"more than the declared number of inputs (2).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -1270,11 +1045,8 @@ static mxArray * MannealVisitParameters_makePDF(int nargout_,
          * pdf(bad) = 0;
          */
         mclArrayAssign1(&pdf, _mxarray20_, mclVsv(bad, "bad"));
-        /*
-         * 
-         * disp([ 'Warning: the cost function generated a NaN for one or more models']);
-         */
-        mlfDisp(_mxarray24_);
+
+        mexPrintf("Warning: the cost function generated a NaN for one or more models.");
     /*
      * end
      */
