@@ -29,7 +29,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 {
   if (mxIsChar(arr))
     {
-      if (Mx::as_string(arr) == "200*numberofvariables")
+      if (mx::as_string(arr) == "200*numberofvariables")
         {
           return 200*numModelParams;
         }
@@ -40,7 +40,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
         }
     }
 
-  return Mx::as_int(arr);
+  return mx::as_int(arr);
 }
 
 void doSimplex(int nlhs, mxArray* plhs[],
@@ -70,7 +70,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
   const int numModelParams = x.nelems();
 
   // Setup the objective function
-  MatlabFunction objective(Mx::as_string(funfcn_mx),
+  MatlabFunction objective(mx::as_string(funfcn_mx),
                            nvararg,
                            pvararg,
                            false);
@@ -78,12 +78,12 @@ void doSimplex(int nlhs, mxArray* plhs[],
   // Create the optimizer...
   SimplexOptimizer opt(objective,
                        mtx(x_in),
-                       Mx::as_string(printtype_mx),
+                       mx::as_string(printtype_mx),
                        numModelParams,
                        extractMaxIters(maxfun_mx, numModelParams),
                        extractMaxIters(maxiter_mx, numModelParams),
-                       Mx::as_double(tolx_mx),
-                       Mx::as_double(tolf_mx)
+                       mx::as_double(tolx_mx),
+                       mx::as_double(tolf_mx)
                        );
 
   // ... and let it do its optimization

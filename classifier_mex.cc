@@ -77,7 +77,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
         : CModelExemplar::LINEAR_DECAY;
 
       const int numStoredExemplars =
-        Mx::get_int_field(extraArgs_mx, "numStoredExemplars");
+        mx::get_int_field(extraArgs_mx, "numStoredExemplars");
 
       if ( mexPkg->recentCssm.get() != 0 &&
            numStoredExemplars == mexPkg->recentCssm->numStoredExemplars() &&
@@ -112,7 +112,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
         : CModelExemplar::EXP_DECAY;
 
       const int numStoredExemplars =
-        Mx::get_int_field(extraArgs_mx, "numStoredExemplars");
+        mx::get_int_field(extraArgs_mx, "numStoredExemplars");
 
       if ( mexPkg->recentRxm.get() != 0 &&
            numStoredExemplars == mexPkg->recentRxm->numStoredExemplars() &&
@@ -176,7 +176,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   else if (whichType == "spc")
     {
       int numStoredExemplars =
-        Mx::get_int_field(extraArgs_mx, "numStoredExemplars");
+        mx::get_int_field(extraArgs_mx, "numStoredExemplars");
 
       return shared_ptr<Classifier>
         (new CModelSPC(objParams, numStoredExemplars));
@@ -209,11 +209,11 @@ void classifier(int nlhs, mxArray* plhs[],
 DOTRACE("<classifier_mex.cc>::classifier");
 
   const mtx      modelParams   (prhs[0], mtx::COPY);
-  const fstring  modelName     (Mx::as_string(prhs[1]));
-  const fstring  actionRequest (Mx::as_string(prhs[2]));
+  const fstring  modelName     (mx::as_string(prhs[1]));
+  const fstring  actionRequest (mx::as_string(prhs[2]));
   const mxArray* extraArgs_mx  (prhs[3]);
 
-  const mtx      objParams     (Mx::get_field(extraArgs_mx, "objParams"));
+  const mtx      objParams     (mx::get_field(extraArgs_mx, "objParams"));
 
   shared_ptr<Classifier> model =
     makeClassifier(modelName, objParams, extraArgs_mx);

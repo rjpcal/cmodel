@@ -33,7 +33,7 @@ DOTRACE("annealHelper");
 
   AnnealOpts opts((mx_wrapper(prhs[0])));
 
-  MatlabFunction objective(Mx::as_string(prhs[1]), // funcName
+  MatlabFunction objective(mx::as_string(prhs[1]), // funcName
                            nvararg,
                            pvararg,
                            opts.canUseMatrix);
