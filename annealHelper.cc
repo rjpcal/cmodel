@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 18:49:15 2002
+// written: Thu Feb 14 19:03:41 2002
 // $Id$
 //
 //
@@ -57,6 +57,14 @@ namespace
     mexPrintf("file %s, line %d, about to destroy %s...", file, line, name);
     mxDestroyArray(arr);
     mexPrintf(" done.\n");
+  }
+
+  double matlabRand()
+  {
+    mxArray* arr = mlfNRand(1, NULL);
+    double result = mxGetScalar(arr);
+    mxDestroyArray(arr);
+    return result;
   }
 }
 
@@ -124,10 +132,10 @@ mxArray* doFuncEvals(bool canUseMatrix,
                      mxArray* func,
                      mxArray* varargin);
 
-int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
+int sampleFromPdf(const Mtx& temp, const Mtx& costs);
 
 
-mxArray* makePDF(const Mtx& temp, const Mtx& costs);
+Mtx makePDF(const Mtx& temp, const Mtx& costs);
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
@@ -274,10 +282,9 @@ DOTRACE("MannealVisitParameters");
                       mxGetM(costs_mx) : mxGetN(costs_mx) );
 
           // Sample from probability distribution
-          // s = sampleFromPdf(temp, costs);
-          s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
+          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW),
+                                      Mtx(costs_mx, Mtx::BORROW));
 
-          // bestModel(x, 1) = modelmatrix(x, s);
           bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
         }
 
@@ -458,44 +465,33 @@ DOTRACE("doFuncEvals");
 
 //---------------------------------------------------------------------
 //
-// sampleFromPdf_zerobased()
+// sampleFromPdf()
 //
 //---------------------------------------------------------------------
 
-int sampleFromPdf_zerobased(mxArray* temp_mx, mxArray* costs_mx)
+int sampleFromPdf(const Mtx& temp, const Mtx& costs)
 {
-DOTRACE("sampleFromPdf_zerobased");
+DOTRACE("sampleFromPdf");
 
-  mxArray* s_mx = mclGetUninitializedArray();
-  mxArray* cutoff = mclGetUninitializedArray();
-  mxArray* dist = mclGetUninitializedArray();
-  mclCopyArray(&temp_mx);
-  mclCopyArray(&costs_mx);
+  Mtx dist = makePDF(temp, costs);
 
-  // dist = makePDF(temp, costs);
-  mlfAssign(&dist,
-            makePDF(Mtx(temp_mx, Mtx::BORROW), Mtx(costs_mx, Mtx::BORROW)));
+  const double cutoff = matlabRand();
 
-  // cutoff = rand;
-  mlfAssign(&cutoff, mlfNRand(1, NULL));
+  double cumsum = 0.0;
+  int s = -1;
+  for (int i = 0; i < dist.nelems(); ++i)
+    {
+      cumsum += dist.at(i);
 
-  // s = find(cumsum(dist) >= cutoff);
-  mlfAssign(&s_mx,
-            mlfFind(NULL,
-                    NULL,
-                    mclGe(mlfCumsum(dist, NULL), cutoff)));
+      if (cumsum >= cutoff) { s = i; break; }
+    }
 
-  // s = s(1);
-  int s_zerobased = int(mxGetPr(s_mx)[0]) - 1;
+  if (s < 0)
+    {
+      mexErrMsgTxt("snafu in sampleFromPdf");
+    }
 
-  mxDestroyArray(dist);
-  mxDestroyArray(cutoff);
-  mxDestroyArray(costs_mx);
-  mxDestroyArray(temp_mx);
-
-  mxDestroyArray(s_mx);
-
-  return s_zerobased;
+  return s;
 }
 
 //---------------------------------------------------------------------
@@ -504,7 +500,7 @@ DOTRACE("sampleFromPdf_zerobased");
 //
 //---------------------------------------------------------------------
 
-mxArray* makePDF(const Mtx& temp, const Mtx& costs)
+Mtx makePDF(const Mtx& temp, const Mtx& costs)
 {
 DOTRACE("makePDF");
 
@@ -544,7 +540,7 @@ DOTRACE("makePDF");
 
   pdf /= pdf.sum();
 
-  return pdf.makeMxArray();
+  return pdf;
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
