@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Thu Feb 14 13:44:34 2002
+// written: Thu Feb 14 14:13:39 2002
 // $Id$
 //
 //
@@ -151,104 +151,6 @@ _mexLocalFunctionTable _local_function_table_doSimplex
   = { 0, (mexFunctionTableEntry *)NULL };
 
 /*
- * The function "mlfDoSimplex" contains the normal interface for the
- * "doSimplex" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/doSimplex.m" (lines 1-237).
- * This function processes any input arguments and passes them to the
- * implementation version of the function, appearing above.
- */
-mxArray * mlfDoSimplex(mxArray * * fval,
-                       mxArray * * exitflag,
-                       mxArray * * output,
-                       mxArray * funfcn,
-                       mxArray * x_in,
-                       mxArray * printtype,
-                       mxArray * tolx,
-                       mxArray * tolf,
-                       mxArray * maxfun,
-                       mxArray * maxiter,
-                       mxArray * debugFlags,
-                       ...) {
-    mxArray * varargin = NULL;
-    int nargout = 1;
-    mxArray * x = mclGetUninitializedArray();
-    mxArray * fval__ = mclGetUninitializedArray();
-    mxArray * exitflag__ = mclGetUninitializedArray();
-    mxArray * output__ = mclGetUninitializedArray();
-    mlfVarargin(&varargin, debugFlags, 0);
-    mlfEnterNewContext(
-      3,
-      -9,
-      fval,
-      exitflag,
-      output,
-      funfcn,
-      x_in,
-      printtype,
-      tolx,
-      tolf,
-      maxfun,
-      maxiter,
-      debugFlags,
-      varargin);
-    if (fval != NULL) {
-        ++nargout;
-    }
-    if (exitflag != NULL) {
-        ++nargout;
-    }
-    if (output != NULL) {
-        ++nargout;
-    }
-    x
-      = MdoSimplex(
-          &fval__,
-          &exitflag__,
-          &output__,
-          nargout,
-          funfcn,
-          x_in,
-          printtype,
-          tolx,
-          tolf,
-          maxfun,
-          maxiter,
-          debugFlags,
-          varargin);
-    mlfRestorePreviousContext(
-      3,
-      8,
-      fval,
-      exitflag,
-      output,
-      funfcn,
-      x_in,
-      printtype,
-      tolx,
-      tolf,
-      maxfun,
-      maxiter,
-      debugFlags);
-    mxDestroyArray(varargin);
-    if (fval != NULL) {
-        mclCopyOutputArg(fval, fval__);
-    } else {
-        mxDestroyArray(fval__);
-    }
-    if (exitflag != NULL) {
-        mclCopyOutputArg(exitflag, exitflag__);
-    } else {
-        mxDestroyArray(exitflag__);
-    }
-    if (output != NULL) {
-        mclCopyOutputArg(output, output__);
-    } else {
-        mxDestroyArray(output__);
-    }
-    return mlfReturnValue(x);
-}
-
-/*
  * The function "mlxDoSimplex" contains the feval interface for the "doSimplex"
  * M-function from file
  * "/cit/rjpeters/science/psyphy/classmodels/matlab/doSimplex.m" (lines 1-237).
@@ -256,71 +158,77 @@ mxArray * mlfDoSimplex(mxArray * * fval,
  * this function. This function processes any input arguments and passes them
  * to the implementation version of the function, appearing above.
  */
-void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
-    mxArray * mprhs[9];
-    mxArray * mplhs[4];
-    int i;
-    if (nlhs > 4) {
+void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
+{
+  mxArray * mprhs[9];
+  mxArray * mplhs[4];
+  int i;
+  if (nlhs > 4)
+    {
       mexErrMsgTxt("Run-time Error: File: doSimplex Line: 1 Column: 1 "
                    "The function \"doSimplex\" was called with more "
                    "than the declared number of outputs (4).");
     }
-    for (i = 0; i < 4; ++i) {
-        mplhs[i] = mclGetUninitializedArray();
+  for (i = 0; i < 4; ++i)
+    {
+      mplhs[i] = mclGetUninitializedArray();
     }
-    for (i = 0; i < 8 && i < nrhs; ++i) {
-        mprhs[i] = prhs[i];
+  for (i = 0; i < 8 && i < nrhs; ++i)
+    {
+      mprhs[i] = prhs[i];
     }
-    for (; i < 8; ++i) {
-        mprhs[i] = NULL;
+  for (; i < 8; ++i)
+    {
+      mprhs[i] = NULL;
     }
-    mlfEnterNewContext(
-      0,
-      8,
-      mprhs[0],
-      mprhs[1],
-      mprhs[2],
-      mprhs[3],
-      mprhs[4],
-      mprhs[5],
-      mprhs[6],
-      mprhs[7]);
-    mprhs[8] = NULL;
-    mlfAssign(&mprhs[8], mclCreateVararginCell(nrhs - 8, prhs + 8));
-    mplhs[0]
-      = MdoSimplex(
-          &mplhs[1],
-          &mplhs[2],
-          &mplhs[3],
-          nlhs,
-          mprhs[0],
-          mprhs[1],
-          mprhs[2],
-          mprhs[3],
-          mprhs[4],
-          mprhs[5],
-          mprhs[6],
-          mprhs[7],
-          mprhs[8]);
-    mlfRestorePreviousContext(
-      0,
-      8,
-      mprhs[0],
-      mprhs[1],
-      mprhs[2],
-      mprhs[3],
-      mprhs[4],
-      mprhs[5],
-      mprhs[6],
-      mprhs[7]);
-    plhs[0] = mplhs[0];
-    for (i = 1; i < 4 && i < nlhs; ++i) {
-        plhs[i] = mplhs[i];
+  mlfEnterNewContext(0,
+                     8,
+                     mprhs[0],
+                     mprhs[1],
+                     mprhs[2],
+                     mprhs[3],
+                     mprhs[4],
+                     mprhs[5],
+                     mprhs[6],
+                     mprhs[7]);
+  mprhs[8] = NULL;
+  mlfAssign(&mprhs[8], mclCreateVararginCell(nrhs - 8, prhs + 8));
+
+  mplhs[0] = MdoSimplex(&mplhs[1],
+                        &mplhs[2],
+                        &mplhs[3],
+                        nlhs,
+                        mprhs[0],
+                        mprhs[1],
+                        mprhs[2],
+                        mprhs[3],
+                        mprhs[4],
+                        mprhs[5],
+                        mprhs[6],
+                        mprhs[7],
+                        mprhs[8]);
+
+  mlfRestorePreviousContext(0,
+                            8,
+                            mprhs[0],
+                            mprhs[1],
+                            mprhs[2],
+                            mprhs[3],
+                            mprhs[4],
+			    mprhs[5],
+                            mprhs[6],
+                            mprhs[7]);
+
+  plhs[0] = mplhs[0];
+  for (i = 1; i < 4 && i < nlhs; ++i)
+    {
+      plhs[i] = mplhs[i];
     }
-    for (; i < 4; ++i) {
-        mxDestroyArray(mplhs[i]);
+  for (; i < 4; ++i)
+    {
+      mxDestroyArray(mplhs[i]);
     }
-    mxDestroyArray(mprhs[8]);
+  mxDestroyArray(mprhs[8]);
 }
 
 
@@ -345,8 +253,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * maxfun_mx,
                             mxArray * maxiter_mx,
                             mxArray * debugFlags_mx,
-                            mxArray * varargin) {
-
+                            mxArray * varargin)
+{
 DOTRACE("MdoSimplex");
 
   mexLocalFunctionTable save_local_function_table_ =
