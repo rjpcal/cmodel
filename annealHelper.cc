@@ -259,8 +259,7 @@ static mxArray * MannealVisitParameters(int nargout_,
   validateInput(varargin);
   mclCopyArray(&varargin);
 
-  // S.nevals = 0;
-  mlfIndexAssign(&S, ".nevals", _mxarray20_);
+  int nevals = 0;
 
   // for x = find(deltas' ~= 0)
   {
@@ -296,11 +295,8 @@ static mxArray * MannealVisitParameters(int nargout_,
 									 ));
 
 		// S.nevals = S.nevals + length(costs);
-		mlfIndexAssign(&S, ".nevals", mclFeval(mclValueVarargout(),
-															mlxPlus,
-															mlfIndexRef(S, ".nevals"),
-															mlfScalar(mclLengthInt(costs)),
-															NULL));
+		nevals += ( mxGetM(costs) > mxGetN(costs) ?
+						mxGetM(costs) : mxGetN(costs) );
 
 		// Sample from probability distribution
 		// s = sampleFromPdf(temp, costs);
@@ -318,6 +314,9 @@ static mxArray * MannealVisitParameters(int nargout_,
 
 	 mclDestroyForLoopIterator(viter__);
   }
+
+  // S.nevals = 0;
+  mlfIndexAssign(&S, ".nevals", mxCreateScalarDouble(nevals));
 
   // S.newModel = bestModel;
   mlfIndexAssign(&S, ".newModel", bestModel);
