@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 14:27:17 2002
+// written: Thu Feb 14 14:39:57 2002
 // $Id$
 //
 //
@@ -122,9 +122,6 @@ int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 mxArray* makePDF(mxArray* temp, mxArray* costs);
 
 mxArray* eprob(mxArray* temp, mxArray* costs);
-
-_mexLocalFunctionTable _local_function_table_annealVisitParameters
-  = { 0, (mexFunctionTableEntry *)NULL };
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
@@ -243,9 +240,6 @@ DOTRACE("MannealVisitParameters");
         }
 #endif
 
-      mexLocalFunctionTable save_local_function_table_ =
-        mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
-
       mxArray* costs_mx = mclGetUninitializedArray();
       mxArray* x_mx = mclGetUninitializedArray();
 
@@ -350,8 +344,6 @@ DOTRACE("MannealVisitParameters");
       mxDestroyArray(bounds_mx);
       mxDestroyArray(deltas_mx);
       mxDestroyArray(valueScalingRange_mx);
-
-      mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
       return output;
     }
@@ -562,9 +554,6 @@ int sampleFromPdf_zerobased(mxArray* temp_mx, mxArray* costs_mx)
 {
 DOTRACE("sampleFromPdf_zerobased");
 
-  mexLocalFunctionTable save_local_function_table_ =
-    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
-
   mxArray* s_mx = mclGetUninitializedArray();
   mxArray* cutoff = mclGetUninitializedArray();
   mxArray* dist = mclGetUninitializedArray();
@@ -591,8 +580,6 @@ DOTRACE("sampleFromPdf_zerobased");
   mxDestroyArray(costs_mx);
   mxDestroyArray(temp_mx);
 
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
-
   mxDestroyArray(s_mx);
 
   return s_zerobased;
@@ -612,9 +599,6 @@ DOTRACE("sampleFromPdf_zerobased");
 mxArray* makePDF(mxArray* temp_mx, mxArray* costs_mx)
 {
 DOTRACE("makePDF");
-
-  mexLocalFunctionTable save_local_function_table_ =
-    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* pdf = mclGetUninitializedArray();
   mxArray* ans = mclGetUninitializedArray();
@@ -664,8 +648,6 @@ DOTRACE("makePDF");
   mxDestroyArray(costs_mx);
   mxDestroyArray(temp_mx);
 
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
-
   return pdf;
 }
 
@@ -683,9 +665,6 @@ DOTRACE("makePDF");
 mxArray* eprob(mxArray* temp_mx, mxArray* costs_mx)
 {
 DOTRACE("eprob");
-
-  mexLocalFunctionTable save_local_function_table_ =
-    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* pdf = mclGetUninitializedArray();
   mxArray* scale = mclGetUninitializedArray();
@@ -741,8 +720,6 @@ DOTRACE("eprob");
   mxDestroyArray(scale);
   mxDestroyArray(costs_mx);
   mxDestroyArray(temp_mx);
-
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
   return pdf;
 }
