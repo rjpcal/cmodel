@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 15:04:09 2002
+// written: Mon Feb 18 15:22:47 2002
 // $Id$
 //
 //
@@ -363,6 +363,15 @@ namespace
   };
 }
 
+struct Astate
+{
+  Astate(mxArray* arr) :
+    tempRepeats(Mx::getField(arr, "x"), Mtx::COPY)
+  {}
+
+  const Mtx tempRepeats;
+};
+
 //---------------------------------------------------------------------
 //
 // class AnnealingRun
@@ -373,12 +382,13 @@ class AnnealingRun
 {
 private:
   mxArray* const itsAstate_mx;
+  Astate& itsAstate;
   const int itsRunNum;
   const bool itsTalking;
   int itsNvisits;
   double itsCriticalTemp;
   const int itsNumTemps;
-  Mtx itsTempRepeats;
+//   Mtx itsTempRepeats;
   Mtx itsNumFunEvals;
   Mtx itsEnergy;
   Mtx itsMinUsedParams;
@@ -398,17 +408,18 @@ public:
   AnnealingRun(mxArray* old_astate_mx,
                const fstring& funcName,
                int runNum,
+               Astate& astate,
                int nvararg,
                mxArray** pvararg)
     :
     itsAstate_mx(mxDuplicateArray(old_astate_mx)),
-//     itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
+    itsAstate(astate),
     itsRunNum(runNum),
     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
     itsNumTemps(int(mxGetScalar(Mx::getField(itsAstate_mx, "numTemps")))),
-    itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
+//     itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
     itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
     itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
     itsMinUsedParams(0,0),
@@ -705,7 +716,7 @@ DOTRACE("AnnealingRun::go");
       const double temp =
         pow(10.0, itsCriticalTemp + 1.0 - 2.0*double(temps_i)/(itsNumTemps-1));
 
-      const int temp_repeat = int(itsTempRepeats.at(temps_i));
+      const int temp_repeat = int(itsAstate.tempRepeats.at(temps_i));
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
@@ -768,9 +779,11 @@ public:
     // So we own a copy of astate_mx
     astate_mx = mxDuplicateArray(astate_mx);
 
+    Astate astate(astate_mx);
+
     for (int i = 0; i < numruns; ++i)
       {
-        AnnealingRun ar(astate_mx, func_name, i, nvararg, pvararg);
+        AnnealingRun ar(astate_mx, func_name, i, astate, nvararg, pvararg);
 
         mxDestroyArray(astate_mx);
 
