@@ -20,12 +20,54 @@
 #include "libmatlb.h"
 
 class Rat {
+private:
+  enum StorageType { BORROWED, OWNED };
+
+  Rat& operator=(const Rat&); // not allowed
+
+  Rat(const Rat& other, int column /* zero-based */) :
+	 mrows_(other.mrows_),
+	 ncols_(1),
+	 data_(other.data_ + (other.mrows_*column)),
+	 storage_(BORROWED)
+  {}
+
 public:
   Rat(mxArray* a) :
 	 mrows_(mxGetM(a)),
 	 ncols_(mxGetN(a)),
-	 data_(mxGetPr(a))
+	 data_(mxGetPr(a)),
+	 storage_(BORROWED)
   {}
+
+  Rat(const Rat& other) :
+	 mrows_(other.mrows_),
+	 ncols_(other.ncols_),
+	 data_(0),
+	 storage_(other.storage_)
+  {
+	 switch(storage_) {
+	 case BORROWED:
+		data_ = other.data_;
+		break;
+	 case OWNED:
+		data_ = new double[nelems()];
+		for (int i = 0; i < nelems(); ++i)
+		  data_[i] = other.data_[i];
+		break;
+	 }
+  }
+
+  ~Rat()
+  {
+	 switch(storage_) {
+	 case OWNED:
+		delete [] data_;
+		break;
+	 case BORROWED:
+		break;
+	 }
+  }
 
   void print() const
     {
@@ -59,14 +101,19 @@ public:
 
   int mrows() const { return mrows_; }
 
+  int ncols() const { return ncols_; }
+
   double* data() { return data_; }
 
   const double* data() const { return data_; }
+
+  Rat columnSlice(int column) const { return Rat(*this, column); }
 
 private:
   int mrows_;
   int ncols_;
   double* data_;
+  StorageType storage_;
 };
 
 static const char vcid_rutil_h[] = "$Header$";
