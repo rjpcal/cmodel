@@ -606,8 +606,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 										 mxArray * funfcn_mx,
 										 mxArray * x_in,
 										 mxArray * printtype,
-										 mxArray * tolx_mx,
-										 mxArray * tolf_mx,
+										 const double tolx,
+										 const double tolf,
 										 const int numModelParams,
 										 const int maxfun,
 										 const int maxiter,
@@ -653,18 +653,11 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mclCopyArray(&funfcn_mx);
     mclCopyInputArg(&x, x_in);
     mclCopyArray(&printtype);
-    mclCopyArray(&tolx_mx);
-    mclCopyArray(&tolf_mx);
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
 
-	 const double tolx = mxGetScalar(tolx_mx);
-	 const double tolf = mxGetScalar(tolf_mx);
-
 	 FuncEvaluator fevaluator(funfcn_mx, varargin);
-
-//  	 const int numModelParams = mxGetM(x) * mxGetN(x);
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
@@ -1528,8 +1521,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
               mlfSprintf(
                 NULL,
                 _mxarray75_,
-                mclVa(tolx_mx, "tolx"),
-                mclVa(tolf_mx, "tolf"),
+                mxCreateScalarDouble(tolx),
+					 mxCreateScalarDouble(tolf),
                 NULL));
 
 
@@ -1592,8 +1585,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
-    mxDestroyArray(tolf_mx);
-    mxDestroyArray(tolx_mx);
     mxDestroyArray(printtype);
     mxDestroyArray(funfcn_mx);
 
@@ -1660,8 +1651,8 @@ DOTRACE("MdoSimplex");
 												funfcn_mx,
 												x_in,
 												printtype,
-												tolx_mx,
-												tolf_mx,
+												mxGetScalar(tolx_mx),
+												mxGetScalar(tolf_mx),
 												numModelParams,
 												extractMaxIters(maxfun_mx, numModelParams),
 												extractMaxIters(maxiter_mx, numModelParams),
