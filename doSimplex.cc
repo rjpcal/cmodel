@@ -139,34 +139,6 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
   return int(mxGetScalar(arr));
 }
 
-int extractPrinttype(const mxArray* printtype_mx)
-{
-  fixed_string printtype = Mtx::extractString(printtype_mx);
-
-  if (printtype == "notify")
-	 {
-		return 1;
-	 }
-  else if (printtype == "none" || printtype == "off")
-	 {
-		return 0;
-	 }
-  else if (printtype == "iter")
-	 {
-		return 3;
-	 }
-  else if (printtype == "final")
-	 {
-		return 2;
-	 }
-  else if (printtype == "simplex")
-	 {
-		return 4;
-	 }
-
-  return 1;
-}
-
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
                                 'l', 'e', ':', ' ', 'd', 'o', 'S', 'i', 'm',
@@ -668,7 +640,6 @@ private:
   Mtx itsFvals;
 
   int itsIterCount;
-  Mtx itsBestParams;
 
   void buildInitialSimplex()
   {
@@ -699,10 +670,95 @@ private:
 	 itsFvals.at(0, simplexPoint) = itsObjective.evaluate(params);
   }
 
+  void fullSort()
+  {
+	 // sort so itsSimplex.column(0) has the lowest function value 
+	 Mtx index = itsFvals.row(0).getSortOrder();
+
+	 itsFvals.row(0).reorder(index);
+  	 itsSimplex.reorderColumns(index);
+  }
+
+  bool tooManyFevals()
+  {
+	 if (funcCount() < itsMaxFevals)
+		return false;
+
+	 if (itsPrnt != NONE) {
+		mexPrintf("\nExiting: Maximum number of function evaluations "
+					 "has been exceeded\n");
+		mexPrintf("         - increase MaxFunEvals option.\n");
+		mexPrintf("         Current function value: %f \n\n",
+					 bestFval());
+	 }
+
+	 return true;
+  }
+
+  bool tooManyIters()
+  {
+	 if (itsIterCount < itsMaxIters)
+		return false;
+
+	 if (itsPrnt != NONE) {
+		mexPrintf("\nExiting: Maximum number of iterations "
+					 "has been exceeded\n");
+		mexPrintf("         - increase MaxIter option.\n");
+		mexPrintf("         Current function value: %f \n\n",
+					 bestFval());
+	 }	 
+
+	 return true;
+  }
+
+  void printHeader()
+  {
+	 if (itsPrnt == ITER)
+		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
+  }
+
+  void printIter(const fixed_string& how)
+  {
+	 if (itsPrnt == ITER)
+		{
+		  mexPrintf(" %5d        %5d     %12.6g         ",
+						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
+		  mexPrintf(how.c_str());
+		  mexPrintf("\n");
+		}
+  }
+
+  void printSimplex(const fixed_string& how)
+  {
+	 if (itsPrnt == SIMPLEX)
+		{
+		  mexPrintf("\n%s\n", how.c_str());
+		  itsSimplex.print("simplex");
+		  itsFvals.print("fvals");
+		  mexPrintf("funcEvals: %d\n", funcCount());
+		}
+  }
+
+public:
+  enum PrintType { NONE, NOTIFY, FINAL, ITER, SIMPLEX };
+
+private:
+  static PrintType extractPrinttype(const fixed_string& printtype)
+  {
+	 if      (printtype == "notify")   return NOTIFY;
+	 else if (printtype == "none")     return NONE;
+	 else if (printtype == "off")      return NONE;
+	 else if (printtype == "iter")     return ITER;
+	 else if (printtype == "final")    return FINAL;
+	 else if (printtype == "simplex")  return SIMPLEX;
+
+	 return NOTIFY;
+  }
+
 public:
   SimplexOptimizer(FuncEvaluator& objective,
 						 const Mtx& x_in,
-						 const int prnt,
+						 const fixed_string& printtype,
 						 const double tolx,
 						 const double tolf,
 						 const int nparams,
@@ -711,7 +767,7 @@ public:
 	 itsObjective(objective),
 
 	 itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
-	 itsPrnt(prnt),
+	 itsPrnt(extractPrinttype(printtype)),
 	 itsTolx(tolx),
 	 itsTolf(tolf),
 	 itsNparams(nparams),
@@ -721,8 +777,7 @@ public:
 	 itsSimplex(nparams, nparams+1),
 	 itsFvals(1, nparams+1),
 
-	 itsIterCount(0),
-	 itsBestParams(0,0)
+	 itsIterCount(0)
   {}
 
   virtual ~SimplexOptimizer() {}
@@ -730,7 +785,7 @@ public:
   int optimize();
 
   virtual Mtx bestParams()
-  { return itsBestParams; }
+  { return itsSimplex.column(0); }
 
   virtual double bestFval()
   { return itsFvals.row(0).min(); }
@@ -748,67 +803,45 @@ public:
 int SimplexOptimizer::optimize()
 {
 
-// HOME
+  // HOME
 
   const double RHO = 1.0;
   const double CHI = 2.0;
   const double PSI = 0.5;
   const double SIGMA = 0.5;
 
-  // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
+	// Place input guess in the simplex! (credit L.Pfeffer at Stanford)
   putInSimplex(itsInitialParams, 0);
 
   buildInitialSimplex();
 
-  {
-	 // sort so itsSimplex.column(0) has the lowest function value 
-	 Mtx index = itsFvals.row(0).getSortOrder();
-
-	 itsFvals.row(0).reorder(index);
-  	 itsSimplex.reorderColumns(index);
-  }
-
-  fixed_string how = "initial";
+  fullSort();
 
   itsIterCount = 1;
 
-  if (itsPrnt == 3)
-	 {
-		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
-		mexPrintf(" %5d        %5d     %12.6g         ",
-					 itsIterCount, funcCount(), double(itsFvals.at(0,0)));
-		mexPrintf(how.c_str());
-		mexPrintf("\n");
-	 }
-  else if (itsPrnt == 4)
-	 {
-		mexPrintf("\n%s\n", how.c_str());
-		itsSimplex.print("simplex");
-		itsFvals.print("itsFvals");
-		mexPrintf("func_evals: %d\n", funcCount());
-	 }
+  printHeader();
+  printIter("initial");
+  printSimplex("initial");
 
-  int exitFlag = 1;
-
-  //---------------------------------------------------------------------
-  //
-  // Iterate until the diameter of the simplex is less than itsTolx AND
-  // the function values differ from the min by less than itsTolf, or
-  // the max function evaluations are exceeded. (Cannot use OR
-  // instead of AND.)
-  //
-  //---------------------------------------------------------------------
+	//---------------------------------------------------------------------
+	//
+	// Iterate until the diameter of the simplex is less than itsTolx AND
+	// the function values differ from the min by less than itsTolf, or
+	// the max function evaluations are exceeded. (Cannot use OR
+	// instead of AND.)
+	//
+	//---------------------------------------------------------------------
 
 
-  for (;;) { DOTRACE("Main algorithm");
+  while (!withinTolf(itsFvals, itsTolf) || !
+			!withinTolx(itsSimplex, itsTolx))
 
-	 if ((funcCount() >= itsMaxFevals) || (itsIterCount >= itsMaxIters))
-		break; // out of main loop
+	 {DOTRACE("Main algorithm");
 
-	 if (withinTolf(itsFvals, itsTolf) && withinTolx(itsSimplex, itsTolx))
-		break; // out of main loop
+	 if (tooManyIters()) return 0;
+	 if (tooManyFevals()) return 0;
 
-	 how = "";
+	 fixed_string how = "";
 
 	 // xbar = average of the itsNparams (NOT itsNparams+1) best points
 
@@ -822,7 +855,7 @@ int SimplexOptimizer::optimize()
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
 
 
-	 // Calculate the reflection point
+  // Calculate the reflection point
 	 Mtx xr = (xbar*(1.0+RHO) - itsSimplex.columns(itsNparams,1) * RHO);
 
 	 double fxr = itsObjective.evaluate(xr);
@@ -851,7 +884,7 @@ int SimplexOptimizer::optimize()
 				itsFvals.at(0,itsNparams) = fxr;
 				how = "reflect";
 			 }
-      }
+		}
 	 else
 		{
 		  DOTRACE("fxr >= itsFvals(:,1)");
@@ -905,20 +938,20 @@ int SimplexOptimizer::optimize()
 						}
 				  }
 
-			 if (how == "shrink")
-				{
-				  for (int j = 1; j < itsNparams+1; ++j)
-					 {
-						itsSimplex.column(j) =
-						  itsSimplex.columns(0,1) +
-						  (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
+				if (how == "shrink")
+				  {
+					 for (int j = 1; j < itsNparams+1; ++j)
+						{
+						  itsSimplex.column(j) =
+							 itsSimplex.columns(0,1) +
+							 (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
 
-						itsFvals.at(0,j) =
-						  itsObjective.evaluate(itsSimplex.columns(j,1));
-					 }
-				}
-		  }
-      }
+						  itsFvals.at(0,j) =
+							 itsObjective.evaluate(itsSimplex.columns(j,1));
+						}
+				  }
+			 }
+		}
 
 	 {DOTRACE("reorder simplex");
 	 // [dummy,index] = sort(itsFvals);
@@ -943,68 +976,20 @@ int SimplexOptimizer::optimize()
 
 	 ++itsIterCount;
 
-	 if (itsPrnt == 3)
-		{
-		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
-		  mexPrintf(how.c_str());
-		  mexPrintf("\n");
-		}
-	 else if (itsPrnt == 4)
-		{
-		  mexPrintf("\n%s\n", how.c_str());
-		  itsSimplex.print("simplex");
-		  itsFvals.print("itsFvals");
-		  mexPrintf("func_evals: %d\n", funcCount());
-		}
-  }
+	 printIter(how);
+	 printSimplex(how);
+  } // end main algorithm loop
 
-  itsBestParams = itsSimplex.column(0);
+  const char* format = 
+	 "\nOptimization terminated successfully:\n"
+	 " the current x satisfies the termination criteria using "
+	 "OPTIONS.TolX of %e \n"
+	 " and F(X) satisfies the convergence criteria using "
+	 "OPTIONS.TolFun of %e \n";
 
-  // end Main algorithm
+  mexPrintf(format, itsTolx, itsTolf);
 
-  if (funcCount() >= itsMaxFevals)
-	 {
-		if (itsPrnt > 0) {
-		  mexPrintf("\nExiting: Maximum number of function evaluations "
-						"has been exceeded\n");
-		  mexPrintf("         - increase MaxFunEvals option.\n");
-		  mexPrintf("         Current function value: %f \n\n",
-						bestFval());
-		}
-
-		exitFlag = 0;
-	 }
-  else if (itsIterCount >= itsMaxIters)
-	 {
-		if (itsPrnt > 0) {
-		  mexPrintf("\nExiting: Maximum number of iterations "
-						"has been exceeded\n");
-		  mexPrintf("         - increase MaxIter option.\n");
-		  mexPrintf("         Current function value: %f \n\n",
-						bestFval());
-		}
-
-		exitFlag = 0;
-	 }
-  else
-	 {
-		if (itsPrnt > 1)
-		  {
-			 const char* format = 
-				"\nOptimization terminated successfully:\n"
-				" the current x satisfies the termination criteria using "
-				"OPTIONS.TolX of %e \n"
-				" and F(X) satisfies the convergence criteria using "
-				"OPTIONS.TolFun of %e \n";
-
-			 mexPrintf(format, itsTolx, itsTolf);
-		  }
-
-		exitFlag = 1;
-  }
-
-  return exitFlag;
+  return 1;
 }
 
 
@@ -1015,9 +1000,6 @@ int SimplexOptimizer::optimize()
  * It contains the actual compiled code for that M-function. It is a static
  * function and must only be called from one of the interface functions,
  * appearing below.
- */
-/*
- * function [x,fval,exitflag,output] = ...
  */
 
 static mxArray * MdoSimplex(mxArray * * fval,
@@ -1072,7 +1054,7 @@ DOTRACE("MdoSimplex");
 
   SimplexOptimizer opt(objective,
 							  Mtx(x_in),
-							  extractPrinttype(printtype_mx),
+							  Mtx::extractString(printtype_mx),
 							  mxGetScalar(tolx_mx),
 							  mxGetScalar(tolf_mx),
 							  numModelParams,
