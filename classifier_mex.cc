@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Feb 14 11:57:52 2002
+// written: Mon Feb 18 10:32:33 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -93,8 +93,8 @@ void TerminateModule_classifier()
   delete recentModel;
 
   mexPrintf("\tdeleting recentModel...\n");
-  cout.rdbuf(coutOrigBuf);
-  cerr.rdbuf(cerrOrigBuf);
+  cout.rdbuf(0);
+  cerr.rdbuf(0);
   delete mexBuf;
   mexPrintf("\tdone.\n");
 }
