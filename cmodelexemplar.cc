@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 28 08:46:08 2001
+// written: Wed Mar 28 09:00:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -183,47 +183,64 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
 
-	 {DOTRACE("minkowski");
-	 if (minkPower == 2.0) {
-		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2;
-			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2) {
+	 int y = 0;
+	 for (MtxIter iter1 = distrust1, iter2 = distrust2;
+			iter1.hasMore();
+			++y, ++iter1, ++iter2) {
 
-  		  *iter1 = binder1.minkDist2(exemplars[y]);
-  		  *iter2 = binder2.minkDist2(exemplars[y]);
+		bool do1 = true;
+		bool do2 = true;
 
+		if (do1) {
+		  if (minkPower == 2.0) {
+			 if (EXP_DECAY == itsTransferFunc) {
+				*iter1 = Num::fastexp7(-binder1.minkDist2(exemplars[y]));
+			 }
+			 else if (LINEAR_DECAY == itsTransferFunc) {
+				*iter1 = -binder1.minkDist2(exemplars[y]);
+			 }
+		  }
+		  else {
+			 if (EXP_DECAY == itsTransferFunc) {
+				*iter1 = Num::fastexp7(-binder1.minkDist(exemplars[y]));
+			 }
+			 else if (LINEAR_DECAY == itsTransferFunc) {
+				*iter1 = -binder1.minkDist(exemplars[y]);
+			 }
+		  }
 		}
-	 }
-	 else {
-		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2;
-			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2) {
 
-  		  *iter1 = binder1.minkDist(exemplars[y]);
-  		  *iter2 = binder2.minkDist(exemplars[y]);
+		if (do2) {
+		  if (minkPower == 2.0) {
+			 if (EXP_DECAY == itsTransferFunc) {
+				*iter2 = Num::fastexp7(-binder2.minkDist2(exemplars[y]));
+			 }
+			 else if (LINEAR_DECAY == itsTransferFunc) {
+				*iter2 = -binder2.minkDist2(exemplars[y]);
+			 }
+		  }
+		  else {
+			 if (EXP_DECAY == itsTransferFunc) {
+				*iter2 = Num::fastexp7(-binder2.minkDist(exemplars[y]));
+			 }
+			 else if (LINEAR_DECAY == itsTransferFunc) {
+				*iter2 = -binder2.minkDist(exemplars[y]);
+			 }
+		  }
 		}
-	 }
-	 }
 
-	 if (EXP_DECAY == itsTransferFunc) {
-		DOTRACE("exponential");
-		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
-			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2, ++diff) {
-		  *diff += Num::fastexp7(-*iter1) - Num::fastexp7(-*iter2);
-		}
 	 }
-	 else if (LINEAR_DECAY == itsTransferFunc) {
-		DOTRACE("linear");
-		int y = 0;
-		for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
-			  iter1.hasMore();
-			  ++y, ++iter1, ++iter2, ++diff) {
-			 *diff += -*iter1 + *iter2;
-		}
+  }
+
+  for (int x = 0; x < itsNumStoredExemplars; ++x) {
+
+	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
+	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
+
+	 for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
+			iter1.hasMore();
+			++iter1, ++iter2, ++diff) {
+		*diff += *iter1 - *iter2;
 	 }
   }
 }
