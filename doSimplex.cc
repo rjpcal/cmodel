@@ -606,7 +606,7 @@ DOTRACE("MdoSimplex");
     mxArray * xr = mclGetUninitializedArray();
     mxArray * xbar = mclGetUninitializedArray();
     mxArray * formatsave = mclGetUninitializedArray();
-    mxArray * func_evals = mclGetUninitializedArray();
+	 mxArray * func_evals = mclGetUninitializedArray();
     mxArray * itercount = mclGetUninitializedArray();
     mxArray * how = mclGetUninitializedArray();
     mxArray * f = mclGetUninitializedArray();
@@ -922,9 +922,12 @@ DOTRACE("MdoSimplex");
     mlfAssign(&itercount, _mxarray11_);
 
     // func_evals = numModelParams+1;
-    mlfAssign(
-      &func_evals,
-      mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_));
+	 mlfAssign(
+        &func_evals,
+		  mxCreateScalarDouble(int(mxGetScalar(numModelParams))+1));
+//          mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_));
+
+  	 double& func_evals_ref = *(mxGetPr(func_evals));
 
     // if prnt == 3
     if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
@@ -943,7 +946,7 @@ DOTRACE("MdoSimplex");
                 NULL,
                 _mxarray38_,
                 mclVv(itercount, "itercount"),
-                mclVv(func_evals, "func_evals"),
+                func_evals,
                 mclVe(mclIntArrayRef1(mclVsv(funcVals, "funcVals"), 1)),
                 NULL)),
             mclVv(how, "how"),
@@ -977,7 +980,7 @@ DOTRACE("MdoSimplex");
         mclPrintArray(mclVsv(funcVals, "funcVals"), "funcVals");
 
         // func_evals
-        mclPrintArray(mclVsv(func_evals, "func_evals"), "func_evals");
+        mclPrintArray(func_evals, "func_evals");
 
     // end
     }
@@ -985,536 +988,547 @@ DOTRACE("MdoSimplex");
     // exitflag = 1;
     mlfAssign(exitflag, _mxarray11_);
 
-    // Iterate until the diameter of the simplex is less than tolx
-    //   AND the function values differ from the min by less than tolf,
-    //   or the max function evaluations are exceeded. (Cannot use OR instead of AND.)
+
+	 //---------------------------------------------------------------------
+	 //
+    // Iterate until the diameter of the simplex is less than tolx AND
+    // the function values differ from the min by less than tolf, or
+    // the max function evaluations are exceeded. (Cannot use OR
+    // instead of AND.)
+	 //
+	 //---------------------------------------------------------------------
+
 
     // while func_evals < maxfun & itercount < maxiter
     for (;;) { // Main algorithm
 		DOTRACE("Main algorithm");
-        mxArray * a_ = mclInitialize(
-                         mclLt(
-                           mclVv(func_evals, "func_evals"),
-                           mclVa(maxfun, "maxfun")));
-        if (mlfTobool(a_)
-            && mlfTobool(
-                 mclAnd(
-                   a_,
-                   mclLt(
-                     mclVv(itercount, "itercount"),
-                     mclVa(maxiter, "maxiter"))))) {
-            mxDestroyArray(a_);
-        } else {
-            mxDestroyArray(a_);
-            break;
-        }
 
-        {
-			 DOTRACE("check if done");
+		{DOTRACE("Main loop condition"); // 0.5%
+		mxArray * a_ = mclInitialize(
+											  mclLt(
+													  func_evals,
+													  mclVa(maxfun, "maxfun")));
 
-			 if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
-				break; // main loop
-        }
+		if (mlfTobool(a_)
+			 && mlfTobool(
+							  mclAnd(
+										a_,
+										mclLt(
+												mclVv(itercount, "itercount"),
+												mclVa(maxiter, "maxiter"))))) {
+		  mxDestroyArray(a_);
+		} else {
+		  mxDestroyArray(a_);
+		  break;
+		}
+		}
 
-        // how = '';
-        mlfAssign(&how, _mxarray52_);
+		{DOTRACE("check if done");
 
-		  {DOTRACE("compute reflection point");
+		  if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
+			 break; // main loop
+		}
 
-        // 
-        // % Compute the reflection point
-        // 
-        // % xbar = average of the numModelParams (NOT numModelParams+1) best points
-        // xbar = sum(theSimplex(:,one2n), 2)/numModelParams;
-        mlfAssign(
-          &xbar,
-          mclMrdivide(
-            mclVe(
-              mlfSum(
-                mclVe(
-                  mclArrayRef2(
-                    mclVsv(theSimplex, "theSimplex"),
-                    mlfCreateColonIndex(),
-                    mclVsv(one2n, "one2n"))),
-                _mxarray24_)),
-            mclVv(numModelParams, "numModelParams")));
+      // how = '';
+      mlfAssign(&how, _mxarray52_);
 
-        // xr = (1 + rho)*xbar - rho*theSimplex(:,end);
-        mlfAssign(
-          &xr,
-          mclMinus(
-            mclMtimes(
-              mclPlus(_mxarray11_, mclVv(rho, "rho")), mclVv(xbar, "xbar")),
-            mclMtimes(
-              mclVv(rho, "rho"),
+		{DOTRACE("compute reflection point");
+
+      // 
+      // % Compute the reflection point
+      // 
+      // % xbar = average of the numModelParams (NOT numModelParams+1) best points
+      // xbar = sum(theSimplex(:,one2n), 2)/numModelParams;
+      mlfAssign(
+        &xbar,
+        mclMrdivide(
+          mclVe(
+            mlfSum(
               mclVe(
                 mclArrayRef2(
                   mclVsv(theSimplex, "theSimplex"),
                   mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(theSimplex, "theSimplex"),
-                    _mxarray24_,
-                    _mxarray24_))))));
+                  mclVsv(one2n, "one2n"))),
+              _mxarray24_)),
+          mclVv(numModelParams, "numModelParams")));
 
-        // fxr = feval(funfcn,xr,varargin{:});
-        mlfAssign(
-          &fxr,
-          mlfFeval(
-            mclValueVarargout(),
-            mclVa(funfcn_mx, "funfcn"),
-            mclVv(xr, "xr"),
+      // xr = (1 + rho)*xbar - rho*theSimplex(:,end);
+      mlfAssign(
+        &xr,
+        mclMinus(
+          mclMtimes(
+            mclPlus(_mxarray11_, mclVv(rho, "rho")), mclVv(xbar, "xbar")),
+          mclMtimes(
+            mclVv(rho, "rho"),
             mclVe(
-              mlfIndexRef(
-                mclVsa(varargin, "varargin"), "{?}", mlfCreateColonIndex())),
-            NULL));
+              mclArrayRef2(
+                mclVsv(theSimplex, "theSimplex"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(theSimplex, "theSimplex"),
+                  _mxarray24_,
+                  _mxarray24_))))));
 
-        // func_evals = func_evals+1;
-        mlfAssign(
+      // fxr = feval(funfcn,xr,varargin{:});
+      mlfAssign(
+        &fxr,
+        mlfFeval(
+          mclValueVarargout(),
+          mclVa(funfcn_mx, "funfcn"),
+          mclVv(xr, "xr"),
+          mclVe(
+            mlfIndexRef(
+              mclVsa(varargin, "varargin"), "{?}", mlfCreateColonIndex())),
+          NULL));
+
+      // func_evals = func_evals+1;
+		mlfAssign(
           &func_evals, mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
+//  		func_evals_ref += 1;
 
-		  }
+		}
 
-        // 
-        // if fxr < funcVals(:,1)
-        if (mclLtBool(
-              mclVv(fxr, "fxr"),
-              mclVe(
-                mclArrayRef2(
-                  mclVsv(funcVals, "funcVals"),
-                  mlfCreateColonIndex(),
-                  _mxarray11_)))) {
+      // 
+      // if fxr < funcVals(:,1)
+      if (mclLtBool(
+            mclVv(fxr, "fxr"),
+            mclVe(
+              mclArrayRef2(
+                mclVsv(funcVals, "funcVals"),
+                mlfCreateColonIndex(),
+                _mxarray11_)))) {
 			 DOTRACE("if fxr < funcVals(:,1)");
 
-            // % Calculate the expansion point
-            // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
-            mlfAssign(
-              &xe,
-              mclMinus(
-                mclMtimes(
-                  mclPlus(
-                    _mxarray11_,
-                    mclMtimes(mclVv(rho, "rho"), mclVv(chi, "chi"))),
-                  mclVv(xbar, "xbar")),
-                mclMtimes(
-                  mclMtimes(mclVv(rho, "rho"), mclVv(chi, "chi")),
-                  mclVe(
-                    mclArrayRef2(
-                      mclVsv(theSimplex, "theSimplex"),
-                      mlfCreateColonIndex(),
-                      mlfEnd(
-                        mclVv(theSimplex, "theSimplex"),
-                        _mxarray24_,
-                        _mxarray24_))))));
-
-            // fxe = feval(funfcn,xe,varargin{:});
-            mlfAssign(
-              &fxe,
-              mlfFeval(
-                mclValueVarargout(),
-                mclVa(funfcn_mx, "funfcn"),
-                mclVv(xe, "xe"),
+          // % Calculate the expansion point
+          // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
+          mlfAssign(
+            &xe,
+            mclMinus(
+              mclMtimes(
+                mclPlus(
+                  _mxarray11_,
+                  mclMtimes(mclVv(rho, "rho"), mclVv(chi, "chi"))),
+                mclVv(xbar, "xbar")),
+              mclMtimes(
+                mclMtimes(mclVv(rho, "rho"), mclVv(chi, "chi")),
                 mclVe(
-                  mlfIndexRef(
-                    mclVsa(varargin, "varargin"),
-                    "{?}",
-                    mlfCreateColonIndex())),
-                NULL));
+                  mclArrayRef2(
+                    mclVsv(theSimplex, "theSimplex"),
+                    mlfCreateColonIndex(),
+                    mlfEnd(
+                      mclVv(theSimplex, "theSimplex"),
+                      _mxarray24_,
+                      _mxarray24_))))));
 
-            // func_evals = func_evals+1;
-            mlfAssign(
-              &func_evals,
-              mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
+          // fxe = feval(funfcn,xe,varargin{:});
+          mlfAssign(
+            &fxe,
+            mlfFeval(
+              mclValueVarargout(),
+              mclVa(funfcn_mx, "funfcn"),
+              mclVv(xe, "xe"),
+              mclVe(
+                mlfIndexRef(
+                  mclVsa(varargin, "varargin"),
+                  "{?}",
+                  mlfCreateColonIndex())),
+              NULL));
 
-            // if fxe < fxr
-            if (mclLtBool(mclVv(fxe, "fxe"), mclVv(fxr, "fxr"))) {
+          // func_evals = func_evals+1;
+          mlfAssign(
+            &func_evals,
+            mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
 
-                // theSimplex(:,end) = xe;
-                mclArrayAssign2(
-                  &theSimplex,
-                  mclVsv(xe, "xe"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
+          // if fxe < fxr
+          if (mclLtBool(mclVv(fxe, "fxe"), mclVv(fxr, "fxr"))) {
 
-                // funcVals(:,end) = fxe;
-                mclArrayAssign2(
-                  &funcVals,
-                  mclVsv(fxe, "fxe"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
+              // theSimplex(:,end) = xe;
+              mclArrayAssign2(
+                &theSimplex,
+                mclVsv(xe, "xe"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
 
-                // how = 'expand';
-                mlfAssign(&how, _mxarray53_);
+              // funcVals(:,end) = fxe;
+              mclArrayAssign2(
+                &funcVals,
+                mclVsv(fxe, "fxe"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
 
-            // else
-            } else {
+              // how = 'expand';
+              mlfAssign(&how, _mxarray53_);
 
-                // theSimplex(:,end) = xr; 
-                mclArrayAssign2(
-                  &theSimplex,
-                  mclVsv(xr, "xr"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
+          // else
+          } else {
 
-                // funcVals(:,end) = fxr;
-                mclArrayAssign2(
-                  &funcVals,
-                  mclVsv(fxr, "fxr"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
+              // theSimplex(:,end) = xr; 
+              mclArrayAssign2(
+                &theSimplex,
+                mclVsv(xr, "xr"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
 
-                // how = 'reflect';
-                mlfAssign(&how, _mxarray55_);
+              // funcVals(:,end) = fxr;
+              mclArrayAssign2(
+                &funcVals,
+                mclVsv(fxr, "fxr"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
 
-            // end
-            }
+              // how = 'reflect';
+              mlfAssign(&how, _mxarray55_);
 
-        // else % funcVals(:,1) <= fxr
-        } else {
+          // end
+          }
+
+      // else % funcVals(:,1) <= fxr
+      } else {
 			 DOTRACE("else funcVals(:,1) <= fxr");
 
-            // if fxr < funcVals(:,numModelParams)
-            if (mclLtBool(
-                  mclVv(fxr, "fxr"),
-                  mclVe(
-                    mclArrayRef2(
-                      mclVsv(funcVals, "funcVals"),
-                      mlfCreateColonIndex(),
-                      mclVsv(numModelParams, "numModelParams"))))) {
-
-                // theSimplex(:,end) = xr; 
-                mclArrayAssign2(
-                  &theSimplex,
-                  mclVsv(xr, "xr"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
-
-                // funcVals(:,end) = fxr;
-                mclArrayAssign2(
-                  &funcVals,
-                  mclVsv(fxr, "fxr"),
-                  mlfCreateColonIndex(),
-                  mlfEnd(
-                    mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
-
-                // how = 'reflect';
-                mlfAssign(&how, _mxarray55_);
-
-            // else % fxr >= funcVals(:,numModelParams) 
-            } else {
-
-                // % Perform contraction
-                // if fxr < funcVals(:,end)
-                if (mclLtBool(
-                      mclVv(fxr, "fxr"),
-                      mclVe(
-                        mclArrayRef2(
-                          mclVsv(funcVals, "funcVals"),
-                          mlfCreateColonIndex(),
-                          mlfEnd(
-                            mclVv(funcVals, "funcVals"),
-                            _mxarray24_,
-                            _mxarray24_))))) {
-
-                    // % Perform an outside contraction
-                    // xc = (1 + psi*rho)*xbar - psi*rho*theSimplex(:,end);
-                    mlfAssign(
-                      &xc,
-                      mclMinus(
-                        mclMtimes(
-                          mclPlus(
-                            _mxarray11_,
-                            mclMtimes(mclVv(psi, "psi"), mclVv(rho, "rho"))),
-                          mclVv(xbar, "xbar")),
-                        mclMtimes(
-                          mclMtimes(mclVv(psi, "psi"), mclVv(rho, "rho")),
-                          mclVe(
-                            mclArrayRef2(
-                              mclVsv(theSimplex, "theSimplex"),
-                              mlfCreateColonIndex(),
-                              mlfEnd(
-                                mclVv(theSimplex, "theSimplex"),
-                                _mxarray24_,
-                                _mxarray24_))))));
-
-                    // fxc = feval(funfcn,xc,varargin{:});
-                    mlfAssign(
-                      &fxc,
-                      mlfFeval(
-                        mclValueVarargout(),
-                        mclVa(funfcn_mx, "funfcn"),
-                        mclVv(xc, "xc"),
-                        mclVe(
-                          mlfIndexRef(
-                            mclVsa(varargin, "varargin"),
-                            "{?}",
-                            mlfCreateColonIndex())),
-                        NULL));
-
-                    // func_evals = func_evals+1;
-                    mlfAssign(
-                      &func_evals,
-                      mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-
-                    // 
-                    // if fxc <= fxr
-                    if (mclLeBool(mclVv(fxc, "fxc"), mclVv(fxr, "fxr"))) {
-
-                        // theSimplex(:,end) = xc; 
-                        mclArrayAssign2(
-                          &theSimplex,
-                          mclVsv(xc, "xc"),
-                          mlfCreateColonIndex(),
-                          mlfEnd(
-                            mclVv(theSimplex, "theSimplex"),
-                            _mxarray24_,
-                            _mxarray24_));
-
-                        // funcVals(:,end) = fxc;
-                        mclArrayAssign2(
-                          &funcVals,
-                          mclVsv(fxc, "fxc"),
-                          mlfCreateColonIndex(),
-                          mlfEnd(
-                            mclVv(funcVals, "funcVals"),
-                            _mxarray24_,
-                            _mxarray24_));
-
-                        // how = 'contract outside';
-                        mlfAssign(&how, _mxarray57_);
-
-                    // else
-                    } else {
-
-                        // % perform a shrink
-                        // how = 'shrink'; 
-                        mlfAssign(&how, _mxarray59_);
-
-                    // end
-                    }
-
-                // else
-                } else {
-
-                    // % Perform an inside contraction
-                    // xcc = (1-psi)*xbar + psi*theSimplex(:,end);
-                    mlfAssign(
-                      &xcc,
-                      mclPlus(
-                        mclMtimes(
-                          mclMinus(_mxarray11_, mclVv(psi, "psi")),
-                          mclVv(xbar, "xbar")),
-                        mclMtimes(
-                          mclVv(psi, "psi"),
-                          mclVe(
-                            mclArrayRef2(
-                              mclVsv(theSimplex, "theSimplex"),
-                              mlfCreateColonIndex(),
-                              mlfEnd(
-                                mclVv(theSimplex, "theSimplex"),
-                                _mxarray24_,
-                                _mxarray24_))))));
-
-                    // fxcc = feval(funfcn,xcc,varargin{:});
-                    mlfAssign(
-                      &fxcc,
-                      mlfFeval(
-                        mclValueVarargout(),
-                        mclVa(funfcn_mx, "funfcn"),
-                        mclVv(xcc, "xcc"),
-                        mclVe(
-                          mlfIndexRef(
-                            mclVsa(varargin, "varargin"),
-                            "{?}",
-                            mlfCreateColonIndex())),
-                        NULL));
-
-                    // func_evals = func_evals+1;
-                    mlfAssign(
-                      &func_evals,
-                      mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-
-                    // 
-                    // if fxcc < funcVals(:,end)
-                    if (mclLtBool(
-                          mclVv(fxcc, "fxcc"),
-                          mclVe(
-                            mclArrayRef2(
-                              mclVsv(funcVals, "funcVals"),
-                              mlfCreateColonIndex(),
-                              mlfEnd(
-                                mclVv(funcVals, "funcVals"),
-                                _mxarray24_,
-                                _mxarray24_))))) {
-
-                        // theSimplex(:,end) = xcc;
-                        mclArrayAssign2(
-                          &theSimplex,
-                          mclVsv(xcc, "xcc"),
-                          mlfCreateColonIndex(),
-                          mlfEnd(
-                            mclVv(theSimplex, "theSimplex"),
-                            _mxarray24_,
-                            _mxarray24_));
-
-                        // funcVals(:,end) = fxcc;
-                        mclArrayAssign2(
-                          &funcVals,
-                          mclVsv(fxcc, "fxcc"),
-                          mlfCreateColonIndex(),
-                          mlfEnd(
-                            mclVv(funcVals, "funcVals"),
-                            _mxarray24_,
-                            _mxarray24_));
-
-                        // how = 'contract inside';
-                        mlfAssign(&how, _mxarray61_);
-
-                    // else
-                    } else {
-
-                        // % perform a shrink
-                        // how = 'shrink';
-                        mlfAssign(&how, _mxarray59_);
-
-                    // end
-                    }
-
-                // end
-                }
-
-                // if strcmp(how,'shrink')
-                if (mlfTobool(
-                      mclVe(mlfStrcmp(mclVv(how, "how"), _mxarray59_)))) {
-                    mclForLoopIterator viter__;
-
-                    // for j=two2np1
-                    for (mclForStart(
-                           &viter__, mclVv(two2np1, "two2np1"), NULL, NULL);
-                         mclForNext(&viter__, &j);
-                         ) {
-
-                        // theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
-                        mclArrayAssign2(
-                          &theSimplex,
-                          mclPlus(
-                            mclVe(
-                              mclArrayRef2(
-                                mclVsv(theSimplex, "theSimplex"),
-                                mlfCreateColonIndex(),
-                                _mxarray11_)),
-                            mclMtimes(
-                              mclVv(sigma, "sigma"),
-                              mclMinus(
-                                mclVe(
-                                  mclArrayRef2(
-                                    mclVsv(theSimplex, "theSimplex"),
-                                    mlfCreateColonIndex(),
-                                    mclVsv(j, "j"))),
-                                mclVe(
-                                  mclArrayRef2(
-                                    mclVsv(theSimplex, "theSimplex"),
-                                    mlfCreateColonIndex(),
-                                    _mxarray11_))))),
-                          mlfCreateColonIndex(),
-                          mclVsv(j, "j"));
-
-                        // funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
-                        mclArrayAssign2(
-                          &funcVals,
-                          mlfFeval(
-                            mclValueVarargout(),
-                            mclVa(funfcn_mx, "funfcn"),
-                            mclVe(
-                              mclArrayRef2(
-                                mclVsv(theSimplex, "theSimplex"),
-                                mlfCreateColonIndex(),
-                                mclVsv(j, "j"))),
-                            mclVe(
-                              mlfIndexRef(
-                                mclVsa(varargin, "varargin"),
-                                "{?}",
-                                mlfCreateColonIndex())),
-                            NULL),
-                          mlfCreateColonIndex(),
-                          mclVsv(j, "j"));
-
-                    // end
-                    }
-                    mclDestroyForLoopIterator(viter__);
-
-                    // func_evals = func_evals + numModelParams;
-                    mlfAssign(
-                      &func_evals,
-                      mclPlus(
-                        mclVv(func_evals, "func_evals"),
-                        mclVv(numModelParams, "numModelParams")));
-
-                // end
-                }
-
-            // end
-            }
-
-        // end
-        }
-
-        // [funcVals,j] = sort(funcVals);
-        mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
-
-        // theSimplex = theSimplex(:,j);
-        mlfAssign(
-          &theSimplex,
-          mclArrayRef2(
-            mclVsv(theSimplex, "theSimplex"),
-            mlfCreateColonIndex(),
-            mclVsv(j, "j")));
-
-        // itercount = itercount + 1;
-        mlfAssign(
-          &itercount, mclPlus(mclVv(itercount, "itercount"), _mxarray11_));
-
-        // if prnt == 3
-        if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
-
-            // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
-            mlfDisp(
-              mlfHorzcat(
+          // if fxr < funcVals(:,numModelParams)
+          if (mclLtBool(
+                mclVv(fxr, "fxr"),
                 mclVe(
-                  mlfSprintf(
-                    NULL,
-                    _mxarray38_,
-                    mclVv(itercount, "itercount"),
-                    mclVv(func_evals, "func_evals"),
-                    mclVe(mclIntArrayRef1(mclVsv(funcVals, "funcVals"), 1)),
-                    NULL)),
-                mclVv(how, "how"),
-                NULL));
+                  mclArrayRef2(
+                    mclVsv(funcVals, "funcVals"),
+                    mlfCreateColonIndex(),
+                    mclVsv(numModelParams, "numModelParams"))))) {
 
-        // elseif prnt == 4
-        } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
+              // theSimplex(:,end) = xr; 
+              mclArrayAssign2(
+                &theSimplex,
+                mclVsv(xr, "xr"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
 
-            // disp(' ')
-            mlfDisp(_mxarray36_);
+              // funcVals(:,end) = fxr;
+              mclArrayAssign2(
+                &funcVals,
+                mclVsv(fxr, "fxr"),
+                mlfCreateColonIndex(),
+                mlfEnd(
+                  mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
 
-            // disp(how)
-            mlfDisp(mclVv(how, "how"));
+              // how = 'reflect';
+              mlfAssign(&how, _mxarray55_);
 
-            // theSimplex
-            mclPrintArray(mclVsv(theSimplex, "theSimplex"), "theSimplex");
+          // else % fxr >= funcVals(:,numModelParams) 
+          } else {
 
-            // funcVals
-            mclPrintArray(mclVsv(funcVals, "funcVals"), "funcVals");
+              // % Perform contraction
+              // if fxr < funcVals(:,end)
+              if (mclLtBool(
+                    mclVv(fxr, "fxr"),
+                    mclVe(
+                      mclArrayRef2(
+                        mclVsv(funcVals, "funcVals"),
+                        mlfCreateColonIndex(),
+                        mlfEnd(
+                          mclVv(funcVals, "funcVals"),
+                          _mxarray24_,
+                          _mxarray24_))))) {
 
-            // func_evals
-            mclPrintArray(mclVsv(func_evals, "func_evals"), "func_evals");
+                  // % Perform an outside contraction
+                  // xc = (1 + psi*rho)*xbar - psi*rho*theSimplex(:,end);
+                  mlfAssign(
+                    &xc,
+                    mclMinus(
+                      mclMtimes(
+                        mclPlus(
+                          _mxarray11_,
+                          mclMtimes(mclVv(psi, "psi"), mclVv(rho, "rho"))),
+                        mclVv(xbar, "xbar")),
+                      mclMtimes(
+                        mclMtimes(mclVv(psi, "psi"), mclVv(rho, "rho")),
+                        mclVe(
+                          mclArrayRef2(
+                            mclVsv(theSimplex, "theSimplex"),
+                            mlfCreateColonIndex(),
+                            mlfEnd(
+                              mclVv(theSimplex, "theSimplex"),
+                              _mxarray24_,
+                              _mxarray24_))))));
 
-        // end  
-        }
+                  // fxc = feval(funfcn,xc,varargin{:});
+                  mlfAssign(
+                    &fxc,
+                    mlfFeval(
+                      mclValueVarargout(),
+                      mclVa(funfcn_mx, "funfcn"),
+                      mclVv(xc, "xc"),
+                      mclVe(
+                        mlfIndexRef(
+                          mclVsa(varargin, "varargin"),
+                          "{?}",
+                          mlfCreateColonIndex())),
+                      NULL));
+
+                  // func_evals = func_evals+1;
+                  mlfAssign(
+                    &func_evals,
+                    mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
+
+                  // 
+                  // if fxc <= fxr
+                  if (mclLeBool(mclVv(fxc, "fxc"), mclVv(fxr, "fxr"))) {
+
+                      // theSimplex(:,end) = xc; 
+                      mclArrayAssign2(
+                        &theSimplex,
+                        mclVsv(xc, "xc"),
+                        mlfCreateColonIndex(),
+                        mlfEnd(
+                          mclVv(theSimplex, "theSimplex"),
+                          _mxarray24_,
+                          _mxarray24_));
+
+                      // funcVals(:,end) = fxc;
+                      mclArrayAssign2(
+                        &funcVals,
+                        mclVsv(fxc, "fxc"),
+                        mlfCreateColonIndex(),
+                        mlfEnd(
+                          mclVv(funcVals, "funcVals"),
+                          _mxarray24_,
+                          _mxarray24_));
+
+                      // how = 'contract outside';
+                      mlfAssign(&how, _mxarray57_);
+
+                  // else
+                  } else {
+
+                      // % perform a shrink
+                      // how = 'shrink'; 
+                      mlfAssign(&how, _mxarray59_);
+
+                  // end
+                  }
+
+              // else
+              } else {
+
+                  // % Perform an inside contraction
+                  // xcc = (1-psi)*xbar + psi*theSimplex(:,end);
+                  mlfAssign(
+                    &xcc,
+                    mclPlus(
+                      mclMtimes(
+                        mclMinus(_mxarray11_, mclVv(psi, "psi")),
+                        mclVv(xbar, "xbar")),
+                      mclMtimes(
+                        mclVv(psi, "psi"),
+                        mclVe(
+                          mclArrayRef2(
+                            mclVsv(theSimplex, "theSimplex"),
+                            mlfCreateColonIndex(),
+                            mlfEnd(
+                              mclVv(theSimplex, "theSimplex"),
+                              _mxarray24_,
+                              _mxarray24_))))));
+
+                  // fxcc = feval(funfcn,xcc,varargin{:});
+                  mlfAssign(
+                    &fxcc,
+                    mlfFeval(
+                      mclValueVarargout(),
+                      mclVa(funfcn_mx, "funfcn"),
+                      mclVv(xcc, "xcc"),
+                      mclVe(
+                        mlfIndexRef(
+                          mclVsa(varargin, "varargin"),
+                          "{?}",
+                          mlfCreateColonIndex())),
+                      NULL));
+
+                  // func_evals = func_evals+1;
+                  mlfAssign(
+                    &func_evals,
+                    mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
+
+                  // 
+                  // if fxcc < funcVals(:,end)
+                  if (mclLtBool(
+                        mclVv(fxcc, "fxcc"),
+                        mclVe(
+                          mclArrayRef2(
+                            mclVsv(funcVals, "funcVals"),
+                            mlfCreateColonIndex(),
+                            mlfEnd(
+                              mclVv(funcVals, "funcVals"),
+                              _mxarray24_,
+                              _mxarray24_))))) {
+
+                      // theSimplex(:,end) = xcc;
+                      mclArrayAssign2(
+                        &theSimplex,
+                        mclVsv(xcc, "xcc"),
+                        mlfCreateColonIndex(),
+                        mlfEnd(
+                          mclVv(theSimplex, "theSimplex"),
+                          _mxarray24_,
+                          _mxarray24_));
+
+                      // funcVals(:,end) = fxcc;
+                      mclArrayAssign2(
+                        &funcVals,
+                        mclVsv(fxcc, "fxcc"),
+                        mlfCreateColonIndex(),
+                        mlfEnd(
+                          mclVv(funcVals, "funcVals"),
+                          _mxarray24_,
+                          _mxarray24_));
+
+                      // how = 'contract inside';
+                      mlfAssign(&how, _mxarray61_);
+
+                  // else
+                  } else {
+
+                      // % perform a shrink
+                      // how = 'shrink';
+                      mlfAssign(&how, _mxarray59_);
+
+                  // end
+                  }
+
+              // end
+              }
+
+              // if strcmp(how,'shrink')
+              if (mlfTobool(
+                    mclVe(mlfStrcmp(mclVv(how, "how"), _mxarray59_)))) {
+                  mclForLoopIterator viter__;
+
+                  // for j=two2np1
+                  for (mclForStart(
+                         &viter__, mclVv(two2np1, "two2np1"), NULL, NULL);
+                       mclForNext(&viter__, &j);
+                       ) {
+
+                      // theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
+                      mclArrayAssign2(
+                        &theSimplex,
+                        mclPlus(
+                          mclVe(
+                            mclArrayRef2(
+                              mclVsv(theSimplex, "theSimplex"),
+                              mlfCreateColonIndex(),
+                              _mxarray11_)),
+                          mclMtimes(
+                            mclVv(sigma, "sigma"),
+                            mclMinus(
+                              mclVe(
+                                mclArrayRef2(
+                                  mclVsv(theSimplex, "theSimplex"),
+                                  mlfCreateColonIndex(),
+                                  mclVsv(j, "j"))),
+                              mclVe(
+                                mclArrayRef2(
+                                  mclVsv(theSimplex, "theSimplex"),
+                                  mlfCreateColonIndex(),
+                                  _mxarray11_))))),
+                        mlfCreateColonIndex(),
+                        mclVsv(j, "j"));
+
+                      // funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
+                      mclArrayAssign2(
+                        &funcVals,
+                        mlfFeval(
+                          mclValueVarargout(),
+                          mclVa(funfcn_mx, "funfcn"),
+                          mclVe(
+                            mclArrayRef2(
+                              mclVsv(theSimplex, "theSimplex"),
+                              mlfCreateColonIndex(),
+                              mclVsv(j, "j"))),
+                          mclVe(
+                            mlfIndexRef(
+                              mclVsa(varargin, "varargin"),
+                              "{?}",
+                              mlfCreateColonIndex())),
+                          NULL),
+                        mlfCreateColonIndex(),
+                        mclVsv(j, "j"));
+
+                  // end
+                  }
+                  mclDestroyForLoopIterator(viter__);
+
+                  // func_evals = func_evals + numModelParams;
+                  mlfAssign(
+                    &func_evals,
+                    mclPlus(
+                      mclVv(func_evals, "func_evals"),
+                      mclVv(numModelParams, "numModelParams")));
+
+              // end
+              }
+
+          // end
+          }
+
+      // end
+      }
+
+      // [funcVals,j] = sort(funcVals);
+      mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
+
+      // theSimplex = theSimplex(:,j);
+      mlfAssign(
+        &theSimplex,
+        mclArrayRef2(
+          mclVsv(theSimplex, "theSimplex"),
+          mlfCreateColonIndex(),
+          mclVsv(j, "j")));
+
+      // itercount = itercount + 1;
+      mlfAssign(
+        &itercount, mclPlus(mclVv(itercount, "itercount"), _mxarray11_));
+
+      // if prnt == 3
+      if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
+
+          // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
+          mlfDisp(
+            mlfHorzcat(
+              mclVe(
+                mlfSprintf(
+                  NULL,
+                  _mxarray38_,
+                  mclVv(itercount, "itercount"),
+                  mclVv(func_evals, "func_evals"),
+                  mclVe(mclIntArrayRef1(mclVsv(funcVals, "funcVals"), 1)),
+                  NULL)),
+              mclVv(how, "how"),
+              NULL));
+
+      // elseif prnt == 4
+      } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
+
+          // disp(' ')
+          mlfDisp(_mxarray36_);
+
+          // disp(how)
+          mlfDisp(mclVv(how, "how"));
+
+          // theSimplex
+          mclPrintArray(mclVsv(theSimplex, "theSimplex"), "theSimplex");
+
+          // funcVals
+          mclPrintArray(mclVsv(funcVals, "funcVals"), "funcVals");
+
+          // func_evals
+          mclPrintArray(mclVsv(func_evals, "func_evals"), "func_evals");
+
+      // end  
+      }
 
     // end   % while
     }
