@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb  4 13:55:29 2002
+// written: Mon Feb  4 15:09:38 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,6 +24,7 @@
 #include "cmodelcuevalidity.h"
 #include "cmodelgcm.h"
 #include "cmodelpbi.h"
+#include "cmodelspc.h"
 #include "cmodelwpsm.h"
 
 #include "mexbuf.h"
@@ -164,10 +165,26 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
       return shared_ptr<Classifier>
         (new CModelCueValidity(objParams, CModelCueValidity::FREQ_WEIGHT));
     }
+  else if (whichType == "spc")
+    {
+      int numStoredExemplars = 0;
+      if (extraArgs_mx && mxIsStruct(extraArgs_mx))
+        {
+          mxArray* ns_mx = mxGetField(extraArgs_mx, 0, "numStoredExemplars");
+          if (ns_mx)
+            numStoredExemplars = int(mxGetScalar(ns_mx));
+        }
+
+      return shared_ptr<Classifier>
+        (new CModelSPC(objParams, numStoredExemplars));
+    }
   else
     {
       throw Util::Error(fstring("unknown classifier type: ", whichType));
     }
+
+  // Can't get here, but placate compiler with a return value
+  return shared_ptr<Classifier>(0);
 }
 
 static mxArray* Mclassifier(int /* nargout_ */,
