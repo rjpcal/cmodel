@@ -86,7 +86,7 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 		Num::linearCombo(numTrainingExemplars(),
 							  itsScaledWeights+n,
 							  2*numStoredExemplars(),
-							  &training1()[0], numAllExemplars(), DIM_OBJ_PARAMS,
+							  &training1()[0], DIM_OBJ_PARAMS,
 							  &itsStored1[0]);
 
 		return Slice(&itsStored1[0], 1);
@@ -97,7 +97,7 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
 		Num::linearCombo(numTrainingExemplars(),
 							  itsScaledWeights+n+numStoredExemplars(),
 							  2*numStoredExemplars(),
-							  &training2()[0], numAllExemplars(), DIM_OBJ_PARAMS,
+							  &training2()[0], DIM_OBJ_PARAMS,
 							  &itsStored2[0]);
 
 		return Slice(&itsStored2[0], 1);

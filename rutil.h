@@ -21,9 +21,9 @@
 
 class Slice {
   const double* data;
-  int const stride;
+  int stride;
 public:
-  Slice(const double* d, int s) : data(d), stride(s) {}
+  Slice(const double* d=0, int s=0) : data(d), stride(s) {}
 
   double operator[](int i) const { return *(data + stride*i); }
 

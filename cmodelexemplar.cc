@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 17:32:54 2001
+// written: Fri Mar  9 17:42:35 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -105,9 +105,9 @@ CModelExemplar::CModelExemplar(const Rat& objParams,
   for (int i = 0; i < objParams.mrows(); ++i)
 	 {
 		if (int(objParams.at(i,0)) == 0)
-		  itsTraining1[c1++] = objParams.address(i,1);
+		  itsTraining1[c1++] = Slice(objParams.address(i,1), objParams.mrows());
 		else if (int(objParams.at(i,0)) == 1)
-		  itsTraining2[c2++] = objParams.address(i,1);
+		  itsTraining2[c2++] = Slice(objParams.address(i,1), objParams.mrows());
 	 }
 }
 

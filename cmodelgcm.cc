@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Fri Mar  9 17:34:05 2001
+// written: Fri Mar  9 17:49:13 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -44,12 +44,12 @@ DOTRACE("CModelGcm::findStoredExemplar");
 
   if (CAT1 == cat)
 	 {
-  		return Slice(training1()[n], numAllExemplars());
+  		return training1()[n];
 	 }
 
   else if (CAT2 == cat)
 	 {
-  		return Slice(training2()[n], numAllExemplars());
+  		return training2()[n];
 	 }
 
   else
