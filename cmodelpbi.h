@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:08:46 2001
-// written: Fri Apr  6 11:19:47 2001
+// written: Thu Apr 26 18:42:28 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 
 class CModelPbi : public Classifier {
 public:
-  CModelPbi(const Mtx& objParams, const Mtx& observedIncidence);
+  CModelPbi(const Mtx& objParams);
 
   virtual ~CModelPbi();
 

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Apr 18 16:16:19 2001
+// written: Thu Apr 26 18:40:03 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,7 +27,6 @@ public:
   static const int MAX_STORED = -1;
 
   CModelExemplar(const Mtx& objParams,
-					  const Mtx& observedIncidence,
 					  int numStoredExemplars,
 					  TransferFunction transferFunc);
 

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Thu Apr 26 18:41:27 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,7 +21,6 @@ private:
 
 public:
   CModelGcm(const Mtx& objParams,
-				const Mtx& observedIncidence,
 				TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelGcm();

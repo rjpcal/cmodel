@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Tue Apr 10 10:32:38 2001
+// written: Thu Apr 26 18:46:22 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,8 +19,8 @@
 
 #include "trace.h"
 
-CModelPbi::CModelPbi(const Mtx& objParams, const Mtx& observedIncidence) :
-  Classifier(objParams, observedIncidence)
+CModelPbi::CModelPbi(const Mtx& objParams) :
+  Classifier(objParams)
 {}
 
 CModelPbi::~CModelPbi() {}

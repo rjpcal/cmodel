@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Tue Apr 10 11:51:50 2001
+// written: Thu Apr 26 18:39:41 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,9 +34,8 @@ namespace
 }
 
 CModelCueValidity::CModelCueValidity(const Mtx& objParams,
-												 const Mtx& observedIncidence,
 												 Flag f) :
-  Classifier(objParams, observedIncidence),
+  Classifier(objParams),
   itsFlags(f),
   itsTraining1(objectsOfCategory(0)),
   itsTraining2(objectsOfCategory(1))

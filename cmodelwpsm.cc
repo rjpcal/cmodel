@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Thu Apr 26 18:46:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,9 +22,8 @@
 
 
 CModelWpsm::CModelWpsm(const Mtx& objParams,
-							  const Mtx& observedIncidence,
 							  TransferFunction transferFunc) :
-  CModelExemplar(objParams, observedIncidence, 1, transferFunc),
+  CModelExemplar(objParams, 1, transferFunc),
   itsPrototype1(1, DIM_OBJ_PARAMS),
   itsPrototype2(1, DIM_OBJ_PARAMS)
 {

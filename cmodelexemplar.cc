@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Apr 18 16:16:24 2001
+// written: Thu Apr 26 18:40:32 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -73,10 +73,9 @@ private:
 ///////////////////////////////////////////////////////////////////////
 
 CModelExemplar::CModelExemplar(const Mtx& objParams,
-										 const Mtx& observedIncidence,
 										 int numStoredExemplars,
 										 TransferFunction transferFunc) :
-  Classifier(objParams, observedIncidence),
+  Classifier(objParams),
   itsTraining1(objectsOfCategory(0)),
   itsTraining2(objectsOfCategory(1)),
   itsNumTrainingExemplars(itsTraining1.mrows()),
@@ -136,17 +135,6 @@ DOTRACE("CModelExemplar::handleRequest");
   return Classifier::handleRequest(action, allModelParams, extraArgs);
 }
 
-//---------------------------------------------------------------------
-//
-// compute the minus loglikelihood for the constrained summed
-// similarity model (cssm)
-//
-// based on the MATLAB function llcssm 
-//
-//     function ll = llcssm(modelParams, objParams, ...
-//                          observedIncidence, numStoredExemplars)
-//
-//---------------------------------------------------------------------
 
 void CModelExemplar::computeDiffEv(const Mtx& objects,
 											  Slice& modelParams, Mtx& diffEvOut)

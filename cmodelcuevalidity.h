@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Tue Apr 10 11:18:32 2001
+// written: Thu Apr 26 18:39:19 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,8 +19,7 @@ class CModelCueValidity : public Classifier {
 public:
   enum Flag { FREQ_WEIGHT, NO_FREQ_WEIGHT };
 
-  CModelCueValidity(const Mtx& objParams, const Mtx& observedIncidence,
-						  Flag f);
+  CModelCueValidity(const Mtx& objParams, Flag f);
 
   virtual ~CModelCueValidity();
 

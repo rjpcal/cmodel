@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Thu Apr 26 18:41:11 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,10 +24,9 @@
 #include "trace.h"
 
 CModelCssm::CModelCssm(const Mtx& objParams,
-							  const Mtx& observedIncidence,
 							  TransferFunction transferFunc,
 							  int numStoredExemplars) :
-  CModelExemplar(objParams, observedIncidence,
+  CModelExemplar(objParams,
 					  numStoredExemplars, transferFunc),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
   itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),

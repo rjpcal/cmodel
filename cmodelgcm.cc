@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Fri Apr  6 11:22:35 2001
+// written: Thu Apr 26 18:41:49 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,10 +22,8 @@
 
 
 CModelGcm::CModelGcm(const Mtx& objParams,
-							const Mtx& observedIncidence,
 							TransferFunction transferFunc) :
   CModelExemplar(objParams,
-					  observedIncidence,
 					  MAX_STORED,
 					  transferFunc)
 {
