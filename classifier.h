@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Mar 28 10:17:13 2001
+// written: Wed Mar 28 10:24:51 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -26,6 +26,7 @@ private:
   const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
   double* const itsPredictedProbability;
+  double itsCachedLogL_1_2;
 
   void forwardProbit(double thresh, double sigmaNoise) const;
 
