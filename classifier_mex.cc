@@ -129,7 +129,7 @@ DOTRACE("Mclassifier");
 	 fixed_string actionRequest = Local::getString(actionRequest_mx);
 
 
-#ifdef LOCAL_PROF
+#ifdef LOCAL_DEBUG
 	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -1) {
 		ofstream ofs("profdata.out");
 		Util::Prof::printAllProfData(ofs);
