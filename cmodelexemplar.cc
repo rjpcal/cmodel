@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar 12 16:45:40 2001
+// written: Mon Mar 12 17:04:06 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,16 +21,23 @@
 
 #include <cmath>
 
-double minkDist(const double* w, int nelems,
-                Slice::ConstIterator x1,
-                Slice::ConstIterator x2,
+double minkDist(const ConstSlice& wts,
+                ConstSlice::ConstIterator x1,
+                ConstSlice::ConstIterator x2,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
-  for (int k = 0; k < nelems; ++k)
+//    for (int k = 0; k < nelems; ++k)
+//  	 {
+  for (ConstSlice::ConstIterator
+			wt = wts.begin(),
+			wend = wts.end();
+		 wt != wend;
+		 ++wt)
 	 {
-		wt_sum += w[k] * pow( abs( *x1 - *x2), r);
+		wt_sum += (*wt) * pow( abs( *x1 - *x2), r);
 
+		++wt;
 		++x1;
 		++x2;
 	 }
@@ -45,10 +52,10 @@ double minkDist(const double* w, int nelems,
 
 class MinkDist2Binder {
 public:
-  MinkDist2Binder(const double* attWeights, int nelems,
+  MinkDist2Binder(const ConstSlice& attWeights,
 						const ConstSlice& x2) :
 	 itsAttWeights(attWeights),
-	 itsNelems(nelems),
+	 itsNelems(attWeights.nelems()),
 	 itsX2(x2)
   {}
 
@@ -56,22 +63,22 @@ public:
   double minkDist2(Slice::ConstIterator x1) const
   {
 	 double wt_sum = 0.0;
+	 Slice::ConstIterator wt = itsAttWeights.begin();
 	 Slice::ConstIterator x2 = itsX2.begin();
-	 const double* w = itsAttWeights;
 
-	 for (int k = 0; k < itsNelems; ++k, ++x1, ++x2, ++w)
+	 for (int k = 0; k < itsNelems; ++k, ++x1, ++x2, ++wt)
 		{
 		  wt_sum +=
-			 (*w) * 
+			 (*wt) * 
 			 ((*x1) - (*x2)) * ((*x1) - (*x2));
 		}
 	 return sqrt(wt_sum);	 
   }
 
 private:
-  const double* const itsAttWeights;
+  const ConstSlice itsAttWeights;
   int itsNelems;
-  ConstSlice const itsX2;
+  const ConstSlice itsX2;
 };
 
 
@@ -123,7 +130,7 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
   return n;
 }
 
-void CModelExemplar::doDiffEvidence(const double* attWeights,
+void CModelExemplar::doDiffEvidence(const ConstSlice& attWeights,
 												const ConstSlice& storedExemplar1,
 												const ConstSlice& storedExemplar2,
 												double minkPower,
@@ -137,7 +144,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 
 	 // compute similarity of ex-y to stored-1-x
 	 double sim1 =
-		minkDist(attWeights, DIM_OBJ_PARAMS,
+		minkDist(attWeights,
 					exemplar(y).begin(),
 					storedExemplar1.begin(),
 					minkPower, minkPowerInv);
@@ -146,7 +153,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 
 		// compute similarity of ex-y to stored-2-x
 	 double sim2 =
-		minkDist(attWeights, DIM_OBJ_PARAMS,
+		minkDist(attWeights,
 					exemplar(y).begin(),
 					storedExemplar2.begin(),
 					minkPower, minkPowerInv);
@@ -156,16 +163,16 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 }
 
 
-void CModelExemplar::doDiffEvidence2(const double* attWeights,
+void CModelExemplar::doDiffEvidence2(const ConstSlice& attWeights,
 												 const ConstSlice& storedExemplar1,
 												 const ConstSlice& storedExemplar2)
 {
 DOTRACE("CModelExemplar::doDiffEvidence2");
 
-  MinkDist2Binder binder1(attWeights, DIM_OBJ_PARAMS,
+  MinkDist2Binder binder1(attWeights,
 								  storedExemplar1);
 
-  MinkDist2Binder binder2(attWeights, DIM_OBJ_PARAMS,
+  MinkDist2Binder binder2(attWeights,
 								  storedExemplar2);
 
   for (int y = 0; y < numAllExemplars(); ++y) {
@@ -202,9 +209,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  double* attWeights = modelParams.data();
+  Slice attWeights = modelParams.asSlice().leftmost(DIM_OBJ_PARAMS);
 
-  for (int i = 0; i < DIM_OBJ_PARAMS; ++i)
+  for (int i = 0; i < attWeights.nelems(); ++i)
 	 attWeights[i] = abs(attWeights[i]);
 
   loadModelParams(modelParams);

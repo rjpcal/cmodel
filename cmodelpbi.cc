@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Mon Mar 12 14:36:11 2001
+// written: Mon Mar 12 16:54:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,7 +29,7 @@ void CModelPbi::computeDiffEv(Mtx& modelParams)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
-  Slice attWeights(modelParams.data(), 1, DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams.asSlice().leftmost(DIM_OBJ_PARAMS);
 
   for (int i = 0; i < numAllExemplars(); ++i)
 	 diffEvidence(i) = -1.0 * Slice::dot(attWeights, exemplar(i));
