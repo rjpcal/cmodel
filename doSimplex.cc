@@ -19,32 +19,38 @@
 // ? max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
 bool withinTolf(mxArray* funcVals_mx, const double tolf)
 {
-  Mtx funcVals_ref(funcVals_mx, Mtx::BORROW);
-  double max_fdiff = 0.0;
-  for (int elem = 1; elem < funcVals_ref.nelems(); ++elem)
+  const Mtx funcVals_ref(funcVals_mx, Mtx::BORROW);
+
+  MtxConstIter fvals = funcVals_ref.rowIter(0);
+  const double f0 = *fvals;
+  ++fvals;
+
+  for (; fvals.hasMore(); ++fvals)
 	 {
-		double current = fabs(funcVals_ref.at(elem) - funcVals_ref.at(0));
-		if (current > max_fdiff) max_fdiff = current;
+		if (fabs(*fvals - f0) > tolf)
+		  return false;
 	 }
 
-  return (max_fdiff <= tolf);
+  return true;
 }
 
 // ? max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx
 bool withinTolx(mxArray* simplex_mx, const double tolx)
 {
-  Mtx simplex(simplex_mx, Mtx::BORROW);
-  double max_xdiff = 0.0;
+  const Mtx simplex(simplex_mx, Mtx::BORROW);
+
+  const MtxConstIter col0_ = simplex.colIter(0);
+
   for (int col = 1; col < simplex.ncols(); ++col)
 	 {
-		for (int row = 0; row < simplex.mrows(); ++row)
-		  {
-			 double current = fabs(simplex.at(row,col) - simplex.at(row,0));
-			 if (current > max_xdiff) max_xdiff = current;
-		  }
+		MtxConstIter col0(col0_);
+		MtxConstIter coln = simplex.colIter(col);
+
+		for (; col0.hasMore(); ++col0, ++coln)
+		  if ( fabs(*col0 - *coln) > tolx ) return false;
 	 }
 
-  return (max_xdiff <= tolx);
+  return true;
 }
 
 
