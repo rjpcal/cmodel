@@ -8,9 +8,12 @@
  */
 #include "doSimplex.h"
 
+#include "mtx.h"
+
 #include <fstream.h>
 #include "libmatlbm.h"
 
+#define LOCAL_DEBUG
 #include "trace.h"
 
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
@@ -509,19 +512,22 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
 /*
  * function [x,fval,exitflag,output] = ...
  */
+
 static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * * exitflag,
                             mxArray * * output,
                             int nargout_,
-                            mxArray * funfcn,
+                            mxArray * funfcn_mx,
                             mxArray * x_in,
                             mxArray * printtype,
-                            mxArray * tolx,
-                            mxArray * tolf,
+                            mxArray * tolx_mx,
+                            mxArray * tolf_mx,
                             mxArray * maxfun,
                             mxArray * maxiter,
                             mxArray * debugFlags_mx,
                             mxArray * varargin) {
+
+DOTRACE("MdoSimplex");
 
 // HOME
 
@@ -585,11 +591,11 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxArray * ans = mclGetUninitializedArray();
     mxArray * numModelParams = mclGetUninitializedArray();
 
-    mclCopyArray(&funfcn);
+    mclCopyArray(&funfcn_mx);
     mclCopyInputArg(&x, x_in);
     mclCopyArray(&printtype);
-    mclCopyArray(&tolx);
-    mclCopyArray(&tolf);
+    mclCopyArray(&tolx_mx);
+    mclCopyArray(&tolf_mx);
     mclCopyArray(&maxfun);
     mclCopyArray(&maxiter);
     mclCopyArray(&debugFlags_mx);
@@ -777,7 +783,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
       &funcVals,
       mlfFeval(
         mclValueVarargout(),
-        mclVa(funfcn, "funfcn"),
+        mclVa(funfcn_mx, "funfcn"),
         mclVv(initialParams, "initialParams"),
         mclVe(
           mlfIndexRef(
@@ -836,7 +842,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                   &f,
                   mlfFeval(
                     mclValueVarargout(),
-                    mclVa(funfcn, "funfcn"),
+                    mclVa(funfcn_mx, "funfcn"),
                     mclVv(y, "y"),
                     mclVe(
                       mlfIndexRef(
@@ -938,13 +944,13 @@ static mxArray * MdoSimplex(mxArray * * fval,
     // exitflag = 1;
     mlfAssign(exitflag, _mxarray11_);
 
-    // 
-    // % Main algorithm
-    // % Iterate until the diameter of the simplex is less than tolx
-    // %   AND the function values differ from the min by less than tolf,
-    // %   or the max function evaluations are exceeded. (Cannot use OR instead of AND.)
+    // Iterate until the diameter of the simplex is less than tolx
+    //   AND the function values differ from the min by less than tolf,
+    //   or the max function evaluations are exceeded. (Cannot use OR instead of AND.)
+
     // while func_evals < maxfun & itercount < maxiter
-    for (;;) {
+    for (;;) { // Main algorithm
+		DOTRACE("Main algorithm");
         mxArray * a_ = mclInitialize(
                          mclLt(
                            mclVv(func_evals, "func_evals"),
@@ -963,7 +969,53 @@ static mxArray * MdoSimplex(mxArray * * fval,
         }
 
         // if max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx & ...
+		  // max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
         {
+			 DOTRACE("check if done");
+#if 0
+            mxArray * max_mx = mclInitialize(
+															mlfMax(
+																	 NULL,
+																	 mclVe(
+																			 mlfMax(
+																					  NULL,
+																					  mclVe(
+																							  mlfAbs(
+																										mclMinus(
+																													mclVe(
+																															mclArrayRef2(theSimplex,
+																																			 mlfCreateColonIndex(),
+																																			 two2np1)),
+																													mclVe(
+																															mclArrayRef2(theSimplex,
+																																			 mlfCreateColonIndex(),
+																																			 onesn))))),
+																					  NULL,
+																					  NULL)),
+																	 NULL,
+																	 NULL));
+#endif
+				
+
+				Mtx theSimplex_ref(theSimplex, Mtx::BORROW);
+				double max_diff_ = 0.0;
+				for (int col = 1; col < theSimplex_ref.ncols(); ++col)
+				  {
+					 for (int row = 0; row < theSimplex_ref.mrows(); ++row)
+						{
+						  double current = fabs(theSimplex_ref.at(row,col) - theSimplex_ref.at(row,0));
+						  if (current > max_diff_) max_diff_ = current;
+						}
+				  }
+
+				double tolx = mxGetScalar(tolx_mx);
+//  				double max_diff = mxGetScalar(max_mx);
+
+//  				mexPrintf("max_diff_ %f, diff_diff %f\n", max_diff_, (max_diff-max_diff_));
+
+				bool within_tolx = (max_diff_ <= tolx);
+
+#if 0
             mxArray * a_ = mclInitialize(
                              mclLe(
                                mclVe(
@@ -976,26 +1028,25 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                          mlfAbs(
                                            mclMinus(
                                              mclVe(
-                                               mclArrayRef2(
-                                                 mclVsv(
-                                                   theSimplex, "theSimplex"),
-                                                 mlfCreateColonIndex(),
-                                                 mclVsv(two2np1, "two2np1"))),
+                                               mclArrayRef2(theSimplex,
+																				mlfCreateColonIndex(),
+																				two2np1)),
                                              mclVe(
-                                               mclArrayRef2(
-                                                 mclVsv(
-                                                   theSimplex, "theSimplex"),
-                                                 mlfCreateColonIndex(),
-                                                 mclVsv(onesn, "onesn")))))),
+                                               mclArrayRef2(theSimplex,
+																				mlfCreateColonIndex(),
+																				onesn))))),
                                        NULL,
                                        NULL)),
                                    NULL,
                                    NULL)),
-                               mclVa(tolx, "tolx")));
-            if (mlfTobool(a_)
+                               tolx_mx));
+#endif
+
+//              if (mlfTobool(a_)
+            if (within_tolx
                 && mlfTobool(
-                     mclAnd(
-                       a_,
+//                         mclAnd(
+//  										a_,
                        mclLe(
                          mclVe(
                            mlfMax(
@@ -1004,22 +1055,23 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                mlfAbs(
                                  mclMinus(
                                    mclVe(
-                                     mclIntArrayRef1(
-                                       mclVsv(funcVals, "funcVals"), 1)),
+                                     mclIntArrayRef1(funcVals, 1)),
                                    mclVe(
-                                     mclArrayRef1(
-                                       mclVsv(funcVals, "funcVals"),
-                                       mclVsv(two2np1, "two2np1")))))),
+                                     mclArrayRef1(funcVals, two2np1))))),
                              NULL,
                              NULL)),
-                         mclVa(tolf, "tolf"))))) {
-                mxDestroyArray(a_);
+                         mclVa(tolf_mx, "tolf"))))
+//  					 )
 
-                // max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
+				  {
+//                  mxDestroyArray(a_);
+//                  mxDestroyArray(max_mx);
+
                 // break
                 break;
             } else {
-                mxDestroyArray(a_);
+//                  mxDestroyArray(a_);
+//                  mxDestroyArray(max_mx);
             }
 
         // end
@@ -1027,6 +1079,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
 
         // how = '';
         mlfAssign(&how, _mxarray52_);
+
+		  {DOTRACE("compute reflection point");
 
         // 
         // % Compute the reflection point
@@ -1068,7 +1122,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
           &fxr,
           mlfFeval(
             mclValueVarargout(),
-            mclVa(funfcn, "funfcn"),
+            mclVa(funfcn_mx, "funfcn"),
             mclVv(xr, "xr"),
             mclVe(
               mlfIndexRef(
@@ -1079,6 +1133,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
         mlfAssign(
           &func_evals, mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
 
+		  }
+
         // 
         // if fxr < funcVals(:,1)
         if (mclLtBool(
@@ -1088,6 +1144,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                   mclVsv(funcVals, "funcVals"),
                   mlfCreateColonIndex(),
                   _mxarray11_)))) {
+			 DOTRACE("if fxr < funcVals(:,1)");
 
             // % Calculate the expansion point
             // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
@@ -1115,7 +1172,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
               &fxe,
               mlfFeval(
                 mclValueVarargout(),
-                mclVa(funfcn, "funfcn"),
+                mclVa(funfcn_mx, "funfcn"),
                 mclVv(xe, "xe"),
                 mclVe(
                   mlfIndexRef(
@@ -1178,6 +1235,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
 
         // else % funcVals(:,1) <= fxr
         } else {
+			 DOTRACE("else funcVals(:,1) <= fxr");
 
             // if fxr < funcVals(:,numModelParams)
             if (mclLtBool(
@@ -1249,7 +1307,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                       &fxc,
                       mlfFeval(
                         mclValueVarargout(),
-                        mclVa(funfcn, "funfcn"),
+                        mclVa(funfcn_mx, "funfcn"),
                         mclVv(xc, "xc"),
                         mclVe(
                           mlfIndexRef(
@@ -1327,7 +1385,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                       &fxcc,
                       mlfFeval(
                         mclValueVarargout(),
-                        mclVa(funfcn, "funfcn"),
+                        mclVa(funfcn_mx, "funfcn"),
                         mclVv(xcc, "xcc"),
                         mclVe(
                           mlfIndexRef(
@@ -1431,7 +1489,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                           &funcVals,
                           mlfFeval(
                             mclValueVarargout(),
-                            mclVa(funfcn, "funfcn"),
+                            mclVa(funfcn_mx, "funfcn"),
                             mclVe(
                               mclArrayRef2(
                                 mclVsv(theSimplex, "theSimplex"),
@@ -1545,8 +1603,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
             mclVv(formatsave, "formatsave"),
             NULL));
 
-    // end
-    }
+    } // end Main algorithm
 
     // output.iterations = itercount;
     mlfIndexAssign(output, ".iterations", mclVsv(itercount, "itercount"));
@@ -1630,8 +1687,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
               mlfSprintf(
                 NULL,
                 _mxarray75_,
-                mclVa(tolx, "tolx"),
-                mclVa(tolf, "tolf"),
+                mclVa(tolx_mx, "tolx"),
+                mclVa(tolf_mx, "tolf"),
                 NULL));
 
 
@@ -1698,10 +1755,10 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(maxiter);
     mxDestroyArray(maxfun);
-    mxDestroyArray(tolf);
-    mxDestroyArray(tolx);
+    mxDestroyArray(tolf_mx);
+    mxDestroyArray(tolx_mx);
     mxDestroyArray(printtype);
-    mxDestroyArray(funfcn);
+    mxDestroyArray(funfcn_mx);
     mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
     return x;
