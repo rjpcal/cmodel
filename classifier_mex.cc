@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Fri Mar 23 12:12:00 2001
+// written: Fri Mar 23 15:32:14 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -152,13 +152,15 @@ DOTRACE("Mclassifier");
 		mclSetCurrentLocalFunctionTable(&_local_function_table_classifier);
 
 	 validateInput(modelParams_mx);
-	 Mtx allModelParams(modelParams_mx); // The Mtx gets a copy of the data
+	 // This Mtx will copy the data if necessary, so that the original
+	 // mxArray is not altered
+	 Mtx allModelParams(modelParams_mx, Mtx::BORROW);
 
 	 validateInput(objParams_mx);
-	 const Mtx objParams(objParams_mx);
+	 const Mtx objParams(objParams_mx, Mtx::BORROW);
 
 	 validateInput(observedIncidence_mx);
-	 const Mtx observedIncidence(observedIncidence_mx);
+	 const Mtx observedIncidence(observedIncidence_mx, Mtx::BORROW);
 
 	 Mtx result(allModelParams.ncols(), 1);
 
