@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 21 14:04:12 2001
+// written: Wed Mar 28 08:46:08 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -78,6 +78,10 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   itsNumTrainingExemplars(countCategory(objParams,0)),
   itsTraining1(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
   itsTraining2(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
+  itsStored1Cache(numStoredExemplars, DIM_OBJ_PARAMS),
+  itsStored2Cache(numStoredExemplars, DIM_OBJ_PARAMS),
+  itsEvidence1Cache(numStoredExemplars, objParams.mrows()),
+  itsEvidence2Cache(numStoredExemplars, objParams.mrows()),
   itsNumStoredExemplars(numStoredExemplars),
   itsTransferFunc(transferFunc)
 {
@@ -167,10 +171,6 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 exemplars.push_back(exemplar(yy).begin());
   }
 
-  Mtx distrust(numAllExemplars(), 2);
-  const MtxIter distrust1 = distrust.colIter(0);
-  const MtxIter distrust2 = distrust.colIter(1);
-
   const MtxIter diffEv = diffEvOut.colIter(0);
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
@@ -179,6 +179,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
 									 minkPower, minkPowerInv);
 	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
 									 minkPower, minkPowerInv);
+
+	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
+	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
 
 	 {DOTRACE("minkowski");
 	 if (minkPower == 2.0) {
