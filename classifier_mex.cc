@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 19 11:38:06 2002
+// written: Tue Feb 19 11:51:15 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -29,7 +29,6 @@
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mx.h"
-#include "rutil.h"
 
 #include "util/error.h"
 #include "util/pointers.h"
@@ -54,9 +53,6 @@ namespace
   int recentNumStored = -1;
 
   MexBuf* mexBuf = 0;
-
-  std::streambuf* coutOrigBuf = 0;
-  std::streambuf* cerrOrigBuf = 0;
 }
 
 void InitializeModule_classifier()
@@ -67,8 +63,8 @@ void InitializeModule_classifier()
   cout = mexBuf;
   cerr = mexBuf;
 #else
-  coutOrigBuf = cout.rdbuf(mexBuf);
-  cerrOrigBuf = cerr.rdbuf(mexBuf);
+  cout.rdbuf(mexBuf);
+  cerr.rdbuf(mexBuf);
 #endif
 
   mexPrintf("loading '" MEXFUNCNAME "' mex file\n");
@@ -183,72 +179,41 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   return shared_ptr<Classifier>(0);
 }
 
-static mxArray* Mclassifier(mxArray* modelParams_mx,
-                            mxArray* modelName_mx,
-                            mxArray* actionRequest_mx,
+static mxArray* Mclassifier(const Mtx& modelParams,
+                            const fstring& modelName,
+                            const fstring& actionRequest,
                             mxArray* extraArgs_mx)
 {
   DOTRACE("Mclassifier");
 
-  try
-    {
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (Mx::hasField(extraArgs_mx, "debugFlag"))
-        {
-          int debugFlag = Mx::getIntField(extraArgs_mx, "debugFlag");
+  if (Mx::hasField(extraArgs_mx, "debugFlag"))
+    {
+      int debugFlag = Mx::getIntField(extraArgs_mx, "debugFlag");
 
-          if (debugFlag == -1)
-            {
-              Util::Prof::printAllProfData(cerr);
-            }
-          else if (debugFlag == -2)
-            {
-              Util::Prof::resetAllProfData();
-            }
+      if (debugFlag == -1)       Util::Prof::printAllProfData(cerr);
+      else if (debugFlag == -2)  Util::Prof::resetAllProfData();
 
-          return mxCreateScalarDouble(debugFlag);
-        }
+      return mxCreateScalarDouble(debugFlag);
+    }
 #endif
 
-      fstring modelName = Mx::getString(modelName_mx);
+  const Mtx objParams(Mx::getField(extraArgs_mx, "objParams"));
 
-      fstring actionRequest = Mx::getString(actionRequest_mx);
+  shared_ptr<Classifier> model =
+    makeClassifier(modelName, objParams, extraArgs_mx);
 
-      validateInput(modelParams_mx);
-      // This Mtx will copy the data leaving the original mxArray untouched
-      Mtx allModelParams(modelParams_mx);
+  Classifier::RequestResult res = model->handleRequest(actionRequest,
+                                                       modelParams,
+                                                       extraArgs_mx);
 
-      const Mtx objParams(Mx::getField(extraArgs_mx, "objParams"));
-
-      shared_ptr<Classifier> model =
-        makeClassifier(modelName, objParams, extraArgs_mx);
-
-      Classifier::RequestResult res = model->handleRequest(actionRequest,
-                                                           allModelParams,
-                                                           extraArgs_mx);
-
-      if ( !res.requestHandled )
-        {
-          fstring msg("unknown model action: ", actionRequest);
-          mexWarnMsgTxt(msg.c_str());
-        }
-
-      return res.result.release();
-    }
-  catch (Util::Error& err)
+  if ( !res.requestHandled )
     {
-      mexErrMsgTxt(err.msg_cstr());
-    }
-  catch (std::exception& err)
-    {
-      mexErrMsgTxt(err.what());
-    }
-  catch (...)
-    {
-      mexErrMsgTxt("an unknown C++ exception occurred.");
+      fstring msg("unknown model action: ", actionRequest);
+      mexWarnMsgTxt(msg.c_str());
     }
 
-  return (mxArray*) 0; // can't happen, but placate compiler
+  return res.result.release();
 }
 
 
@@ -294,15 +259,29 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
     }
 
 
-  mlfEnterNewContext(0, NARGIN,
-                     mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+  mlfEnterNewContext(0, NARGIN, mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
 
-  mxArray* result = Mclassifier(mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+  try
+    {
+      plhs[0] = Mclassifier(Mtx(mprhs[0], Mtx::COPY), // model params
+                            Mx::getString(mprhs[1]), // model name
+                            Mx::getString(mprhs[2]), // action request
+                            mprhs[3]); // extra args struct
+    }
+  catch (Util::Error& err)
+    {
+      mexErrMsgTxt(err.msg_cstr());
+    }
+  catch (std::exception& err)
+    {
+      mexErrMsgTxt(err.what());
+    }
+  catch (...)
+    {
+      mexErrMsgTxt("an unknown C++ exception occurred.");
+    }
 
-  mlfRestorePreviousContext(0, NARGIN,
-                            mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
-
-  plhs[0] = mlfReturnValue(result);
+  mlfRestorePreviousContext(0, NARGIN, mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
 }
 
 
