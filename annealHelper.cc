@@ -19,6 +19,7 @@
 #include "libmatlbm.h"
 
 #include "trace.h"
+#include "debug.h"
 
 static mxArray* _mxarray20_;
 static mxArray* _mxarray21_;
@@ -484,16 +485,21 @@ DOTRACE("doFuncEvals");
 #else
 
 		mxArray* plhs[1] = { 0 };
-		mxArray* prhs[6] = {
-  		  mxDuplicateArray(models_mx),
-		  mxDuplicateArray(mxGetCell(varargin_mx, 0)),
-		  mxDuplicateArray(mxGetCell(varargin_mx, 1)),
-		  mxDuplicateArray(mxGetCell(varargin_mx, 2)),
-		  mxDuplicateArray(mxGetCell(varargin_mx, 3)),
-		  mxDuplicateArray(mxGetCell(varargin_mx, 4))
-		};
 
-		int nrhs = 6;
+		const int MAX_NRHS = 32;
+		mxArray* prhs[MAX_NRHS];
+
+		prhs[0] = mxDuplicateArray(models_mx);
+
+	   int nrhs = 1;
+
+		const int nvararg = mxGetNumberOfElements(varargin_mx);
+
+		for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
+		  {
+			 DebugEvalNL(i);
+			 prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
+		  }
 
   		fixed_string cmd_name = MxWrapper::extractString(func);
 
