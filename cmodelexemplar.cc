@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar 12 17:05:30 2001
+// written: Wed Mar 14 15:21:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -28,10 +28,8 @@ double minkDist(const ConstSlice& wts,
 {
   double wt_sum = 0.0;
 
-  for (ConstSlice::ConstIterator
-			wt = wts.begin(),
-			wend = wts.end();
-		 wt != wend;
+  for (ConstSlice::ConstIterator wt = wts.begin();
+		 wt.hasMore();
 		 ++wt, ++x1, ++x2)
 	 {
 		wt_sum += (*wt) * pow( abs( *x1 - *x2), r);
@@ -50,7 +48,6 @@ public:
   MinkDist2Binder(const ConstSlice& attWeights,
 						const ConstSlice& x2) :
 	 itsAttWeights(attWeights),
-	 itsNelems(attWeights.nelems()),
 	 itsX2(x2)
   {}
 
@@ -61,7 +58,7 @@ public:
 	 Slice::ConstIterator wt = itsAttWeights.begin();
 	 Slice::ConstIterator x2 = itsX2.begin();
 
-	 for (int k = 0; k < itsNelems; ++k, ++x1, ++x2, ++wt)
+	 for (; wt.hasMore(); ++wt, ++x1, ++x2)
 		{
 		  wt_sum +=
 			 (*wt) * 
@@ -71,9 +68,8 @@ public:
   }
 
 private:
-  const ConstSlice itsAttWeights;
-  int itsNelems;
-  const ConstSlice itsX2;
+  const ConstSlice& itsAttWeights;
+  const ConstSlice& itsX2;
 };
 
 
@@ -168,11 +164,9 @@ void CModelExemplar::doDiffEvidence2(const ConstSlice& attWeights,
 {
 DOTRACE("CModelExemplar::doDiffEvidence2");
 
-  MinkDist2Binder binder1(attWeights,
-								  storedExemplar1);
+  MinkDist2Binder binder1(attWeights, storedExemplar1);
 
-  MinkDist2Binder binder2(attWeights,
-								  storedExemplar2);
+  MinkDist2Binder binder2(attWeights, storedExemplar2);
 
   for (int y = 0; y < numAllExemplars(); ++y) {
 
@@ -226,16 +220,16 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const double minkPower = 2.0;
   const double minkPowerInv = 1.0/minkPower;
 
+  const Mtx& stored1(getStoredExemplars(CAT1));
+  const Mtx& stored2(getStoredExemplars(CAT2));
+
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-	 ConstSlice stored1(findStoredExemplar(CAT1, x));
-	 ConstSlice stored2(findStoredExemplar(CAT2, x));
-
 	 if (minkPower == 2.0) {
-		doDiffEvidence2(attWeights, stored1, stored2);
+		doDiffEvidence2(attWeights, stored1.row(x), stored2.row(x));
 	 }
 	 else {
-		doDiffEvidence(attWeights, stored1, stored2,
+		doDiffEvidence(attWeights, stored1.row(x), stored2.row(x),
 							minkPower, minkPowerInv);
 	 }
   }

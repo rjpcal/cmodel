@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Tue Mar 13 16:25:19 2001
+// written: Wed Mar 14 15:21:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -32,24 +32,24 @@ DOTRACE("CModelGcm::CModelGcm");
 CModelGcm::~CModelGcm() {}
 
 
-ConstSlice CModelGcm::findStoredExemplar(Category cat, int n)
+const Mtx& CModelGcm::getStoredExemplars(Category cat)
 {
 DOTRACE("CModelGcm::findStoredExemplar");
 
   if (CAT1 == cat)
 	 {
-  		return training1().row(n);
+  		return training1();
 	 }
 
   else if (CAT2 == cat)
 	 {
-  		return training2().row(n);
+		return training2();
 	 }
 
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return ConstSlice(); // can't happen, but placate the compiler
+  return Mtx::emptyMtx(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelgcm_cc[] = "$Header$";

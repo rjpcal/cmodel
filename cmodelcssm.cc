@@ -26,8 +26,8 @@ CModelCssm::CModelCssm(const Mtx& objParams,
 							  const Mtx& observedIncidence,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
-  itsStored1(1, DIM_OBJ_PARAMS),
-  itsStored2(1, DIM_OBJ_PARAMS),
+  itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
+  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
   itsScaledWeights(0,0)
 {
 DOTRACE("CModelCssm::CModelCssm");
@@ -55,34 +55,40 @@ DOTRACE("CModelCssm::loadModelParams");
 		Slice row = itsScaledWeights.row(r);
 		row /= row.sum();
 	 }
+
+  {for (int n = 0; n < itsStored1.mrows(); ++n)
+	 {
+		Slice result1(itsStored1.row(n));
+		training1().leftMultAndAssign(itsScaledWeights.row(n),
+												result1);
+	 }
+  }
+
+  {for (int n = 0; n < itsStored2.mrows(); ++n)
+	 {
+		Slice result2(itsStored2.row(n));
+		training2().leftMultAndAssign(itsScaledWeights.row(n+numStoredExemplars()),
+												result2);
+	 }
+  }
 }
 
-ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
+const Mtx& CModelCssm::getStoredExemplars(Category cat)
 {
   if (CAT1 == cat)
 	 {
-		Slice result(itsStored1.row(0));
-
-		training1().leftMultAndAssign(itsScaledWeights.row(n),
-  												result);
-
-		return result;
+		return itsStored1;
 	 }
 
   else if (CAT2 == cat)
 	 {
-  		Slice result(itsStored2.row(0));
-
-		training2().leftMultAndAssign(itsScaledWeights.row(n+numStoredExemplars()),
-  												result);
-
-  		return result;
+		return itsStored2;
 	 }
 
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return ConstSlice(); // can't happen, but placate the compiler
+  return Mtx::emptyMtx(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";

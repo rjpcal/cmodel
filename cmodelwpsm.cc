@@ -40,24 +40,24 @@ DOTRACE("CModelWpsm::CModelWpsm");
 CModelWpsm::~CModelWpsm() {}
 
 
-ConstSlice CModelWpsm::findStoredExemplar(Category cat, int n)
+const Mtx& CModelWpsm::getStoredExemplars(Category cat)
 {
 DOTRACE("CModelWpsm::findStoredExemplar");
 
   if (CAT1 == cat)
 	 {
-  		return itsPrototype1.row(0);
+  		return itsPrototype1;
 	 }
 
   else if (CAT2 == cat)
 	 {
-  		return itsPrototype2.row(0);
+  		return itsPrototype2;
 	 }
 
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return ConstSlice(); // can't happen, but placate the compiler
+  return Mtx::emptyMtx(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelwpsm_cc[] = "$Header$";

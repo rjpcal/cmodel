@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Tue Mar 13 16:17:23 2001
+// written: Wed Mar 14 15:21:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -61,9 +61,7 @@ private:
 
   virtual void loadModelParams(Slice& modelParams);
 
-  // The result of this function is only valid until the next call to
-  // the function
-  virtual ConstSlice findStoredExemplar(Category cat, int n) = 0;
+  virtual const Mtx& getStoredExemplars(Category cat) = 0;
 };
 
 static const char vcid_cmodelexemplar_h[] = "$Header$";
