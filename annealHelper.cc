@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:02:44 2002
+// written: Fri Feb 15 11:05:55 2002
 // $Id$
 //
 //
@@ -148,7 +148,7 @@ DOTRACE("makeTestModels");
 
 //---------------------------------------------------------------------
 //
-// doFuncEvals()
+// doParallelFuncEvals()
 //
 //---------------------------------------------------------------------
 
@@ -194,6 +194,12 @@ DOTRACE("doParallelFuncEvals");
 
   return costs;
 }
+
+//---------------------------------------------------------------------
+//
+// doSerialFuncEvals()
+//
+//---------------------------------------------------------------------
 
 Mtx doSerialFuncEvals(const Mtx& models,
                       const fstring& func_name,
@@ -244,24 +250,9 @@ DOTRACE("doSerialFuncEvals");
       mxDestroyArray(prhs[nrhs]);
     }
 
-//   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
   return costs;
-}
-
-Mtx doFuncEvals(bool canUseMatrix,
-                const Mtx& models,
-                const fstring& func_name,
-                int nvararg,
-                mxArray** pvararg)
-{
-  if (canUseMatrix)
-    {
-      return doParallelFuncEvals(models, func_name, nvararg, pvararg);
-    }
-
-  return doSerialFuncEvals(models, func_name, nvararg, pvararg);
 }
 
 //---------------------------------------------------------------------
@@ -270,7 +261,7 @@ Mtx doFuncEvals(bool canUseMatrix,
 //
 //---------------------------------------------------------------------
 
-Mtx makePDF(const Mtx& temp, const Mtx& costs)
+Mtx makePDF(double temp, const Mtx& costs)
 {
 DOTRACE("makePDF");
 
@@ -287,7 +278,7 @@ DOTRACE("makePDF");
 
   const double toobig = 708.3964185322641;
 
-  Mtx pdf = costs; pdf /= temp.at(0);
+  Mtx pdf = costs; pdf /= temp;
 
   const double mpdf = pdf.max();
 
@@ -319,7 +310,7 @@ DOTRACE("makePDF");
 //
 //---------------------------------------------------------------------
 
-int sampleFromPdf(const Mtx& temp, const Mtx& costs)
+int sampleFromPdf(double temp, const Mtx& costs)
 {
 DOTRACE("sampleFromPdf");
 
@@ -396,6 +387,7 @@ DOTRACE("MannealVisitParameters");
       const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
       const Mtx deltas(deltas_mx, Mtx::BORROW);
       const Mtx bounds(bounds_mx, Mtx::BORROW);
+      const double temp = mxGetScalar(temp_mx);
 
       const fstring func_name = MxWrapper::extractString(FUN_mx);
 
@@ -415,14 +407,18 @@ DOTRACE("MannealVisitParameters");
                                            bounds);
 
           // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-          costs = doFuncEvals(canUseMatrix, modelmatrix,
-                              func_name, nvararg, pvararg);
+          if (canUseMatrix)
+            costs = doParallelFuncEvals(modelmatrix, func_name,
+                                        nvararg, pvararg);
+          else
+            costs = doSerialFuncEvals(modelmatrix, func_name,
+                                      nvararg, pvararg);
 
           // S.nevals = S.nevals + length(costs);
-          nevals += costs.nelems();;
+          nevals += costs.nelems();
 
           // Sample from probability distribution
-          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW), costs);
+          s_zerobased = sampleFromPdf(temp, costs);
 
           bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
         }
