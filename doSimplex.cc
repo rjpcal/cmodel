@@ -27,80 +27,6 @@ namespace {
   }
 }
 
-class DualRepMtx {
-private:
-  mutable Mtx itsMtx;
-  mutable bool itsMtxIsValid;
-
-  mutable mxArray* itsArray;
-  mutable bool itsArrayIsValid;
-
-  void updateMtx() const
-  {
-	 itsMtx = Mtx(itsArray);
-	 itsMtxIsValid = true;
-  }
-
-  void updateArray() const
-  {
-	 mlfAssign(&itsArray, itsMtx.makeMxArray());
-	 itsArrayIsValid = true;
-  }
-
-public:
-  DualRepMtx() :
-	 itsMtx(0,0),
-	 itsMtxIsValid(true),
-	 itsArray(mclGetUninitializedArray()),
-	 itsArrayIsValid(false)
-  {}
-
-  DualRepMtx(const Mtx& other) :
-	 itsMtx(other),
-	 itsMtxIsValid(true),
-	 itsArray(mclGetUninitializedArray()),
-	 itsArrayIsValid(false)
-  {}
-
-  ~DualRepMtx()
-  {
-	 mxDestroyArray(itsArray);
-  }
-
-  void assignArray(mxArray* rhs)
-  {
-	 mlfAssign(&itsArray, rhs);
-	 itsArrayIsValid = true;
-	 itsMtxIsValid = false;
-  }
-
-  void assignMtx(const Mtx& rhs)
-  {
-	 itsMtx = rhs;
-	 itsMtxIsValid = true;
-	 itsArrayIsValid = false;
-  }
-
-  mxArray* asArray() const
-  {
-	 if (!itsArrayIsValid) updateArray();
-	 return itsArray;
-  }
-
-  const Mtx& asMtx() const
-  {
-	 if (!itsMtxIsValid) updateMtx();
-	 return itsMtx;
-  }
-
-  Mtx& ncMtx()
-  {
-	 if (!itsMtxIsValid) updateMtx();
-	 itsArrayIsValid = false;
-	 return itsMtx;
-  }
-};
-
 class FuncEvaluator {
   int itsEvalCount;
   mxArray* itsFunfcn;
@@ -742,21 +668,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 // HOME
 
-  double fxcc = 0.0;
-  double fxc = 0.0;
-  double fxe = 0.0;
-  double fxr = 0.0;
-
-  fixed_string how;
-
-  Mtx xr(0,0);
-  Mtx xe(0,0);
-  Mtx xc(0,0);
-  Mtx xcc(0,0);
-  Mtx xbar(0,0);
-
   Mtx xx(x_in);
-
 
   const double rho = 1.0;
   const double chi = 2.0;
@@ -767,16 +679,16 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   Mtx initialParams(xx.asColumn());
 
   // theSimplex = zeros(numModelParams,numModelParams+1);
-  DualRepMtx theSimplex_dr(Mtx(numModelParams,numModelParams+1));
+  Mtx theSimplex(numModelParams,numModelParams+1);
 
   // funcVals = zeros(1,numModelParams+1);
-  DualRepMtx funcVals_dr(Mtx(1,numModelParams+1));
+  Mtx funcVals(1,numModelParams+1);
 
   // theSimplex(:,1) = initialParams;    % Place input guess in the simplex! (credit L.Pfeffer at Stanford)
-  theSimplex_dr.ncMtx().column(0) = initialParams.columns(0,1);
+  theSimplex.column(0) = initialParams.columns(0,1);
 
   // funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
-  funcVals_dr.ncMtx().at(0,0) = objective.evaluate(initialParams);
+  funcVals.at(0,0) = objective.evaluate(initialParams);
 
   {
 	 // Following improvement suggested by L.Pfeffer at Stanford
@@ -800,23 +712,23 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				y.at(j) = zero_term_delta;
 			 }
 
-		  theSimplex_dr.ncMtx().column(j+1) = y;
+		  theSimplex.column(j+1) = y;
 
-		  funcVals_dr.ncMtx().at(0,j+1) = objective.evaluate(y);
+		  funcVals.at(0,j+1) = objective.evaluate(y);
 		}
   }
 
   {
 	 // sort so theSimplex(1,:) has the lowest function value 
 	 // [funcVals,index] = sort(funcVals);
-	 Mtx index = funcVals_dr.asMtx().row(0).getSortOrder();
-	 funcVals_dr.ncMtx().row(0).reorder(index);
+	 Mtx index = funcVals.row(0).getSortOrder();
+	 funcVals.row(0).reorder(index);
 	 // theSimplex = theSimplex(:,index);
-  	 theSimplex_dr.ncMtx().reorderColumns(index);
+  	 theSimplex.reorderColumns(index);
   }
 
 
-  how = "initial";
+  fixed_string how = "initial";
 
   int itercount = 1;
 
@@ -824,15 +736,15 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 {
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
 		mexPrintf(" %5d        %5d     %12.6g         ",
-					 itercount, objective.evalCount(), double(funcVals_dr.asMtx().at(0,0)));
+					 itercount, objective.evalCount(), double(funcVals.at(0,0)));
 		mexPrintf(how.c_str());
 		mexPrintf("\n");
 	 }
   else if (prnt == 4)
 	 {
 		mexPrintf("\n%s\n", how.c_str());
-		theSimplex_dr.asMtx().print("theSimplex");
-		funcVals_dr.asMtx().print("funcVals");
+		theSimplex.print("theSimplex");
+		funcVals.print("funcVals");
 		mexPrintf("func_evals: %d\n", objective.evalCount());
 	 }
 
@@ -860,57 +772,50 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 }
 
 	 {DOTRACE("check if done");
-	 if (withinTolf(funcVals_dr.asMtx(), tolf) &&
-		  withinTolx(theSimplex_dr.asMtx(), tolx))
+	 if (withinTolf(funcVals, tolf) &&
+		  withinTolx(theSimplex, tolx))
 		break; // out of main loop
 	 }
 
 	 how = "";
 
-	 {DOTRACE("compute reflection point");
-
 	 // xbar = average of the numModelParams (NOT numModelParams+1) best points
 
-	 {DOTRACE("compute xbar");
-
-	 xbar = Mtx(numModelParams,1);
-	 const Mtx simplex_1_n(theSimplex_dr.asMtx().columns(0,numModelParams));
+	 Mtx xbar(numModelParams,1);
+	 const Mtx simplex_1_n(theSimplex.columns(0,numModelParams));
 
 	 const double numparams_inv = 1.0/numModelParams;
 	 MtxIter xbar_itr = xbar.columnIter(0);
 
 	 for (int r = 0; r < numModelParams; ++r, ++xbar_itr)
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
-	 }
 
-	 {DOTRACE("compute xr");
+
 	 // xr = (1 + rho)*xbar - rho*theSimplex(:,end);
-	 xr = (xbar*(1.0+rho) - 
-			 theSimplex_dr.asMtx().columns(numModelParams,1) * rho);
-	 }
+	 Mtx xr = (xbar*(1.0+rho) - 
+				  theSimplex.columns(numModelParams,1) * rho);
 
-	 fxr = objective.evaluate(xr);
-	 }
+	 double fxr = objective.evaluate(xr);
 
-	 if (fxr < funcVals_dr.asMtx().at(0,0))
+	 if (fxr < funcVals.at(0,0))
 		{
 		  DOTRACE("if fxr < funcVals(:,1)");
 
 		  // % Calculate the expansion point
 		  // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
-		  xe = ((xbar * (1 + rho*chi)) -
-				  (theSimplex_dr.asMtx().columns(numModelParams,1) * (rho*chi)));
+		  Mtx xe = ((xbar * (1 + rho*chi)) -
+						(theSimplex.columns(numModelParams,1) * (rho*chi)));
 
-		  fxe = objective.evaluate(xe);
+		  double fxe = objective.evaluate(xe);
 
 		  // if fxe < fxr
 		  if (fxe < fxr) {
 
 			 // theSimplex(:,end) = xe;
-			 theSimplex_dr.ncMtx().column(numModelParams) = xe;
+			 theSimplex.column(numModelParams) = xe;
 
 			 // funcVals(:,end) = fxe;
-			 funcVals_dr.ncMtx().at(0,numModelParams) = fxe;
+			 funcVals.at(0,numModelParams) = fxe;
 
 			 how = "expand";
 
@@ -918,10 +823,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		  } else {
 
 			 // theSimplex(:,end) = xr; 
-			 theSimplex_dr.ncMtx().column(numModelParams) = xr;
+			 theSimplex.column(numModelParams) = xr;
 
 			 // funcVals(:,end) = fxr;
-			 funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
+			 funcVals.at(0,numModelParams) = fxr;
 
 			 how = "reflect";
 
@@ -933,13 +838,13 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		  DOTRACE("else funcVals(:,1) <= fxr");
 
 		  // if fxr < funcVals(:,numModelParams)
-		  if (fxr < funcVals_dr.asMtx().at(0,numModelParams-1)) {
+		  if (fxr < funcVals.at(0,numModelParams-1)) {
 
 			 // theSimplex(:,end) = xr; 
-			 theSimplex_dr.ncMtx().column(numModelParams) = xr;
+			 theSimplex.column(numModelParams) = xr;
 
 			 // funcVals(:,end) = fxr;
-			 funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
+			 funcVals.at(0,numModelParams) = fxr;
 
 			 how = "reflect";
 
@@ -948,25 +853,25 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 			 // % Perform contraction
 			 // if fxr < funcVals(:,end)
-			 if (fxr < funcVals_dr.asMtx().at(0,numModelParams)) {
+			 if (fxr < funcVals.at(0,numModelParams)) {
 
 				// % Perform an outside contraction
 				// xc = (1 + psi*rho)*xbar -
 				//            psi*rho*theSimplex(:,end);
-				xc = (xbar*(1.0 + psi*rho) -
-						(theSimplex_dr.asMtx().columns(numModelParams,1) *(psi*rho)));
+				Mtx xc = (xbar*(1.0 + psi*rho) -
+							 (theSimplex.columns(numModelParams,1) *(psi*rho)));
 
 
-				fxc = objective.evaluate(xc);
+				double fxc = objective.evaluate(xc);
 
 				// if fxc <= fxr
 				if (fxc <= fxr) {
 
 				  // theSimplex(:,end) = xc; 
-				  theSimplex_dr.ncMtx().column(numModelParams) = xc;
+				  theSimplex.column(numModelParams) = xc;
 
 				  // funcVals(:,end) = fxc;
-				  funcVals_dr.ncMtx().at(0,numModelParams) = fxc;
+				  funcVals.at(0,numModelParams) = fxc;
 
 				  how = "contract outside";
 
@@ -980,19 +885,19 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 				// % Perform an inside contraction
 				// xcc = (1-psi)*xbar + psi*theSimplex(:,end);
-				xcc = (xbar*(1.0-psi) +
-						 (theSimplex_dr.asMtx().columns(numModelParams,1)* psi));
+				Mtx xcc = (xbar*(1.0-psi) +
+							  (theSimplex.columns(numModelParams,1)* psi));
 
-				fxcc = objective.evaluate(xcc);
+				double fxcc = objective.evaluate(xcc);
 
 				// if fxcc < funcVals(:,end)
-				if (fxcc < funcVals_dr.asMtx().at(0,numModelParams)) {
+				if (fxcc < funcVals.at(0,numModelParams)) {
 
 				  // theSimplex(:,end) = xcc;
-				  theSimplex_dr.ncMtx().column(numModelParams) = xcc;
+				  theSimplex.column(numModelParams) = xcc;
 
 				  // funcVals(:,end) = fxcc;
-				  funcVals_dr.ncMtx().at(0,numModelParams) = fxcc;
+				  funcVals.at(0,numModelParams) = fxcc;
 
 				  how = "contract inside";
 
@@ -1010,14 +915,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  for (int j = 1; j < numModelParams+1; ++j)
 					 {
 						// theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
-						theSimplex_dr.ncMtx().column(j) =
-						  theSimplex_dr.asMtx().columns(0,1) +
-						  (theSimplex_dr.asMtx().columns(j,1) -
-							theSimplex_dr.asMtx().columns(0,1)) * sigma;
+						theSimplex.column(j) =
+						  theSimplex.columns(0,1) +
+						  (theSimplex.columns(j,1) -
+							theSimplex.columns(0,1)) * sigma;
 
 						// funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
-						funcVals_dr.ncMtx().at(0,j) =
-						  objective.evaluate(theSimplex_dr.asMtx()
+						funcVals.at(0,j) =
+						  objective.evaluate(theSimplex
 													.columns(j,1)
 													.makeMxArray()
 													);
@@ -1028,7 +933,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 	 {DOTRACE("reorder simplex");
 	 // [dummy,index] = sort(funcVals);
-	 Mtx index = funcVals_dr.asMtx().row(0).getSortOrder();
+	 Mtx index = funcVals.row(0).getSortOrder();
 
 	 const int smallest = int(index.at(0));
 	 const int largest = int(index.at(numModelParams));
@@ -1037,13 +942,13 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 // These swaps are smart enough to check if the column numbers
 	 // are the same before doing the swap
 
-	 funcVals_dr.ncMtx().swapColumns(0, smallest);
-	 funcVals_dr.ncMtx().swapColumns(largest, numModelParams);
-	 funcVals_dr.ncMtx().swapColumns(largest2, numModelParams-1);
+	 funcVals.swapColumns(0, smallest);
+	 funcVals.swapColumns(largest, numModelParams);
+	 funcVals.swapColumns(largest2, numModelParams-1);
 
-	 theSimplex_dr.ncMtx().swapColumns(0, smallest);
-	 theSimplex_dr.ncMtx().swapColumns(largest, numModelParams);
-	 theSimplex_dr.ncMtx().swapColumns(largest2, numModelParams-1);
+	 theSimplex.swapColumns(0, smallest);
+	 theSimplex.swapColumns(largest, numModelParams);
+	 theSimplex.swapColumns(largest2, numModelParams-1);
 	 }
 
 
@@ -1052,20 +957,20 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 if (prnt == 3)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
-						itercount, objective.evalCount(), double(funcVals_dr.asMtx().at(0,0)));
+						itercount, objective.evalCount(), double(funcVals.at(0,0)));
 		  mexPrintf(how.c_str());
 		  mexPrintf("\n");
 		}
 	 else if (prnt == 4)
 		{
 		  mexPrintf("\n%s\n", how.c_str());
-		  theSimplex_dr.asMtx().print("theSimplex");
-		  funcVals_dr.asMtx().print("funcVals");
+		  theSimplex.print("theSimplex");
+		  funcVals.print("funcVals");
 		  mexPrintf("func_evals: %d\n", objective.evalCount());
 		}
   }
 
-  xx = theSimplex_dr.asMtx().columns(0,1);
+  xx = theSimplex.columns(0,1);
 
   // end Main algorithm
 
@@ -1076,7 +981,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   // output.algorithm = 'Nelder-Mead simplex direct search';
   mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
-  mlfAssign(fval, mxCreateScalarDouble(funcVals_dr.asMtx().row(0).min()));
+  mlfAssign(fval, mxCreateScalarDouble(funcVals.row(0).min()));
 
   if (objective.evalCount() >= maxfun)
 	 {
