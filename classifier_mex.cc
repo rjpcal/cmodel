@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 11:12:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -63,7 +63,11 @@ void InitializeModule_classifier()
   cerr.rdbuf(mexBuf);
 #endif
 
+#ifndef LOCAL_DEBUG
   mexPrintf("loading 'classifier' mex file\n");
+#else
+  mexPrintf("loading 'dclassifier' mex file\n");
+#endif
 
   recentModel = new shared_ptr<CModelCssm>(0);
   recentObjParams = new Mtx(0,0);
@@ -73,7 +77,11 @@ void TerminateModule_classifier()
 {
   DOTRACE("TerminateModule_classifier");
 
+#ifndef LOCAL_DEBUG
   mexPrintf("unloading 'classifier' mex file\n");
+#else
+  mexPrintf("unloading 'dclassifier' mex file\n");
+#endif
 
   delete recentObjParams;
   delete recentModel;
