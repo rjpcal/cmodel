@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Apr 18 16:16:33 2001
+// written: Wed Apr 18 16:45:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,11 +17,29 @@
 
 #include "error.h"
 #include "mxwrapper.h"
+#include "multivarfunction.h"
 #include "num.h"
+#include "simplexoptimizer.h"
 #include "strings.h"
+
+#include <iostream.h>
 
 #include "trace.h"
 #include "debug.h"
+
+class LLEvaluator : public MultivarFunction {
+  Classifier& itsC;
+
+protected:
+  virtual double doEvaluate(const Mtx& x)
+  {
+	 Slice params(x.column(0));
+	 return -itsC.currentLogL(params);
+  }
+
+public:
+  LLEvaluator(Classifier& c) : itsC(c) {}
+};
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -255,6 +273,32 @@ DOTRACE("Classifier::handleRequest");
 			 Slice modelParams(allModelParams.column(i));
 			 result.column(i) = this->classifyObjects(modelParams, testObjects);
 		  }
+
+		return result;
+	 }
+
+  if ( action == "simplex" )
+	 {
+		LLEvaluator objective(*this);
+
+		SimplexOptimizer opt(objective,
+									allModelParams.asColumn(),
+									"notify",
+									allModelParams.nelems(),
+									extraArgs.getStructField("maxfun").getInt(),
+									extraArgs.getStructField("maxiter").getInt()
+									);
+
+		int exitFlag = opt.optimize();
+
+		MxWrapper result;
+
+		result.setStructField("bestParams", opt.bestParams());
+		result.setStructField("bestFval", opt.bestFval());
+		result.setStructField("exitFlag", exitFlag);
+		result.setStructField("iterations", opt.iterCount());
+		result.setStructField("funcCount", opt.funcCount());
+		result.setStructField("algorithm", opt.algorithm());
 
 		return result;
 	 }
