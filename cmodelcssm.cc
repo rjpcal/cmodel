@@ -26,59 +26,40 @@ CModelCssm::CModelCssm(const Mtx& objParams,
 							  const Mtx& observedIncidence,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
-  itsScaledWeights()
+  itsScaledWeights(0,0)
 {
 DOTRACE("CModelCssm::CModelCssm");
 }
 
 CModelCssm::~CModelCssm() {}
 
-//  void CModelCssm::scaleWeights(double* weights, int numRawWeights)
-void CModelCssm::scaleWeights(Slice& weights)
-{
-DOTRACE("CModelCssm::scaleWeights");
-
-  int mrows = numStoredExemplars()*2;
-  int ncols = numTrainingExemplars();
-
-  if ( weights.nelems() != (mrows*ncols) )
-	 throw ErrorWithMsg("weights must have "
-							  "2*numStoredExemplars*numTrainingExemplars elements");
-
-  for (int i = 0; i < mrows; ++i)
-	 {
-		double sum_wt = 0.0;
-		{
-		  for (int ix = i; ix < weights.nelems(); ix+=mrows)
-			 sum_wt += abs(weights[ix]);
-		}
-		{
-		  for (int ix = i; ix < weights.nelems(); ix+=mrows)
-			 weights[ix] = abs(weights[ix]) / sum_wt;
-		}
-	 }
-}
-
 void CModelCssm::loadModelParams(Slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
+
+  itsScaledWeights = Mtx(modelParams);
+
+  itsScaledWeights.reshape(2*numStoredExemplars(),
+									numTrainingExemplars());
 
   //
   // Rescale the stored exemplar weights so that they sum to 1.
   //
 
-  scaleWeights(modelParams);
+  itsScaledWeights.apply(abs);
 
-  itsScaledWeights.rebind(modelParams);
+  for (int r = 0; r < itsScaledWeights.mrows(); ++r)
+	 {
+		Slice row = itsScaledWeights.row(r);
+		row /= row.sum();
+	 }
 }
 
 ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
-		Num::linearCombo(ConstSlice(itsScaledWeights.data()+n,
-											 2*numStoredExemplars(),
-											 numTrainingExemplars()),
+		Num::linearCombo(itsScaledWeights.row(n),
 							  &training1()[0],
 							  training1().size(),
 							  &itsStored1[0]);
@@ -88,9 +69,7 @@ ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 
   else if (CAT2 == cat)
 	 {
-		Num::linearCombo(ConstSlice(itsScaledWeights.data()+n+numStoredExemplars(),
-											 2*numStoredExemplars(),
-											 numTrainingExemplars()),
+		Num::linearCombo(itsScaledWeights.row(n+numStoredExemplars()),
 							  &training2()[0],
 							  training2().size(),
 							  &itsStored2[0]);

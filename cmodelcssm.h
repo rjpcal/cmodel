@@ -22,12 +22,7 @@ private:
   double itsStored1[DIM_OBJ_PARAMS];
   double itsStored2[DIM_OBJ_PARAMS];
 
-//    const double* itsScaledWeights;
-
-  ConstSlice itsScaledWeights;
-
-  // Scales the weights in place; weights is an input/output argument
-  void scaleWeights(Slice& weights);
+  Mtx itsScaledWeights;
 
 public:
   CModelCssm(const Mtx& objParams,

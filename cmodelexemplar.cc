@@ -110,10 +110,10 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
 	 {
 		if (int(objParams.at(i,0)) == 0)
 		  itsTraining1[c1++].rebind(
-						objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS));
+						objParams.row(i).rightmost(DIM_OBJ_PARAMS));
 		else if (int(objParams.at(i,0)) == 1)
 		  itsTraining2[c2++].rebind(
-						objParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS));
+						objParams.row(i).rightmost(DIM_OBJ_PARAMS));
 	 }
 }
 

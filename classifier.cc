@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Mon Mar 12 16:20:51 2001
+// written: Tue Mar 13 11:06:55 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -157,7 +157,7 @@ int Classifier::exemplarCategory(int i) const {
 
 ConstSlice Classifier::exemplar(int i) const {
   // Skip the first column which contains category info
-  return itsObjParams.rowSlice(i).rightmost(DIM_OBJ_PARAMS);
+  return itsObjParams.row(i).rightmost(DIM_OBJ_PARAMS);
 }
 
 static const char vcid_classifier_cc[] = "$Header$";
