@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Apr 18 16:16:15 2001
+// written: Thu Apr 26 18:22:49 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -23,10 +23,10 @@ public:
   Classifier(const Mtx& objParams, const Mtx& observedIncidence);
   virtual ~Classifier();
 
-  // Returns the classification probability for each of 'objects'
-  Mtx classifyObjects(Slice& modelParams, const Mtx& objects);
+  // Returns the classification probability for each of 'testObjects'
+  Mtx classifyObjects(Slice& modelParams, const Mtx& testObjects);
 
-  double currentLogL(Slice& modelParams);  
+  double currentLogL(Slice& modelParams);
 
   double fullLogL();
 
