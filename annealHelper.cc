@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 19:03:41 2002
+// written: Fri Feb 15 09:24:29 2002
 // $Id$
 //
 //
@@ -38,11 +38,6 @@
 
 #include "util/trace.h"
 #include "util/debug.h"
-
-static mxArray* _mxarray20_;
-static mxArray* _mxarray21_;
-static mxArray* _mxarray22_;
-static mxArray* _mxarray23_;
 
 namespace
 {
@@ -84,11 +79,6 @@ void InitializeModule_annealVisitParameters()
   coutOrigBuf = std::cout.rdbuf(mexBuf);
   cerrOrigBuf = std::cerr.rdbuf(mexBuf);
 #endif
-
-  _mxarray20_ = mclInitializeDouble(0.0);
-  _mxarray21_ = mclInitializeDouble(1.0);
-  _mxarray22_ = mclInitializeDouble(2.0);
-  _mxarray23_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
 }
 
 void TerminateModule_annealVisitParameters()
@@ -104,11 +94,6 @@ void TerminateModule_annealVisitParameters()
   std::cerr.rdbuf(0);
 
   delete mexBuf;
-
-  mxDestroyArray(_mxarray23_);
-  mxDestroyArray(_mxarray22_);
-  mxDestroyArray(_mxarray21_);
-  mxDestroyArray(_mxarray20_);
 }
 
 mxArray* MannealVisitParameters(int nargout_,
@@ -127,10 +112,10 @@ Mtx makeTestModels(int x_zerobased,
                    const double delta,
                    const Mtx& bounds);
 
-mxArray* doFuncEvals(bool canUseMatrix,
-                     const Mtx& models,
-                     mxArray* func,
-                     mxArray* varargin);
+Mtx doFuncEvals(bool canUseMatrix,
+                const Mtx& models,
+                mxArray* func,
+                mxArray* varargin);
 
 int sampleFromPdf(const Mtx& temp, const Mtx& costs);
 
@@ -146,10 +131,8 @@ Mtx makePDF(const Mtx& temp, const Mtx& costs);
  * input arguments and passes them to the implementation version of the
  * function, appearing above.
  */
-void mlxAnnealVisitParameters(int nlhs,
-                              mxArray* plhs[],
-                              int nrhs,
-                              mxArray* prhs[])
+void mlxAnnealVisitParameters(int nlhs, mxArray* plhs[],
+                              int nrhs, mxArray* prhs[])
 {
 DOTRACE("mlxAnnealVisitParameters");
 
@@ -239,8 +222,6 @@ DOTRACE("MannealVisitParameters");
         }
 #endif
 
-      mxArray* costs_mx = mclGetUninitializedArray();
-
       mclCopyArray(&bestModel_mx);
 
       Mtx bestModel(bestModel_mx, Mtx::REFER);
@@ -253,6 +234,8 @@ DOTRACE("MannealVisitParameters");
       const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
       const Mtx deltas(deltas_mx, Mtx::BORROW);
       const Mtx bounds(bounds_mx, Mtx::BORROW);
+
+      Mtx costs(0,0);
 
       // for x = find(deltas' ~= 0)
       for (int x = 0; x < deltas.nelems(); ++x)
@@ -268,22 +251,18 @@ DOTRACE("MannealVisitParameters");
                                            bounds);
 
           // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-          mlfAssign(&costs_mx,
-                    doFuncEvals(canUseMatrix,
-                                modelmatrix,
-                                FUN_mx,
-                                mlfIndexRef(varargin_mx,
-                                            "{?}",
-                                            mlfCreateColonIndex())
-                                ));
+          costs = doFuncEvals(canUseMatrix,
+                              modelmatrix,
+                              FUN_mx,
+                              mlfIndexRef(varargin_mx,
+                                          "{?}",
+                                          mlfCreateColonIndex()));
 
           // S.nevals = S.nevals + length(costs);
-          nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
-                      mxGetM(costs_mx) : mxGetN(costs_mx) );
+          nevals += costs.nelems();;
 
           // Sample from probability distribution
-          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW),
-                                      Mtx(costs_mx, Mtx::BORROW));
+          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW), costs);
 
           bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
         }
@@ -299,9 +278,7 @@ DOTRACE("MannealVisitParameters");
 
       // S.cost = costs(s);
       mxSetField(output, 0, "cost",
-                 mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
-
-      mxDestroyArray(costs_mx);
+                 mxCreateScalarDouble(costs.at(s_zerobased)));
 
       return output;
     }
@@ -373,10 +350,10 @@ DOTRACE("makeTestModels");
 //
 //---------------------------------------------------------------------
 
-mxArray* doFuncEvals(bool canUseMatrix,
-                     const Mtx& models,
-                     mxArray* func,
-                     mxArray* varargin_mx)
+Mtx doFuncEvals(bool canUseMatrix,
+                const Mtx& models,
+                mxArray* func,
+                mxArray* varargin_mx)
 {
 DOTRACE("doFuncEvals");
 
@@ -460,7 +437,11 @@ DOTRACE("doFuncEvals");
   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
-  return costs_mx;
+  Mtx costs(costs_mx, Mtx::COPY);
+
+  mxDestroyArray(costs_mx);
+
+  return costs;
 }
 
 //---------------------------------------------------------------------
