@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Feb  7 16:18:49 2002
-// written: Wed Feb 20 17:51:49 2002
+// written: Wed Feb 20 18:10:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,9 @@
 #ifndef EUCBINDER_H_DEFINED
 #define EUCBINDER_H_DEFINED
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
+#endif
 
 //
 // This is just a functor that binds arguments to eucDist, so that we don't

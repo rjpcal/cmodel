@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 17 11:21:42 2001
-// written: Thu Feb 14 11:55:55 2002
+// written: Wed Feb 20 18:10:23 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,10 @@
 #ifndef DRMTX_H_DEFINED
 #define DRMTX_H_DEFINED
 
-#include "libmatlbm.h"
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(LIBMATLBM_H_DEFINED)
+#include <libmatlbm.h>
+#define LIBMATLBM_H_DEFINED
+#endif
 
 ///////////////////////////////////////////////////////////////////////
 //

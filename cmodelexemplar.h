@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Feb 20 17:51:36 2002
+// written: Wed Feb 20 18:08:11 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,13 @@
 #ifndef CMODELEXEMPLAR_H_DEFINED
 #define CMODELEXEMPLAR_H_DEFINED
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CLASSIFIER_H_DEFINED)
 #include "classifier.h"
+#endif
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
+#endif
 
 class CModelExemplar : public Classifier
 {

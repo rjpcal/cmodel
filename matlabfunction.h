@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:07:28 2002
-// written: Tue Feb 19 09:53:23 2002
+// written: Wed Feb 20 18:10:48 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,13 @@
 #ifndef MATLABFUNCTION_H_DEFINED
 #define MATLABFUNCTION_H_DEFINED
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MULTIVARFUNCTION_H_DEFINED)
 #include "multivarfunction.h"
+#endif
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(STRINGS_H_DEFINED)
 #include "util/strings.h"
+#endif
 
 typedef struct mxArray_tag mxArray;
 

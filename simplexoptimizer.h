@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Wed Feb 20 17:52:03 2002
+// written: Wed Feb 20 18:13:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,10 +13,13 @@
 #ifndef SIMPLEXOPTIMIZER_H_DEFINED
 #define SIMPLEXOPTIMIZER_H_DEFINED
 
-#include <iostream>
-
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
+#endif
+
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MULTIVARFUNCTION_H_DEFINED)
 #include "multivarfunction.h"
+#endif
 
 class fstring;
 
@@ -177,49 +180,13 @@ private:
     return true;
   }
 
-  bool tooManyFevals()
-  {
-    if (funcCount() < itsMaxFevals)
-      return false;
+  bool tooManyFevals();
 
-    if (itsPrnt != NONE)
-      {
-        std::cerr << "\nExiting: Maximum number of function evaluations "
-                  << "has been exceeded\n"
-                  << "         - increase MaxFunEvals option.\n"
-                  << "         Current function value: "
-                  << bestFval()
-                  << "\n\n";
-      }
-
-    return true;
-  }
-
-  bool tooManyIters()
-  {
-    if (itsIterCount < itsMaxIters)
-      return false;
-
-    if (itsPrnt != NONE)
-      {
-        std::cerr << "\nExiting: Maximum number of iterations "
-                  << "has been exceeded\n"
-                  << "         - increase MaxIter option.\n"
-                  << "         Current function value: "
-                  << bestFval()
-                  << "\n\n";
-      }
-
-    return true;
-  }
+  bool tooManyIters();
 
   void doOneIter();
 
-  void printHeader()
-  {
-    if (itsPrnt == ITER)
-      std::cerr << "\n Iteration   Func-count     min f(x)         Procedure\n";
-  }
+  void printHeader();
 
   static const char* iterTypeString(IterType how)
   {

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Thu Feb 14 13:20:30 2002
+// written: Wed Feb 20 18:10:03 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,9 @@
 #ifndef CMODELWPSM_H_DEFINED
 #define CMODELWPSM_H_DEFINED
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CMODELEXEMPLAR_H_DEFINED)
 #include "cmodelexemplar.h"
+#endif
 
 class CModelWpsm : public CModelExemplar
 {

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Thu Feb 14 11:54:13 2002
+// written: Wed Feb 20 18:07:43 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,9 @@
 #ifndef CMODELCSSM_H_DEFINED
 #define CMODELCSSM_H_DEFINED
 
+#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CMODELEXEMPLAR_H_DEFINED)
 #include "cmodelexemplar.h"
+#endif
 
 class CModelCssm : public CModelExemplar {
 private:
