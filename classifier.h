@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar  8 16:09:35 2001
+// written: Thu Mar  8 16:49:09 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -30,7 +30,10 @@ private:
   double* const itsPredictedProbability;
 
   void forwardProbit(double thresh, double sigmaNoise) const;
-  double loglikelihood();
+
+  enum LogLType { CURRENT, FULL };
+
+  double computeLogL(LogLType type);
 
   void resetDiffEv()
   {
@@ -57,7 +60,11 @@ public:
 												 const Rat& observedIncidence,
 												 int numStoredExemplars);
 
-  double loglikelihoodFor(Rat& modelParams);  
+  double currentLogL(Rat& modelParams);  
+
+  double fullLogL();
+
+  double deviance(Rat& modelParams);
 };
 
 static const char vcid_classifier_h[] = "$Header$";
