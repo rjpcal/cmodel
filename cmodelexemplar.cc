@@ -23,35 +23,34 @@
 
 #include <cmath>
 
-double minkDist(const Slice& wts,
-                MtxConstIter x1,
-                MtxConstIter x2,
-                double r, double r_inv)
-{
-  double wt_sum = 0.0;
-
-  for (MtxConstIter wt = wts.begin();
-		 wt.hasMore();
-		 ++wt, ++x1, ++x2)
-	 {
-		wt_sum += (*wt) * pow( abs( *x1 - *x2), r);
-	 }
-  return pow(wt_sum, r_inv);
-}
-
 //
-// This is just a functor that binds 4 of the 5 arguments to
-// minkDist2, so that we don't have to keep passing 5 arguments to
-// functions all the time in the time-critical inner loop.
+// This is just a functor that binds arguments to minkDist, so that
+// we don't have to keep passing extra arguments to functions all the
+// time in the time-critical inner loop.
 //
 
-class MinkDist2Binder {
+class MinkDistBinder {
 public:
-  MinkDist2Binder(MtxConstIter attWeights,
-						MtxConstIter x2) :
+  MinkDistBinder(MtxConstIter attWeights, MtxConstIter x2,
+					  double r = 2.0, double r_inv = 0.5) :
 	 itsAttWeights(attWeights),
-	 itsX2(x2)
+	 itsX2(x2),
+	 itsR(r),
+	 itsRinv(r_inv)
   {}
+
+  double minkDist(MtxConstIter x1) const
+  {
+	 double wt_sum = 0.0;
+	 MtxConstIter wt = itsAttWeights;
+	 MtxConstIter x2 = itsX2;
+
+	 for (; wt.hasMore(); ++wt, ++x1, ++x2)
+		{
+		  wt_sum += (*wt) * pow( abs( *x1 - *x2), itsR);
+		}
+	 return pow(wt_sum, itsRinv);
+  }
 
   // Specialized Minkowski distance for r==2
   double minkDist2(MtxConstIter x1) const
@@ -62,9 +61,7 @@ public:
 
 	 for (; wt.hasMore(); ++wt, ++x1, ++x2)
 		{
-		  wt_sum +=
-			 (*wt) * 
-			 ((*x1) - (*x2)) * ((*x1) - (*x2));
+		  wt_sum += (*wt) * ((*x1) - (*x2)) * ((*x1) - (*x2));
 		}
 	 return sqrt(wt_sum);	 
   }
@@ -72,6 +69,8 @@ public:
 private:
   const MtxConstIter itsAttWeights;
   const MtxConstIter itsX2;
+  const double itsR;
+  const double itsRinv;
 };
 
 
@@ -84,8 +83,7 @@ private:
 CModelExemplar::CModelExemplar(const Mtx& objParams,
 										 const Mtx& observedIncidence,
 										 int numStoredExemplars) :
-  Classifier(objParams,
-				 observedIncidence),
+  Classifier(objParams, observedIncidence),
   itsNumTrainingExemplars(countCategory(objParams,0)),
   itsTraining1(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
   itsTraining2(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
@@ -104,11 +102,11 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
 	 {
 		if (int(objParams.at(i,0)) == 0)
 		  {
-			 itsTraining1.row(c1++) = objParams.row(i).rightmost(DIM_OBJ_PARAMS);
+			 itsTraining1.row(c1++) = exemplar(i);
 		  }
 		else if (int(objParams.at(i,0)) == 1)
 		  {
-			 itsTraining2.row(c2++) = objParams.row(i).rightmost(DIM_OBJ_PARAMS);
+			 itsTraining2.row(c2++) = exemplar(i);
 		  }
 	 }
 }
@@ -125,38 +123,6 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 		  ++n;
 	 }
   return n;
-}
-
-void CModelExemplar::doDiffEvidence(const Slice& attWeights,
-												const Slice& storedExemplar1,
-												const Slice& storedExemplar2,
-												double minkPower,
-												double minkPowerInv)
-{
-DOTRACE("CModelExemplar::doDiffEvidence");
-
-  throw ErrorWithMsg("doDiffEvidence not implemented");
-
-  for (int y = 0; y < numAllExemplars(); ++y) {
-
-	 // compute similarity of ex-y to stored-1-x
-	 double sim1 =
-		minkDist(attWeights,
-					exemplar(y).begin(),
-					storedExemplar1.begin(),
-					minkPower, minkPowerInv);
-
-	 diffEvidence(y) += exp(-sim1);
-
-	 // compute similarity of ex-y to stored-2-x
-	 double sim2 =
-		minkDist(attWeights,
-					exemplar(y).begin(),
-					storedExemplar2.begin(),
-					minkPower, minkPowerInv);
-
-	 diffEvidence(y) -= exp(-sim2);
-  }
 }
 
 //---------------------------------------------------------------------
@@ -199,36 +165,34 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const Mtx& stored1 = getStoredExemplars(CAT1);
   const Mtx& stored2 = getStoredExemplars(CAT2);
 
-  if (minkPower == 2.0) {
-	 MtxConstIter attWts = attWeights.begin();
+  MtxConstIter attWts = attWeights.begin();
 
-	 minivec<MtxConstIter> exemplars;
+  minivec<MtxConstIter> exemplars;
 
-	 for (int yy = 0; yy < numAllExemplars(); ++yy) {
-		exemplars.push_back(exemplar(yy).begin());
-	 }
-
-	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
-
-		MinkDist2Binder binder1(attWts, stored1.rowIter(x));
-		MinkDist2Binder binder2(attWts, stored2.rowIter(x));
-
-		for (int y = 0; y < numAllExemplars(); ++y) {
-
-		  // compute similarity of ex-y to stored-1-x
-		  const double sim1 = binder1.minkDist2(exemplars[y]);
-
-		  // compute similarity of ex-y to stored-2-x
-		  const double sim2 = binder2.minkDist2(exemplars[y]);
-
-		  diffEvidence(y) += exp(-sim1) - exp(-sim2);
-		}
-	 }
+  for (int yy = 0; yy < numAllExemplars(); ++yy) {
+	 exemplars.push_back(exemplar(yy).begin());
   }
-  else {
-	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
-		doDiffEvidence(attWeights, stored1.row(x), stored2.row(x),
-							minkPower, minkPowerInv);
+
+  double sim1, sim2;
+
+  for (int x = 0; x < itsNumStoredExemplars; ++x) {
+
+	 MinkDistBinder binder1(attWts, stored1.rowIter(x),
+									minkPower, minkPowerInv);
+	 MinkDistBinder binder2(attWts, stored2.rowIter(x),
+									minkPower, minkPowerInv);
+
+	 for (int y = 0; y < numAllExemplars(); ++y) {
+
+		if (minkPower == 2.0) {
+		  sim1 = binder1.minkDist2(exemplars[y]);
+		  sim2 = binder2.minkDist2(exemplars[y]);
+		}
+		else {
+		  sim1 = binder1.minkDist(exemplars[y]);
+		  sim2 = binder2.minkDist(exemplars[y]);
+		}
+		diffEvidence(y) += exp(-sim1) - exp(-sim2);
 	 }
   }
 }
