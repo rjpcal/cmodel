@@ -2,10 +2,10 @@
 //
 // cmodelwpsm.h
 //
-// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Thu Apr 26 18:46:38 2001
+// written: Mon Feb  4 18:12:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ private:
 
 public:
   CModelWpsm(const Mtx& objParams,
-				 TransferFunction transferFunc = EXP_DECAY);
+                                 TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelWpsm();
 };

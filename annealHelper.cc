@@ -1,3 +1,18 @@
+///////////////////////////////////////////////////////////////////////
+//
+// annealVisitParameters.cc
+//
+// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+//
+// created: Mon Feb  4 18:14:46 2002
+// written: Mon Feb  4 18:15:01 2002
+// $Id$
+//
+///////////////////////////////////////////////////////////////////////
+
+#ifndef ANNEALVISITPARAMETERS_CC_DEFINED
+#define ANNEALVISITPARAMETERS_CC_DEFINED
+
 /*
  * MATLAB Compiler: 2.1
  * Date: Fri Mar 23 17:17:00 2001
@@ -772,3 +787,6 @@ DOTRACE("eprob");
 
   return pdf;
 }
+
+static const char vcid_annealVisitParameters_cc[] = "$Header$";
+#endif // !ANNEALVISITPARAMETERS_CC_DEFINED

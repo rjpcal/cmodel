@@ -2,10 +2,10 @@
 //
 // drmtx.h
 //
-// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 17 11:21:42 2001
-// written: Tue Apr 17 11:23:26 2001
+// written: Mon Feb  4 18:12:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -36,67 +36,67 @@ private:
 
   void updateMtx() const
   {
-	 itsMtx = Mtx(itsArray);
-	 itsMtxIsValid = true;
+         itsMtx = Mtx(itsArray);
+         itsMtxIsValid = true;
   }
 
   void updateArray() const
   {
-	 mlfAssign(&itsArray, itsMtx.makeMxArray());
-	 itsArrayIsValid = true;
+         mlfAssign(&itsArray, itsMtx.makeMxArray());
+         itsArrayIsValid = true;
   }
 
 public:
   DualRepMtx() :
-	 itsMtx(0,0),
-	 itsMtxIsValid(true),
-	 itsArray(mclGetUninitializedArray()),
-	 itsArrayIsValid(false)
+         itsMtx(0,0),
+         itsMtxIsValid(true),
+         itsArray(mclGetUninitializedArray()),
+         itsArrayIsValid(false)
   {}
 
   DualRepMtx(const Mtx& other) :
-	 itsMtx(other),
-	 itsMtxIsValid(true),
-	 itsArray(mclGetUninitializedArray()),
-	 itsArrayIsValid(false)
+         itsMtx(other),
+         itsMtxIsValid(true),
+         itsArray(mclGetUninitializedArray()),
+         itsArrayIsValid(false)
   {}
 
   ~DualRepMtx()
   {
-	 mxDestroyArray(itsArray);
+         mxDestroyArray(itsArray);
   }
 
   void assignArray(mxArray* rhs)
   {
-	 mlfAssign(&itsArray, rhs);
-	 itsArrayIsValid = true;
-	 itsMtxIsValid = false;
+         mlfAssign(&itsArray, rhs);
+         itsArrayIsValid = true;
+         itsMtxIsValid = false;
   }
 
   void assignMtx(const Mtx& rhs)
   {
-	 itsMtx = rhs;
-	 itsMtxIsValid = true;
-	 itsArrayIsValid = false;
+         itsMtx = rhs;
+         itsMtxIsValid = true;
+         itsArrayIsValid = false;
   }
 
   mxArray* asArray() const
   {
-	 if (!itsArrayIsValid) updateArray();
-	 return itsArray;
+         if (!itsArrayIsValid) updateArray();
+         return itsArray;
   }
 
   const Mtx& asMtx() const
   {
-	 if (!itsMtxIsValid) updateMtx();
-	 return itsMtx;
+         if (!itsMtxIsValid) updateMtx();
+         return itsMtx;
   }
 
   Mtx& ncMtx()
   {
-	 if (!itsMtxIsValid) updateMtx();
-	 itsArrayIsValid = false;
-	 return itsMtx;
+         if (!itsMtxIsValid) updateMtx();
+         itsArrayIsValid = false;
+         return itsMtx;
   }
 };
 

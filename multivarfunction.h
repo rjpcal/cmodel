@@ -2,10 +2,10 @@
 //
 // multivarfunction.h
 //
-// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:45:02 2001
-// written: Wed Apr 18 06:48:46 2001
+// written: Mon Feb  4 18:12:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -30,8 +30,8 @@ public:
 
   double evaluate(const Mtx& x)
   {
-	 ++itsEvalCount;
-	 return doEvaluate(x);
+         ++itsEvalCount;
+         return doEvaluate(x);
   }
 };
 

@@ -2,10 +2,10 @@
 //
 // cmodelcuevalidity.h
 //
-// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Thu Apr 26 18:39:19 2001
+// written: Mon Feb  4 18:12:31 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,7 +25,7 @@ public:
 
 protected:
   virtual void computeDiffEv(const Mtx& objects,
-									  Slice& modelParams, Mtx& diffEvOut);
+                                                                          Slice& modelParams, Mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 
