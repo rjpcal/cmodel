@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 07:23:29 2001
+// written: Tue Mar 27 07:29:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -92,7 +92,6 @@ DOTRACE("makeClassifier");
 
 		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
 
-#if 0
 
 		if (numStoredExemplars == recentNumStored)
 		  { DOTRACE("same num"); }
@@ -124,6 +123,7 @@ DOTRACE("makeClassifier");
                              CModelExemplar::EXP_DECAY, numStoredExemplars));
         }
 
+#if 0
 		return *recentModel;
 #else
 		return shared_ptr<Classifier>(
