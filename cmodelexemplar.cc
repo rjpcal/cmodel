@@ -34,7 +34,7 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-CModelExemplar::CModelExemplar(const Mtx& objParams,
+CModelExemplar::CModelExemplar(const mtx& objParams,
                                int numStoredExemplars,
                                TransferFunction transferFunc) :
   Classifier(objParams),
@@ -66,14 +66,14 @@ CModelExemplar::~CModelExemplar()
 
 Classifier::RequestResult
 CModelExemplar::handleRequest(fstring action,
-                              const Mtx& allModelParams,
+                              const mtx& allModelParams,
                               const MxWrapper& extraArgs)
 {
 DOTRACE("CModelExemplar::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      Mtx category_ = extraArgs.getField("category").asMtx();
+      mtx category_ = extraArgs.getField("category").asMtx();
 
       int category = int(category_.at(0));
 
@@ -98,8 +98,8 @@ DOTRACE("CModelExemplar::handleRequest");
 }
 
 
-void CModelExemplar::computeDiffEv(const Mtx& objects,
-                                   slice& modelParams, Mtx& diffEvOut)
+void CModelExemplar::computeDiffEv(const mtx& objects,
+                                   slice& modelParams, mtx& diffEvOut)
 {
 DOTRACE("CModelExemplar::computeDiffEv");
 
@@ -109,8 +109,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   if (newObjects)
     {
-      itsEvidence1Cache = Mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
-      itsEvidence2Cache = Mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
+      itsEvidence1Cache = mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
+      itsEvidence2Cache = mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
     }
 
   //---------------------------------------------------------------------
@@ -139,8 +139,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const double minkPower = 2.0;
   const double minkPowerInv = 1.0/minkPower;
 
-  const Mtx& stored1 = getStoredExemplars(CAT1);
-  const Mtx& stored2 = getStoredExemplars(CAT2);
+  const mtx& stored1 = getStoredExemplars(CAT1);
+  const mtx& stored2 = getStoredExemplars(CAT2);
 
   mtx_const_iter attWts = attWeights.begin();
 
@@ -223,7 +223,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   }
 
-  diffEvOut.setAll(0.0);
+  diffEvOut.clear(0.0);
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 

@@ -18,14 +18,14 @@
 
 #include "util/trace.h"
 
-CModelPbi::CModelPbi(const Mtx& objParams) :
+CModelPbi::CModelPbi(const mtx& objParams) :
   Classifier(objParams)
 {}
 
 CModelPbi::~CModelPbi() {}
 
-void CModelPbi::computeDiffEv(const Mtx& objects,
-                              slice& modelParams, Mtx& diffEvOut)
+void CModelPbi::computeDiffEv(const mtx& objects,
+                              slice& modelParams, mtx& diffEvOut)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 

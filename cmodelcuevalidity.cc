@@ -32,7 +32,7 @@ namespace
   }
 }
 
-CModelCueValidity::CModelCueValidity(const Mtx& objParams,
+CModelCueValidity::CModelCueValidity(const mtx& objParams,
                                      Flag f) :
   Classifier(objParams),
   itsFlags(f),
@@ -42,17 +42,17 @@ CModelCueValidity::CModelCueValidity(const Mtx& objParams,
 
 CModelCueValidity::~CModelCueValidity() {}
 
-void CModelCueValidity::computeDiffEv(const Mtx& objects,
-                                      slice& modelParams, Mtx& diffEvOut)
+void CModelCueValidity::computeDiffEv(const mtx& objects,
+                                      slice& modelParams, mtx& diffEvOut)
 {
 DOTRACE("CModelCueValidity::computeDiffEv");
 
-  Mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
+  mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
   attWeights.apply(std::abs);
 
   double nTrainers = itsTraining1.mrows() + itsTraining2.mrows();
 
-  diffEvOut.setAll(0.0);
+  diffEvOut.clear(0.0);
 
   for (int d = 0; d < DIM_OBJ_PARAMS; ++d)
     {

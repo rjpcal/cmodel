@@ -17,13 +17,13 @@
 class CModelWpsm : public CModelExemplar
 {
 private:
-  Mtx itsPrototype1;
-  Mtx itsPrototype2;
+  mtx itsPrototype1;
+  mtx itsPrototype2;
 
-  virtual const Mtx& getStoredExemplars(Category cat);
+  virtual const mtx& getStoredExemplars(Category cat);
 
 public:
-  CModelWpsm(const Mtx& objParams,
+  CModelWpsm(const mtx& objParams,
              TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelWpsm();

@@ -17,28 +17,28 @@
 class CModelSPC : public Classifier
 {
 public:
-  CModelSPC(const Mtx& objParams, int numStoredExemplars);
+  CModelSPC(const mtx& objParams, int numStoredExemplars);
 
   virtual ~CModelSPC();
 
   virtual int numModelParams() const;
 
   virtual RequestResult handleRequest(fstring action,
-                                      const Mtx& allModelParams,
+                                      const mtx& allModelParams,
                                       const MxWrapper& extraArgs);
 
 protected:
-  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
+  virtual int fillModelParamsBounds(mtx& bounds, int startRow) const;
 
 private:
-  virtual void computeDiffEv(const Mtx& objects,
-                             slice& modelParams, Mtx& diffEvOut);
+  virtual void computeDiffEv(const mtx& objects,
+                             slice& modelParams, mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 
   const int itsNumStoredExemplars;
-  const Mtx itsHiLo0;
-  const Mtx itsHiLo1;
+  const mtx itsHiLo0;
+  const mtx itsHiLo1;
 };
 
 static const char vcid_cmodelspc_h[] = "$Header$";

@@ -17,7 +17,7 @@
 class CModelCssm : public CModelExemplar
 {
 public:
-  CModelCssm(const Mtx& objParams,
+  CModelCssm(const mtx& objParams,
              TransferFunction transferFunc,
              int numStoredExemplars);
 
@@ -27,17 +27,17 @@ public:
 
   virtual void loadModelParams(slice& modelParams);
 
-  virtual const Mtx& getStoredExemplars(Category cat);
+  virtual const mtx& getStoredExemplars(Category cat);
 
 protected:
-  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
+  virtual int fillModelParamsBounds(mtx& bounds, int startRow) const;
 
 private:
-  Mtx itsStored1;
-  Mtx itsStored2;
+  mtx itsStored1;
+  mtx itsStored2;
 
-  Mtx itsCachedRawWts1;
-  Mtx itsCachedRawWts2;
+  mtx itsCachedRawWts1;
+  mtx itsCachedRawWts2;
 };
 
 static const char vcid_cmodelcssm_h[] = "$Header$";

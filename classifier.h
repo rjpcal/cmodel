@@ -21,7 +21,7 @@ class fstring;
 class Classifier
 {
 public:
-  Classifier(const Mtx& objParams);
+  Classifier(const mtx& objParams);
   virtual ~Classifier();
 
   /// Returns the number of model params needed by this model.
@@ -30,25 +30,25 @@ public:
   virtual int numModelParams() const;
 
   /// Returns an Nx2 matrix of lower and upper bounds on the model params.
-  Mtx modelParamsBounds() const;
+  mtx modelParamsBounds() const;
 
   /// Returns the classification probability for each of 'testObjects'
-  Mtx classifyObjects(slice& modelParams, const Mtx& testObjects);
+  mtx classifyObjects(slice& modelParams, const mtx& testObjects);
 
   double currentLogL(slice& modelParams,
-                     const Mtx& testObjects,
-                     const Mtx& observedIncidence);
+                     const mtx& testObjects,
+                     const mtx& observedIncidence);
 
-  double fullLogL(const Mtx& observedIncidence);
+  double fullLogL(const mtx& observedIncidence);
 
   double deviance(slice& modelParams,
-                  const Mtx& testObjects,
-                  const Mtx& observedIncidence);
+                  const mtx& testObjects,
+                  const mtx& observedIncidence);
 
   struct RequestResult {
-    RequestResult() : requestHandled(false), result(Mtx(0,0)) {}
+    RequestResult() : requestHandled(false), result(mtx(0,0)) {}
 
-    RequestResult(Mtx res) :
+    RequestResult(mtx res) :
       requestHandled(true), result(res) {}
 
     RequestResult(MxWrapper res) :
@@ -62,21 +62,21 @@ public:
   /** Subclasses must be sure to call the superclass version before
       attempting to process the request. */
   virtual RequestResult handleRequest(fstring action,
-                                      const Mtx& modelParams,
+                                      const mtx& modelParams,
                                       const MxWrapper& extraArgs);
 
   static const int DIM_OBJ_PARAMS = 4;
 
-  const Mtx& objParams() const { return itsObjParams; }
+  const mtx& objParams() const { return itsObjParams; }
 
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }
 
-  Mtx objectsOfCategory(int category) const;
+  mtx objectsOfCategory(int category) const;
 
   /// Must be overridden by subclasses
-  virtual void computeDiffEv(const Mtx& objects,
-                             slice& modelParams, Mtx& diffEvOut) = 0;
+  virtual void computeDiffEv(const mtx& objects,
+                             slice& modelParams, mtx& diffEvOut) = 0;
 
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
@@ -90,23 +90,23 @@ protected:
       if the subclass doesn't need to place any specific bounds on its
       additional parameters, it can simply leave the bounds matrix alone,
       and just return an adjusted startRow. */
-  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
+  virtual int fillModelParamsBounds(mtx& bounds, int startRow) const;
 
 private:
-  const Mtx itsObjParams; // col 0 --> categories, cols 1-4 --> objects
-  const Mtx itsObjCategories;
-  const Mtx itsObjects;
+  const mtx itsObjParams; // col 0 --> categories, cols 1-4 --> objects
+  const mtx itsObjCategories;
+  const mtx itsObjects;
   int itsNumAllExemplars;
-  Mtx itsDiffEvidence;
+  mtx itsDiffEvidence;
 
-  Mtx itsObservedIncidenceCache;
+  mtx itsObservedIncidenceCache;
   double itsCachedLogL_1_2;
 
-  static Mtx forwardProbit(const Mtx& diffEv,
+  static mtx forwardProbit(const mtx& diffEv,
                            double thresh, double sigmaNoise);
 
-  double computeLogL(const Mtx& predictedProbability,
-                     const Mtx& observedIncidence);
+  double computeLogL(const mtx& predictedProbability,
+                     const mtx& observedIncidence);
 
   // Count the number of objects with the given category
   int countCategory(int category) const;

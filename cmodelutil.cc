@@ -20,7 +20,7 @@
 
 #include "util/trace.h"
 
-void CModelUtil::clampRows(Mtx& src, int firstrow, int nrows, const Mtx& hilo)
+void CModelUtil::clampRows(mtx& src, int firstrow, int nrows, const mtx& hilo)
 {
 DOTRACE("CModelUtil::clampRows");
 
@@ -37,15 +37,15 @@ DOTRACE("CModelUtil::clampRows");
     }
 }
 
-Mtx CModelUtil::getStoredExemplars(const slice& otherParams, int nstored,
-                                   const Mtx& hilo0, const Mtx& hilo1)
+mtx CModelUtil::getStoredExemplars(const slice& otherParams, int nstored,
+                                   const mtx& hilo0, const mtx& hilo1)
 {
 DOTRACE("CModelUtil::getStoredExemplars");
 
   // reshape params into a stored exemplar matrix
 
-  Mtx storedExemplars =
-    Mtx(otherParams).as_shape(2*nstored, Classifier::DIM_OBJ_PARAMS);
+  mtx storedExemplars =
+    mtx(otherParams).as_shape(2*nstored, Classifier::DIM_OBJ_PARAMS);
 
   clampRows(storedExemplars, 0, nstored, hilo0);
 
@@ -54,11 +54,11 @@ DOTRACE("CModelUtil::getStoredExemplars");
   return storedExemplars;
 }
 
-Mtx CModelUtil::getHiLo(const Mtx& src)
+mtx CModelUtil::getHiLo(const mtx& src)
 {
 DOTRACE("CModelUtil::getHiLo");
 
-  Mtx result(2, src.ncols());
+  mtx result(2, src.ncols());
 
   for (int i = 0; i < src.ncols(); ++i)
     {

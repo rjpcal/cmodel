@@ -17,8 +17,8 @@
 ///////////////////////////////////////////////////////////////////////
 //
 // DualRepMtx is a helper class for transitioning code from using
-// mxArray*'s to using Mtx's. It implements a dual-representation
-// object which can be accessed and assigned as either a Mtx or an
+// mxArray*'s to using mtx's. It implements a dual-representation
+// object which can be accessed and assigned as either a mtx or an
 // mxArray*. The alternate representations are updated on demand
 // (lazily).
 //
@@ -27,7 +27,7 @@
 
 class DualRepMtx {
 private:
-  mutable Mtx itsMtx;
+  mutable mtx itsMtx;
   mutable bool itsMtxIsValid;
 
   mutable mxArray* itsArray;
@@ -35,7 +35,7 @@ private:
 
   void updateMtx() const
   {
-         itsMtx = Mtx(itsArray);
+         itsMtx = mtx(itsArray);
          itsMtxIsValid = true;
   }
 
@@ -53,7 +53,7 @@ public:
          itsArrayIsValid(false)
   {}
 
-  DualRepMtx(const Mtx& other) :
+  DualRepMtx(const mtx& other) :
          itsMtx(other),
          itsMtxIsValid(true),
          itsArray(mclGetUninitializedArray()),
@@ -72,7 +72,7 @@ public:
          itsMtxIsValid = false;
   }
 
-  void assignMtx(const Mtx& rhs)
+  void assignMtx(const mtx& rhs)
   {
          itsMtx = rhs;
          itsMtxIsValid = true;
@@ -85,13 +85,13 @@ public:
          return itsArray;
   }
 
-  const Mtx& asMtx() const
+  const mtx& asMtx() const
   {
          if (!itsMtxIsValid) updateMtx();
          return itsMtx;
   }
 
-  Mtx& ncMtx()
+  mtx& ncMtx()
   {
          if (!itsMtxIsValid) updateMtx();
          itsArrayIsValid = false;

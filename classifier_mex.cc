@@ -65,7 +65,7 @@ namespace
 }
 
 shared_ptr<Classifier> makeClassifier(const fstring& whichType,
-                                      const Mtx& objParams,
+                                      const mtx& objParams,
                                       const mxArray* extraArgs_mx)
 {
   DOTRACE("<classifier_mex.cc>::makeClassifier");
@@ -93,7 +93,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
           DOTRACE("<classifier_mex.cc>::makeClassifier-make new cssm");
 
           // To avoid relying on transient matlab storage:
-          Mtx uniqObjParams = objParams;
+          mtx uniqObjParams = objParams;
           uniqObjParams.make_unique();
 
           mexPkg->recentCssm.reset
@@ -128,7 +128,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
           DOTRACE("<classifier_mex.cc>::makeClassifier-make new rxm");
 
           // To avoid relying on transient matlab storage:
-          Mtx uniqObjParams = objParams;
+          mtx uniqObjParams = objParams;
           uniqObjParams.make_unique();
 
           mexPkg->recentRxm.reset
@@ -208,12 +208,12 @@ void classifier(int nlhs, mxArray* plhs[],
 {
 DOTRACE("<classifier_mex.cc>::classifier");
 
-  const Mtx      modelParams   (prhs[0], Mtx::COPY);
+  const mtx      modelParams   (prhs[0], mtx::COPY);
   const fstring  modelName     (Mx::getString(prhs[1]));
   const fstring  actionRequest (Mx::getString(prhs[2]));
   const mxArray* extraArgs_mx  (prhs[3]);
 
-  const Mtx      objParams     (Mx::getField(extraArgs_mx, "objParams"));
+  const mtx      objParams     (Mx::getField(extraArgs_mx, "objParams"));
 
   shared_ptr<Classifier> model =
     makeClassifier(modelName, objParams, extraArgs_mx);

@@ -24,7 +24,7 @@
 #include "util/debug.h"
 #include "util/trace.h"
 
-CModelRxm::CModelRxm(const Mtx& objParams,
+CModelRxm::CModelRxm(const mtx& objParams,
                      TransferFunction transferFunc,
                      int numStoredExemplars) :
   CModelExemplar(objParams, numStoredExemplars, transferFunc),
@@ -52,14 +52,14 @@ DOTRACE("CModelRxm::loadModelParams");
 
   const int nex = numStoredExemplars();
 
-  const Mtx storedExemplars =
+  const mtx storedExemplars =
     CModelUtil::getStoredExemplars(modelParams, nex, itsHiLo1, itsHiLo2);
 
   itsStored1 = storedExemplars.sub(row_range_n(0, nex));
   itsStored2 = storedExemplars.sub(row_range_n(nex, nex));
 }
 
-const Mtx& CModelRxm::getStoredExemplars(Category cat)
+const mtx& CModelRxm::getStoredExemplars(Category cat)
 {
 DOTRACE("CModelRxm::getStoredExemplars");
   if (CAT1 == cat)
@@ -75,10 +75,10 @@ DOTRACE("CModelRxm::getStoredExemplars");
   else
     throw Util::Error("unknown category enumerator in findStoredExemplar");
 
-  return Mtx::emptyMtx(); // can't happen, but placate the compiler
+  return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
-int CModelRxm::fillModelParamsBounds(Mtx& bounds, int startRow) const
+int CModelRxm::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
 DOTRACE("CModelRxm::fillModelParamsBounds");
 

@@ -17,10 +17,10 @@
 class CModelGcm : public CModelExemplar
 {
 private:
-  virtual const Mtx& getStoredExemplars(Category cat);
+  virtual const mtx& getStoredExemplars(Category cat);
 
 public:
-  CModelGcm(const Mtx& objParams,
+  CModelGcm(const mtx& objParams,
             TransferFunction transferFunc = EXP_DECAY);
 
   virtual ~CModelGcm();

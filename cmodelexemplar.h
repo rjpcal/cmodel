@@ -26,7 +26,7 @@ public:
 
   static const int MAX_STORED = -1;
 
-  CModelExemplar(const Mtx& objParams,
+  CModelExemplar(const mtx& objParams,
                  int numStoredExemplars,
                  TransferFunction transferFunc);
 
@@ -36,7 +36,7 @@ public:
   // be sure to call the superclass version before attempting to
   // process the request.
   virtual RequestResult handleRequest(fstring action,
-                                      const Mtx& modelParams,
+                                      const mtx& modelParams,
                                       const MxWrapper& extraArgs);
 
   int numStoredExemplars() const { return itsNumStoredExemplars; }
@@ -44,14 +44,14 @@ public:
   TransferFunction transferFunction() const { return itsTransferFunc; }
 
 protected:
-  const Mtx& training1() const { return itsTraining1; }
-  const Mtx& training2() const { return itsTraining2; }
+  const mtx& training1() const { return itsTraining1; }
+  const mtx& training2() const { return itsTraining2; }
 
   int numTrainingExemplars() const { return itsNumTrainingExemplars; }
 
 private:
-  const Mtx itsTraining1;
-  const Mtx itsTraining2;
+  const mtx itsTraining1;
+  const mtx itsTraining2;
 
   const int itsNumTrainingExemplars;
 
@@ -59,24 +59,24 @@ private:
 
   const TransferFunction itsTransferFunc;
 
-  Mtx itsObjectsCache;
+  mtx itsObjectsCache;
 
-  Mtx itsStored1Cache;
-  Mtx itsStored2Cache;
+  mtx itsStored1Cache;
+  mtx itsStored2Cache;
 
-  Mtx itsEvidence1Cache;
-  Mtx itsEvidence2Cache;
+  mtx itsEvidence1Cache;
+  mtx itsEvidence2Cache;
 
-  Mtx itsAttWtsCache;
+  mtx itsAttWtsCache;
 
-  virtual void computeDiffEv(const Mtx& objects,
-                             slice& modelParams, Mtx& diffEvOut);
+  virtual void computeDiffEv(const mtx& objects,
+                             slice& modelParams, mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 
   virtual void loadModelParams(slice& modelParams);
 
-  virtual const Mtx& getStoredExemplars(Category cat) = 0;
+  virtual const mtx& getStoredExemplars(Category cat) = 0;
 };
 
 static const char vcid_cmodelexemplar_h[] = "$Header$";

@@ -23,7 +23,7 @@
 
 #include "util/trace.h"
 
-CModelCssm::CModelCssm(const Mtx& objParams,
+CModelCssm::CModelCssm(const mtx& objParams,
                        TransferFunction transferFunc,
                        int numStoredExemplars) :
   CModelExemplar(objParams,
@@ -52,11 +52,11 @@ DOTRACE("CModelCssm::loadModelParams");
 
   const int nex = numStoredExemplars();
 
-  Mtx allScaledWeights =
-    Mtx(modelParams).as_shape(2*nex, numTrainingExemplars());
+  mtx allScaledWeights =
+    mtx(modelParams).as_shape(2*nex, numTrainingExemplars());
 
-  Mtx scaledWeights1 = allScaledWeights(row_range_n(0,nex));
-  Mtx scaledWeights2 = allScaledWeights(row_range_n(nex,nex));
+  mtx scaledWeights1 = allScaledWeights(row_range_n(0,nex));
+  mtx scaledWeights2 = allScaledWeights(row_range_n(nex,nex));
 
 
   //
@@ -82,7 +82,7 @@ DOTRACE("CModelCssm::loadModelParams");
   if (do2) itsStored2.assign_MMmul(scaledWeights2, training2());
 }
 
-const Mtx& CModelCssm::getStoredExemplars(Category cat)
+const mtx& CModelCssm::getStoredExemplars(Category cat)
 {
   if (CAT1 == cat)
     {
@@ -97,10 +97,10 @@ const Mtx& CModelCssm::getStoredExemplars(Category cat)
   else
     throw Util::Error("unknown category enumerator in findStoredExemplar");
 
-  return Mtx::emptyMtx(); // can't happen, but placate the compiler
+  return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
-int CModelCssm::fillModelParamsBounds(Mtx& bounds, int startRow) const
+int CModelCssm::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
 DOTRACE("CModelCssm::fillModelParamsBounds");
 

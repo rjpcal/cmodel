@@ -17,13 +17,13 @@
 class CModelPbi : public Classifier
 {
 public:
-  CModelPbi(const Mtx& objParams);
+  CModelPbi(const mtx& objParams);
 
   virtual ~CModelPbi();
 
 private:
-  virtual void computeDiffEv(const Mtx& objects,
-                             slice& modelParams, Mtx& diffEvOut);
+  virtual void computeDiffEv(const mtx& objects,
+                             slice& modelParams, mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 };

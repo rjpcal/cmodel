@@ -12,17 +12,17 @@
 #ifndef CMODELUTIL_H_DEFINED
 #define CMODELUTIL_H_DEFINED
 
-class Mtx;
+class mtx;
 class slice;
 
 namespace CModelUtil
 {
-  void clampRows(Mtx& src, int firstrow, int nrows, const Mtx& hilo);
+  void clampRows(mtx& src, int firstrow, int nrows, const mtx& hilo);
 
-  Mtx getStoredExemplars(const slice& otherParams, int nstored,
-                         const Mtx& hilo0, const Mtx& hilo1);
+  mtx getStoredExemplars(const slice& otherParams, int nstored,
+                         const mtx& hilo0, const mtx& hilo1);
 
-  Mtx getHiLo(const Mtx& src);
+  mtx getHiLo(const mtx& src);
 }
 
 static const char vcid_cmodelutil_h[] = "$Header$";

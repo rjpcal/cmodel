@@ -66,7 +66,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
   int nvararg = nrhs - NDECLARED;
   const mxArray** pvararg = prhs + NDECLARED;
 
-  const Mtx x(x_in, Mtx::BORROW);
+  const mtx x(x_in, mtx::BORROW);
   const int numModelParams = x.nelems();
 
   // Setup the objective function
@@ -77,7 +77,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
 
   // Create the optimizer...
   SimplexOptimizer opt(objective,
-                       Mtx(x_in),
+                       mtx(x_in),
                        Mx::getString(printtype_mx),
                        numModelParams,
                        extractMaxIters(maxfun_mx, numModelParams),

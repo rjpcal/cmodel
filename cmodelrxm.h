@@ -17,7 +17,7 @@
 class CModelRxm : public CModelExemplar
 {
 public:
-  CModelRxm(const Mtx& objParams,
+  CModelRxm(const mtx& objParams,
             TransferFunction transferFunc,
             int numStoredExemplars);
 
@@ -27,17 +27,17 @@ public:
 
   virtual void loadModelParams(slice& modelParams);
 
-  virtual const Mtx& getStoredExemplars(Category cat);
+  virtual const mtx& getStoredExemplars(Category cat);
 
 protected:
-  virtual int fillModelParamsBounds(Mtx& bounds, int startRow) const;
+  virtual int fillModelParamsBounds(mtx& bounds, int startRow) const;
 
 private:
-  Mtx itsStored1;
-  Mtx itsStored2;
+  mtx itsStored1;
+  mtx itsStored2;
 
-  const Mtx itsHiLo1;
-  const Mtx itsHiLo2;
+  const mtx itsHiLo1;
+  const mtx itsHiLo2;
 };
 
 static const char vcid_cmodelrxm_h[] = "$Header$";

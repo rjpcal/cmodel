@@ -32,11 +32,11 @@
 class LLEvaluator : public MultivarFunction
 {
   Classifier& itsC;
-  const Mtx& itsObjs;
-  const Mtx& itsInc;
+  const mtx& itsObjs;
+  const mtx& itsInc;
 
 protected:
-  virtual double doEvaluate(const Mtx& x)
+  virtual double doEvaluate(const mtx& x)
   {
     DOTRACE("LLEvaluator::doEvaluate");
     slice params(x.column(0));
@@ -44,7 +44,7 @@ protected:
   }
 
 public:
-  LLEvaluator(Classifier& c, const Mtx& objs, const Mtx& inc) :
+  LLEvaluator(Classifier& c, const mtx& objs, const mtx& inc) :
     itsC(c), itsObjs(objs), itsInc(inc) {}
 };
 
@@ -57,7 +57,7 @@ public:
 namespace
 {
   // Just check that objParams has the right size
-  const Mtx& testSize(const Mtx& objParams)
+  const mtx& testSize(const mtx& objParams)
   {
     DOTRACE("<classifier.cc>::testSize");
     if (objParams.ncols() != Classifier::DIM_OBJ_PARAMS+1)
@@ -70,7 +70,7 @@ namespace
   }
 }
 
-Classifier::Classifier(const Mtx& objParams) :
+Classifier::Classifier(const mtx& objParams) :
   itsObjParams(testSize(objParams)),
   itsObjCategories(objParams(col_range_n(0, 1))),
   itsObjects(objParams(col_range_n(1, DIM_OBJ_PARAMS))),
@@ -96,11 +96,11 @@ DOTRACE("Classifier::numModelParams");
     + 1; // plus one param for the std deviation of the noise
 }
 
-Mtx Classifier::modelParamsBounds() const
+mtx Classifier::modelParamsBounds() const
 {
 DOTRACE("Classifier::modelParamsBounds");
 
-  Mtx bounds(numModelParams(), 2);
+  mtx bounds(numModelParams(), 2);
 
   const int row = fillModelParamsBounds(bounds, 0);
 
@@ -115,7 +115,7 @@ DOTRACE("Classifier::modelParamsBounds");
   return bounds;
 }
 
-Mtx Classifier::forwardProbit(const Mtx& diffEv,
+mtx Classifier::forwardProbit(const mtx& diffEv,
                               double thresh, double sigmaNoise)
 {
 DOTRACE("Classifier::forwardProbit");
@@ -124,7 +124,7 @@ DOTRACE("Classifier::forwardProbit");
 
   mtx_const_iter diffev = diffEv.columnIter(0);
 
-  Mtx pp(diffEv.mrows(), 1);
+  mtx pp(diffEv.mrows(), 1);
   mtx_iter ppiter = pp.columnIter(0);
 
   // alpha = (thresh - diffEvidence) / sigmaNoise
@@ -148,8 +148,8 @@ DOTRACE("Classifier::forwardProbit");
 //
 //---------------------------------------------------------------------
 
-double Classifier::computeLogL(const Mtx& predictedProbability,
-                               const Mtx& observedIncidence)
+double Classifier::computeLogL(const mtx& predictedProbability,
+                               const mtx& observedIncidence)
 {
 DOTRACE("Classifier::computeLogL");
 
@@ -204,7 +204,7 @@ DOTRACE("Classifier::computeLogL");
 }
 
 // Returns the classification probability for each of 'objects'
-Mtx Classifier::classifyObjects(slice& modelParams, const Mtx& testObjects)
+mtx Classifier::classifyObjects(slice& modelParams, const mtx& testObjects)
 {
 DOTRACE("Classifier::classifyObjects");
 
@@ -230,12 +230,12 @@ DOTRACE("Classifier::classifyObjects");
 }
 
 double Classifier::currentLogL(slice& modelParams,
-                               const Mtx& testObjects,
-                               const Mtx& observedIncidence)
+                               const mtx& testObjects,
+                               const mtx& observedIncidence)
 {
 DOTRACE("Classifier::currentLogL");
 
-  Mtx pp = classifyObjects(modelParams, testObjects);
+  mtx pp = classifyObjects(modelParams, testObjects);
 
   // Compute the loglikelihood based on the predicted probabilities
   // and the observed incidences.
@@ -243,11 +243,11 @@ DOTRACE("Classifier::currentLogL");
   return computeLogL(pp, observedIncidence);
 }
 
-double Classifier::fullLogL(const Mtx& observedIncidence)
+double Classifier::fullLogL(const mtx& observedIncidence)
 {
 DOTRACE("Classifier::fullLogL");
 
-  Mtx observedProb(numAllExemplars(), 1);
+  mtx observedProb(numAllExemplars(), 1);
   mtx_iter opiter = observedProb.columnIter(0);
 
   mtx_const_iter oi1iter = observedIncidence.columnIter(0);
@@ -260,8 +260,8 @@ DOTRACE("Classifier::fullLogL");
 }
 
 double Classifier::deviance(slice& modelParams,
-                            const Mtx& testObjects,
-                            const Mtx& observedIncidence)
+                            const mtx& testObjects,
+                            const mtx& observedIncidence)
 {
 DOTRACE("Classifier::deviance");
 
@@ -273,9 +273,9 @@ DOTRACE("Classifier::deviance");
 
 namespace
 {
-  Mtx getTestObjects(const MxWrapper& extraArgs)
+  mtx getTestObjects(const MxWrapper& extraArgs)
   {
-    Mtx result = extraArgs.getField("testObjects").asMtx();
+    mtx result = extraArgs.getField("testObjects").asMtx();
 
     if (result.ncols() != Classifier::DIM_OBJ_PARAMS)
       {
@@ -286,7 +286,7 @@ namespace
     return result;
   }
 
-  void checkModelParams(const Mtx& allModelParams,
+  void checkModelParams(const mtx& allModelParams,
                         const int expectedNumber)
   {
     if (allModelParams.mrows() != expectedNumber)
@@ -300,7 +300,7 @@ namespace
 
 Classifier::RequestResult
 Classifier::handleRequest(fstring action,
-                          const Mtx& allModelParams,
+                          const mtx& allModelParams,
                           const MxWrapper& extraArgs)
 {
 DOTRACE("Classifier::handleRequest");
@@ -332,13 +332,13 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llc");
 
-      const Mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
 
-      const Mtx testObjects = getTestObjects(extraArgs);
+      const mtx testObjects = getTestObjects(extraArgs);
 
       checkModelParams(allModelParams, numModelParams());
 
-      Mtx result(allModelParams.ncols(), 1);
+      mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           slice modelParams(allModelParams.column(i));
@@ -353,11 +353,11 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llf");
 
-      const Mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
 
       checkModelParams(allModelParams, numModelParams());
 
-      Mtx result(allModelParams.ncols(), 1);
+      mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           result.at(i) = multiplier * fullLogL(observedIncidence);
@@ -370,13 +370,13 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-dev");
 
-      const Mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
 
-      const Mtx testObjects = getTestObjects(extraArgs);
+      const mtx testObjects = getTestObjects(extraArgs);
 
       checkModelParams(allModelParams, numModelParams());
 
-      Mtx result(allModelParams.ncols(), 1);
+      mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           slice modelParams(allModelParams.column(i));
@@ -391,11 +391,11 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-classify");
 
-      const Mtx testObjects = getTestObjects(extraArgs);
+      const mtx testObjects = getTestObjects(extraArgs);
 
       checkModelParams(allModelParams, numModelParams());
 
-      Mtx result(testObjects.mrows(), allModelParams.ncols());
+      mtx result(testObjects.mrows(), allModelParams.ncols());
 
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -410,9 +410,9 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-simplex");
 
-      const Mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
 
-      const Mtx testObjects = getTestObjects(extraArgs);
+      const mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
@@ -444,9 +444,9 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-anneal");
 
-      const Mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
+      const mtx observedIncidence = extraArgs.getField("observedIncidence").asMtx();
 
-      const Mtx testObjects = getTestObjects(extraArgs);
+      const mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
@@ -485,7 +485,7 @@ DOTRACE("Classifier::countCategory");
   return n;
 }
 
-Mtx Classifier::objectsOfCategory(int category) const
+mtx Classifier::objectsOfCategory(int category) const
 {
 DOTRACE("Classifier::objectsOfCategory");
 
@@ -494,7 +494,7 @@ DOTRACE("Classifier::objectsOfCategory");
   if (nobjs == 0)
     throw Util::Error(fstring("no objects found in category ", category));
 
-  Mtx result(nobjs, DIM_OBJ_PARAMS);
+  mtx result(nobjs, DIM_OBJ_PARAMS);
 
   int r = 0;
   for (int i = 0; i < itsObjects.mrows(); ++i)
@@ -518,7 +518,7 @@ DOTRACE("Classifier::exemplar");
   return itsObjects.row(i);
 }
 
-int Classifier::fillModelParamsBounds(Mtx& bounds, int startRow) const
+int Classifier::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
 DOTRACE("Classifier::fillModelParamsBounds");
 
@@ -527,8 +527,8 @@ DOTRACE("Classifier::fillModelParamsBounds");
 
   // All lower bounds default to "minus infinity"
   // All upper bounds default to "plus infinity"
-  bounds.sub(col_range_n(0,1)).setAll(minus_inf);
-  bounds.sub(col_range_n(1,1)).setAll(plus_inf);
+  bounds.sub(col_range_n(0,1)).clear(minus_inf);
+  bounds.sub(col_range_n(1,1)).clear(plus_inf);
 
   return DIM_OBJ_PARAMS+2;
 }

@@ -21,7 +21,7 @@
 #include "util/trace.h"
 
 
-CModelGcm::CModelGcm(const Mtx& objParams,
+CModelGcm::CModelGcm(const mtx& objParams,
                      TransferFunction transferFunc) :
   CModelExemplar(objParams,
                  MAX_STORED,
@@ -34,7 +34,7 @@ DOTRACE("CModelGcm::CModelGcm");
 CModelGcm::~CModelGcm() {}
 
 
-const Mtx& CModelGcm::getStoredExemplars(Category cat)
+const mtx& CModelGcm::getStoredExemplars(Category cat)
 {
 DOTRACE("CModelGcm::findStoredExemplar");
 
@@ -51,7 +51,7 @@ DOTRACE("CModelGcm::findStoredExemplar");
   else
     throw Util::Error("unknown category enumerator in findStoredExemplar");
 
-  return Mtx::emptyMtx(); // can't happen, but placate the compiler
+  return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelgcm_cc[] = "$Header$";

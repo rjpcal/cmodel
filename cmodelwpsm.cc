@@ -21,7 +21,7 @@
 #include "util/trace.h"
 
 
-CModelWpsm::CModelWpsm(const Mtx& objParams,
+CModelWpsm::CModelWpsm(const mtx& objParams,
                        TransferFunction transferFunc) :
   CModelExemplar(objParams, 1, transferFunc),
   itsPrototype1(1, DIM_OBJ_PARAMS),
@@ -40,7 +40,7 @@ DOTRACE("CModelWpsm::CModelWpsm");
 CModelWpsm::~CModelWpsm() {}
 
 
-const Mtx& CModelWpsm::getStoredExemplars(Category cat)
+const mtx& CModelWpsm::getStoredExemplars(Category cat)
 {
 DOTRACE("CModelWpsm::findStoredExemplar");
 
@@ -57,7 +57,7 @@ DOTRACE("CModelWpsm::findStoredExemplar");
   else
     throw Util::Error("unknown category enumerator in findStoredExemplar");
 
-  return Mtx::emptyMtx(); // can't happen, but placate the compiler
+  return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelwpsm_cc[] = "$Header$";

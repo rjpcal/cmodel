@@ -25,7 +25,7 @@
 
 #include "util/trace.h"
 
-CModelSPC::CModelSPC(const Mtx& objParams, int numStoredExemplars) :
+CModelSPC::CModelSPC(const mtx& objParams, int numStoredExemplars) :
   Classifier(objParams),
   itsNumStoredExemplars(numStoredExemplars),
   itsHiLo0(CModelUtil::getHiLo(objectsOfCategory(0))),
@@ -44,20 +44,20 @@ DOTRACE("CModelSPC::numModelParams");
 
 Classifier::RequestResult
 CModelSPC::handleRequest(fstring action,
-                         const Mtx& allModelParams,
+                         const mtx& allModelParams,
                          const MxWrapper& extraArgs)
 {
 DOTRACE("CmodelSPC::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      Mtx category_ = extraArgs.getField("category").asMtx();
+      mtx category_ = extraArgs.getField("category").asMtx();
 
       int category = int(category_.at(0));
 
       slice modelParams = allModelParams.column(0);
 
-      Mtx storedExemplars =
+      mtx storedExemplars =
         CModelUtil::getStoredExemplars(modelParams,
                                        itsNumStoredExemplars,
                                        itsHiLo0,
@@ -77,8 +77,8 @@ DOTRACE("CmodelSPC::handleRequest");
   return Classifier::handleRequest(action, allModelParams, extraArgs);
 }
 
-void CModelSPC::computeDiffEv(const Mtx& objects,
-                              slice& modelParams, Mtx& diffEvOut)
+void CModelSPC::computeDiffEv(const mtx& objects,
+                              slice& modelParams, mtx& diffEvOut)
 {
 DOTRACE("CModelSPC::computeDiffEv");
 
@@ -87,7 +87,7 @@ DOTRACE("CModelSPC::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
+  mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
 
   attWeights.apply(std::abs);
 
@@ -95,7 +95,7 @@ DOTRACE("CModelSPC::computeDiffEv");
     modelParams(range(Classifier::DIM_OBJ_PARAMS+2,
                       modelParams.nelems()));
 
-  const Mtx storedExemplars =
+  const mtx storedExemplars =
     CModelUtil::getStoredExemplars(otherParams,
                                    itsNumStoredExemplars,
                                    itsHiLo0,
@@ -141,7 +141,7 @@ double CModelSPC::computeSigmaNoise(double rawSigma) const
   return rawSigma;
 }
 
-int CModelSPC::fillModelParamsBounds(Mtx& bounds, int startRow) const
+int CModelSPC::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
 DOTRACE("CModelSPC::fillModelParamsBounds");
 
