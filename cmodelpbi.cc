@@ -29,13 +29,13 @@ void CModelPbi::computeDiffEv(const Mtx& objects,
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
-  MtxConstIter attWeights =
+  mtx_const_iter attWeights =
     static_cast<const Slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();
 
   int i = 0;
-  MtxIter diffEv = diffEvOut.columnIter(0);
+  mtx_iter diffEv = diffEvOut.columnIter(0);
 
-  for (; diffEv.hasMore(); ++i, ++diffEv)
+  for (; diffEv.has_more(); ++i, ++diffEv)
     *diffEv = -1.0 * innerProduct(attWeights, objects.rowIter(i));
 }
 

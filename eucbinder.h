@@ -28,7 +28,7 @@ template <unsigned int Dim>
 class EuclideanBinder
 {
 public:
-  EuclideanBinder(MtxConstIter attWeights, MtxConstIter x2) :
+  EuclideanBinder(mtx_const_iter attWeights, mtx_const_iter x2) :
     itsAttWeightsStop(&itsAttWeights[0] + Dim)
   {
     double* wtptr = &itsAttWeights[0];
@@ -41,7 +41,7 @@ public:
       }
   }
 
-  double eucDist(MtxConstIter x1) const
+  double eucDist(mtx_const_iter x1) const
   {
     double wt_sum = 0.0;
 

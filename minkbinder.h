@@ -25,7 +25,7 @@
 class MinkowskiBinder
 {
 public:
-  MinkowskiBinder(MtxConstIter attWeights, MtxConstIter x2,
+  MinkowskiBinder(mtx_const_iter attWeights, mtx_const_iter x2,
                   double r = 2.0, double r_inv = 0.5) :
     itsAttWeights(attWeights),
     itsX2(x2),
@@ -33,13 +33,13 @@ public:
     itsRinv(r_inv)
   {}
 
-  double minkDist(MtxConstIter x1) const
+  double minkDist(mtx_const_iter x1) const
   {
     double wt_sum = 0.0;
-    MtxConstIter wt = itsAttWeights;
-    MtxConstIter x2 = itsX2;
+    mtx_const_iter wt = itsAttWeights;
+    mtx_const_iter x2 = itsX2;
 
-    for (; wt.hasMore(); ++wt, ++x1, ++x2)
+    for (; wt.has_more(); ++wt, ++x1, ++x2)
       {
         wt_sum += (*wt) * pow( std::abs( *x1 - *x2), itsR);
       }
@@ -47,11 +47,11 @@ public:
   }
 
   // Specialized Minkowski distance for r==2
-  double minkDist2(MtxConstIter x1) const;
+  double minkDist2(mtx_const_iter x1) const;
 
 private:
-  const MtxConstIter itsAttWeights;
-  const MtxConstIter itsX2;
+  const mtx_const_iter itsAttWeights;
+  const mtx_const_iter itsX2;
   const double itsR;
   const double itsRinv;
 };

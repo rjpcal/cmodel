@@ -142,9 +142,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const Mtx& stored1 = getStoredExemplars(CAT1);
   const Mtx& stored2 = getStoredExemplars(CAT2);
 
-  MtxConstIter attWts = attWeights.begin();
+  mtx_const_iter attWts = attWeights.begin();
 
-  std::vector<MtxConstIter> exemplars;
+  std::vector<mtx_const_iter> exemplars;
 
   for (int yy = 0; yy < objects.mrows(); ++yy) {
     exemplars.push_back(objects.rowIter(yy));
@@ -162,13 +162,13 @@ DOTRACE("CModelExemplar::computeDiffEv");
     if (compute1) {
     DOTRACE("compute1");
 
-      const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
+      const mtx_iter distrust1 = itsEvidence1Cache.rowIter(x);
 
       MinkowskiBinder binder1(attWts, stored1.rowIter(x),
                               minkPower, minkPowerInv);
 
       int y = 0;
-      for (MtxIter iter1 = distrust1; iter1.hasMore(); ++y, ++iter1) {
+      for (mtx_iter iter1 = distrust1; iter1.has_more(); ++y, ++iter1) {
 
         if (minkPower == 2.0) {
           if (EXP_DECAY == itsTransferFunc) {
@@ -195,13 +195,13 @@ DOTRACE("CModelExemplar::computeDiffEv");
     DOTRACE("compute2");
       itsStored2Cache.row(x) = stored2.row(x);
 
-      const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
+      const mtx_iter distrust2 = itsEvidence2Cache.rowIter(x);
 
       MinkowskiBinder binder2(attWts, stored2.rowIter(x),
                               minkPower, minkPowerInv);
 
       int y = 0;
-      for (MtxIter iter2 = distrust2; iter2.hasMore(); ++y, ++iter2) {
+      for (mtx_iter iter2 = distrust2; iter2.has_more(); ++y, ++iter2) {
         if (minkPower == 2.0) {
           if (EXP_DECAY == itsTransferFunc) {
             *iter2 = Num::fastexp7(-binder2.minkDist2(exemplars.at(y)));
@@ -227,13 +227,13 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-    const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
-    const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
+    const mtx_iter distrust1 = itsEvidence1Cache.rowIter(x);
+    const mtx_iter distrust2 = itsEvidence2Cache.rowIter(x);
 
-    const MtxIter diffEv = diffEvOut.columnIter(0);
+    const mtx_iter diffEv = diffEvOut.columnIter(0);
 
-    for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
-         iter1.hasMore() && diff.hasMore();
+    for (mtx_iter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
+         iter1.has_more() && diff.has_more();
          ++iter1, ++iter2, ++diff) {
       *diff += *iter1 - *iter2;
     }

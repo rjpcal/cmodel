@@ -21,15 +21,15 @@ namespace
   double square(double x) { return x * x; }
 }
 
-double MinkowskiBinder::minkDist2(MtxConstIter x1) const
+double MinkowskiBinder::minkDist2(mtx_const_iter x1) const
 {
 #ifndef USE_ASM
 
   double wt_sum = 0.0;
-  MtxConstIter wt = itsAttWeights;
-  MtxConstIter x2 = itsX2;
+  mtx_const_iter wt = itsAttWeights;
+  mtx_const_iter x2 = itsX2;
 
-  for (; wt.hasMore(); ++wt, ++x1, ++x2)
+  for (; wt.has_more(); ++wt, ++x1, ++x2)
     {
       wt_sum += (*wt) * square((*x1) - (*x2));
     }

@@ -122,16 +122,16 @@ DOTRACE("Classifier::forwardProbit");
 
   const double divisor = (1.0 / Num::SQRT_2) * (1.0 / sigmaNoise);
 
-  MtxConstIter diffev = diffEv.columnIter(0);
+  mtx_const_iter diffev = diffEv.columnIter(0);
 
   Mtx pp(diffEv.mrows(), 1);
-  MtxIter ppiter = pp.columnIter(0);
+  mtx_iter ppiter = pp.columnIter(0);
 
   // alpha = (thresh - diffEvidence) / sigmaNoise
   //
   // pp = 0.5 * erfc(alpha / sqrt(2))
 
-  for (; ppiter.hasMore(); ++diffev, ++ppiter) {
+  for (; ppiter.has_more(); ++diffev, ++ppiter) {
     double alpha_val = thresh - *diffev;
 
     *ppiter = 0.5*Num::erfc(alpha_val * divisor);
@@ -178,12 +178,12 @@ DOTRACE("Classifier::computeLogL");
 
   const double LOG_10_MINUS_50 = -115.1293;
 
-  MtxConstIter oi1iter = observedIncidence.columnIter(0);
-  MtxConstIter oi2iter = observedIncidence.columnIter(1);
+  mtx_const_iter oi1iter = observedIncidence.columnIter(0);
+  mtx_const_iter oi2iter = observedIncidence.columnIter(1);
 
-  MtxConstIter ppiter = predictedProbability.columnIter(0);
+  mtx_const_iter ppiter = predictedProbability.columnIter(0);
 
-  for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter)
+  for(; ppiter.has_more(); ++ppiter, ++oi1iter, ++oi2iter)
     {
       double oi1 = *oi1iter;
       double oi2 = *oi2iter;
@@ -248,12 +248,12 @@ double Classifier::fullLogL(const Mtx& observedIncidence)
 DOTRACE("Classifier::fullLogL");
 
   Mtx observedProb(numAllExemplars(), 1);
-  MtxIter opiter = observedProb.columnIter(0);
+  mtx_iter opiter = observedProb.columnIter(0);
 
-  MtxConstIter oi1iter = observedIncidence.columnIter(0);
-  MtxConstIter oi2iter = observedIncidence.columnIter(1);
+  mtx_const_iter oi1iter = observedIncidence.columnIter(0);
+  mtx_const_iter oi2iter = observedIncidence.columnIter(1);
 
-  for (; opiter.hasMore(); ++opiter, ++oi1iter, ++oi2iter)
+  for (; opiter.has_more(); ++opiter, ++oi1iter, ++oi2iter)
     *opiter = (*oi1iter / (*oi1iter + *oi2iter));
 
   return computeLogL(observedProb, observedIncidence);
@@ -476,8 +476,8 @@ int Classifier::countCategory(int category) const
 {
 DOTRACE("Classifier::countCategory");
   int n = 0;
-  MtxConstIter iter = itsObjCategories.columnIter(0);
-  for (; iter.hasMore(); ++iter)
+  mtx_const_iter iter = itsObjCategories.columnIter(0);
+  for (; iter.has_more(); ++iter)
     {
       if (*iter == category)
         ++n;

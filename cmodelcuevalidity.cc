@@ -22,9 +22,9 @@
 
 namespace
 {
-  void countCue(std::map<double, int>& counts, MtxConstIter src)
+  void countCue(std::map<double, int>& counts, mtx_const_iter src)
   {
-    while (src.hasMore())
+    while (src.has_more())
       {
         counts[*src] += 1;
         ++src;
@@ -56,20 +56,20 @@ DOTRACE("CModelCueValidity::computeDiffEv");
 
   for (int d = 0; d < DIM_OBJ_PARAMS; ++d)
     {
-      const MtxConstIter objectsColumn = objects.columnIter(d);
+      const mtx_const_iter objectsColumn = objects.columnIter(d);
 
       std::map<double, int> t1counts, t2counts, allcounts;
       countCue(t1counts, itsTraining1.columnIter(d));
       countCue(t2counts, itsTraining2.columnIter(d));
       countCue(allcounts, objects.columnIter(d));
 
-      MtxConstIter objectIter = objectsColumn;
+      mtx_const_iter objectIter = objectsColumn;
 
       const double attWeight = attWeights.at(d,0);
 
-      MtxIter diffEvIter = diffEvOut.columnIter(0);
+      mtx_iter diffEvIter = diffEvOut.columnIter(0);
 
-      for (; objectIter.hasMore(); ++objectIter, ++diffEvIter)
+      for (; objectIter.has_more(); ++objectIter, ++diffEvIter)
         {
           const int count1 = t1counts[*objectIter];
           const int count2 = t2counts[*objectIter];

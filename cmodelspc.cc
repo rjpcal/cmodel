@@ -107,7 +107,7 @@ DOTRACE("CModelSPC::computeDiffEv");
   for (int r = 0; r < objects.mrows(); ++r)
     {
       EuclideanBinder<DIM_OBJ_PARAMS>
-        ebinder(MtxConstIter(attWeights.columnIter(0)), objects.rowIter(r));
+        ebinder(mtx_const_iter(attWeights.columnIter(0)), objects.rowIter(r));
 
       // compute distances between test object and stored exemplars, looking
       // for the nearest exemplar from each category
