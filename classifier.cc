@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Mar 15 16:11:20 2001
+// written: Wed Mar 21 13:56:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,14 +34,13 @@ Classifier::Classifier(const Mtx& objParams,
   itsObjParams(objParams),
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
-  itsDiffEvidence(new double[itsNumAllExemplars]),
+  itsDiffEvidence(itsNumAllExemplars,1),
   itsPredictedProbability(new double[numAllExemplars()])
 {}
 
 Classifier::~Classifier()
 {
   delete [] itsPredictedProbability;
-  delete [] itsDiffEvidence;
 }
 
 void Classifier::forwardProbit(double thresh, double sigmaNoise) const
@@ -50,8 +49,10 @@ DOTRACE("Classifier::forwardProbit");
 
   const double divisor = (1.0 / Num::SQRT_2) * (1.0 / sigmaNoise);
 
-  for (int i = 0; i < itsNumAllExemplars; ++i) {
-	 double alpha_val = thresh-itsDiffEvidence[i];
+  MtxConstIter diffev = itsDiffEvidence.colIter(0);
+
+  for (int i = 0; i < itsNumAllExemplars; ++i, ++diffev) {
+	 double alpha_val = thresh - *diffev;
 
 	 //
 	 // alpha = (thresh - diffEvidence) / sigmaNoise
@@ -110,10 +111,9 @@ double Classifier::currentLogL(Slice& modelParams)
 {
 DOTRACE("Classifier::currentLogL");
 
-  resetDiffEv();
+  itsDiffEvidence = 0.0;
 
   computeDiffEv(modelParams);
-
 
   //---------------------------------------------------------------------
   //
