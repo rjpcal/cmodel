@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:05:55 2002
+// written: Fri Feb 15 11:11:31 2002
 // $Id$
 //
 //
@@ -341,8 +341,7 @@ DOTRACE("sampleFromPdf");
 //
 //---------------------------------------------------------------------
 
-mxArray* MannealVisitParameters(int nargout_,
-                                mxArray* bestModel_mx,
+mxArray* MannealVisitParameters(mxArray* bestModel_mx,
                                 mxArray* valueScalingRange_mx,
                                 mxArray* deltas_mx,
                                 mxArray* bounds_mx,
@@ -379,10 +378,10 @@ DOTRACE("MannealVisitParameters");
 
       Mtx bestModel(bestModel_mx, Mtx::REFER);
 
-      const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
+      const bool canUseMatrix = (mxGetScalar(canUseMatrix_mx) != 0.0);
 
       int nevals = 0;
-      int s_zerobased = -1;
+      int s = -1;
 
       const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
       const Mtx deltas(deltas_mx, Mtx::BORROW);
@@ -418,12 +417,12 @@ DOTRACE("MannealVisitParameters");
           nevals += costs.nelems();
 
           // Sample from probability distribution
-          s_zerobased = sampleFromPdf(temp, costs);
+          s = sampleFromPdf(temp, costs);
 
-          bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
+          bestModel.at(x, 0) = modelmatrix.at(x, s);
         }
 
-      if (s_zerobased < 0)
+      if (s < 0)
         {
           mexErrMsgTxt("didn't run any annealing iterations because "
                        "there were no non-zero deltas");
@@ -432,15 +431,9 @@ DOTRACE("MannealVisitParameters");
       const char* fieldNames[] = { "nevals", "newModel", "cost" };
       mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
 
-      // S.nevals = 0;
       mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
-
-      // S.newModel = bestModel;
       mxSetField(output, 0, "newModel", bestModel_mx);
-
-      // S.cost = costs(s);
-      mxSetField(output, 0, "cost",
-                 mxCreateScalarDouble(costs.at(s_zerobased)));
+      mxSetField(output, 0, "cost", mxCreateScalarDouble(costs.at(s)));
 
       return output;
     }
@@ -488,8 +481,7 @@ DOTRACE("mlxAnnealVisitParameters");
   int nvararg = nrhs - 7;
   mxArray** pvararg = prhs + 7;
 
-  plhs[0] = MannealVisitParameters(nlhs,
-                                   prhs[0],
+  plhs[0] = MannealVisitParameters(prhs[0],
                                    prhs[1],
                                    prhs[2],
                                    prhs[3],
