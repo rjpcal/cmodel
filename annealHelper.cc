@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:40:36 2002
+// written: Mon Feb 18 16:49:11 2002
 // $Id$
 //
 //
@@ -350,9 +350,10 @@ DOTRACE("sampleFromPdf");
   return s;
 }
 
-struct Astate
+struct AnnealOpts
 {
-  Astate(mxArray* arr, int numruns) :
+  AnnealOpts(mxArray* arr, int numruns) :
+    numRuns(numruns),
     talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
     canUseMatrix(mxGetScalar(Mx::getField(arr, "canUseMatrix")) != 0.0),
     doNewton(mxGetScalar(Mx::getField(arr, "newton")) != 0.0),
@@ -363,8 +364,7 @@ struct Astate
     numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
     valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
-    deltas(Mx::getField(arr, "currentDeltas"), Mtx::COPY),
-    numFunEvals(numruns, 1),
+    deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
     bestCost(numruns, 1),
     modelHist(numModelParams, int(tempRepeats.sum())),
     mhat(numModelParams, numruns),
@@ -374,6 +374,7 @@ struct Astate
     energy.setAll(std::numeric_limits<double>::max());
   }
 
+  const int numRuns;
   const bool talking;
   const bool canUseMatrix;
   const bool doNewton;
@@ -384,8 +385,7 @@ struct Astate
   const int numStartingPoints;
   const Mtx valueScalingRange;
   const Mtx bounds;
-  Mtx deltas;
-  Mtx numFunEvals;
+  const Mtx deltas;
   Mtx bestCost;
   Mtx modelHist;
   Mtx mhat;
@@ -402,20 +402,26 @@ struct Astate
 class AnnealingRun
 {
 private:
-  Astate& itsAstate;
+  AnnealOpts& itsOpts;
   int itsRunNum;
+  Mtx itsDeltas;
+  Mtx itsNumFunEvals;
+
   const fstring itsFunFunName;
   const int itsNvararg;
   mxArray** const itsPvararg;
 
 public:
   AnnealingRun(const fstring& funcName,
-               Astate& astate,
+               AnnealOpts& astate,
                int nvararg,
                mxArray** pvararg)
     :
-    itsAstate(astate),
+    itsOpts(astate),
     itsRunNum(0),
+    itsDeltas(itsOpts.deltas),
+    itsNumFunEvals(itsOpts.numRuns, 1),
+
     itsFunFunName(funcName),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
@@ -423,12 +429,34 @@ public:
 
   void oneRun();
 
+  mxArray* getOutput()
+  {
+    const char* fieldnames[] =
+      {
+        "bestCost",
+        "mhat",
+        "model",
+        "energy",
+        "numFunEvals"
+      };
+
+    mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
+
+    mxSetField(output, 0, "bestCost", itsOpts.bestCost.makeMxArray());
+    mxSetField(output, 0, "mhat", itsOpts.mhat.makeMxArray());
+    mxSetField(output, 0, "model", itsOpts.modelHist.makeMxArray());
+    mxSetField(output, 0, "energy", itsOpts.energy.makeMxArray());
+    mxSetField(output, 0, "numFunEvals", itsNumFunEvals.makeMxArray());
+
+    return output;
+  }
+
   // Returns the cost at the best model that was found
   double visitParameters(Mtx& bestModel, const double temp);
 
   Mtx doFuncEvals(const Mtx& models)
   {
-    if (itsAstate.canUseMatrix)
+    if (itsOpts.canUseMatrix)
       return doParallelFuncEvals(models, itsFunFunName,
                                  itsNvararg, itsPvararg);
 
@@ -438,16 +466,16 @@ public:
 
   Mtx makeRandomModels()
   {
-    Mtx models = matlabRand(itsAstate.numModelParams,
-                            itsAstate.numStartingPoints);
+    Mtx models = matlabRand(itsOpts.numModelParams,
+                            itsOpts.numStartingPoints);
 
     models -= 0.5;
     models *= 2;
 
     for (int r = 0; r < models.mrows(); ++r)
       {
-        models.row(r) *= itsAstate.deltas.at(r);
-        models.row(r) += itsAstate.startValues.at(r);
+        models.row(r) *= itsDeltas.at(r);
+        models.row(r) += itsOpts.startValues.at(r);
       }
 
     return models;
@@ -463,12 +491,12 @@ public:
 
     *criticalTemp =
       log10(startingCosts.sum() / startingCosts.nelems())
-      - itsAstate.tempScales.at(itsRunNum);
+      - itsOpts.tempScales.at(itsRunNum);
 
     int startingPos = 0;
     const double startingCost = startingCosts.min(&startingPos);
 
-    if (itsAstate.talking)
+    if (itsOpts.talking)
       {
         mexPrintf("\nStarting cost %7.2f", startingCost);
         mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
@@ -483,7 +511,7 @@ public:
 
   void displayParams(const Mtx& model, double cost)
   {
-    if (!itsAstate.talking) return;
+    if (!itsOpts.talking) return;
 
     mexPrintf("\nparams: ");
     for (int i = 0; i < model.nelems(); ++i)
@@ -496,15 +524,15 @@ public:
   {
     // FIXME ought to use a smarter algorithm to keep track of the best cost
 
-    Mtx currentEnergy = itsAstate.energy.column(itsRunNum);
+    Mtx currentEnergy = itsOpts.energy.column(itsRunNum);
 
     int best_pos = 0;
     const double best_energy = currentEnergy.min(&best_pos);
 
-    itsAstate.bestCost.at(itsRunNum) = best_energy;
-    itsAstate.mhat.column(itsRunNum) = itsAstate.modelHist.column(best_pos);
+    itsOpts.bestCost.at(itsRunNum) = best_energy;
+    itsOpts.mhat.column(itsRunNum) = itsOpts.modelHist.column(best_pos);
 
-    displayParams(itsAstate.mhat.column(itsRunNum), itsAstate.bestCost.at(itsRunNum));
+    displayParams(itsOpts.mhat.column(itsRunNum), itsOpts.bestCost.at(itsRunNum));
   }
 
   void runSimplex()
@@ -515,9 +543,9 @@ public:
     MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
 
     SimplexOptimizer opt(objective,
-                         Mtx(itsAstate.mhat.column(itsRunNum)),
+                         Mtx(itsOpts.mhat.column(itsRunNum)),
                          fstring("notify"),
-                         itsAstate.numModelParams,
+                         itsOpts.numModelParams,
                          10000000, // maxFunEvals
                          10000, // maxIter
                          1e-4, // tolx
@@ -530,11 +558,11 @@ public:
 
     Mtx mstar = opt.bestParams();
 
-    if (Ostar < itsAstate.bestCost.at(itsRunNum))
+    if (Ostar < itsOpts.bestCost.at(itsRunNum))
       {
         displayParams(mstar, Ostar);
 
-        if (itsAstate.talking)
+        if (itsOpts.talking)
           mexPrintf("%d iterations\n", opt.iterCount());
 
         bool inBounds = true;
@@ -542,21 +570,21 @@ public:
         for (int i = 0; i < mstar.nelems(); ++i)
           {
             double val = mstar.at(i);
-            if (val < itsAstate.bounds.at(i, 0)) { inBounds = false; break; }
-            if (val > itsAstate.bounds.at(i, 1)) { inBounds = false; break; }
+            if (val < itsOpts.bounds.at(i, 0)) { inBounds = false; break; }
+            if (val > itsOpts.bounds.at(i, 1)) { inBounds = false; break; }
           }
 
         if (inBounds)
           {
-            itsAstate.mhat.column(itsRunNum) = mstar;
-            itsAstate.bestCost.at(itsRunNum) = Ostar;
-            if (itsAstate.talking)
+            itsOpts.mhat.column(itsRunNum) = mstar;
+            itsOpts.bestCost.at(itsRunNum) = Ostar;
+            if (itsOpts.talking)
               mexPrintf("\nSimplex method lowered cost "
                         "and remained within constraints.\n\n");
           }
         else
           {
-            if (itsAstate.talking)
+            if (itsOpts.talking)
               mexPrintf("\nSimplex method lowered cost "
                         "but failed to remain within constraints.\n\n");
           }
@@ -575,17 +603,17 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
   Mtx costs(0,0);
 
   // for x = find(deltas' ~= 0)
-  for (int x = 0; x < itsAstate.deltas.nelems(); ++x)
+  for (int x = 0; x < itsDeltas.nelems(); ++x)
     {
-      const double delta = itsAstate.deltas.at(x);
+      const double delta = itsDeltas.at(x);
 
       if (delta == 0.0) continue;
 
       Mtx modelmatrix = makeTestModels(x,
                                        bestModel,
-                                       itsAstate.valueScalingRange,
+                                       itsOpts.valueScalingRange,
                                        delta,
-                                       itsAstate.bounds);
+                                       itsOpts.bounds);
 
       costs = doFuncEvals(modelmatrix);
 
@@ -603,7 +631,7 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
                    "there were no non-zero deltas");
     }
 
-  itsAstate.numFunEvals.at(itsRunNum) += nevals;
+  itsNumFunEvals.at(itsRunNum) += nevals;
 
   return costs.at(s);
 }
@@ -639,28 +667,28 @@ DOTRACE("AnnealingRun::oneRun");
   Mtx minUsedParams = bestModel;
   Mtx maxUsedParams = bestModel;
 
-  for (int temps_i = 0; temps_i < itsAstate.numTemps; ++temps_i)
+  for (int temps_i = 0; temps_i < itsOpts.numTemps; ++temps_i)
     {
       // so the temperatures range from 10^(crit_temp+1) ... 10^(crit_temp-1)
       const double temp =
         pow(10.0, (criticalTemp + 1.0
-                   - 2.0*double(temps_i)/(itsAstate.numTemps-1)));
+                   - 2.0*double(temps_i)/(itsOpts.numTemps-1)));
 
-      const int temp_repeat = int(itsAstate.tempRepeats.at(temps_i));
+      const int temp_repeat = int(itsOpts.tempRepeats.at(temps_i));
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
           ++nvisits;
 
-          if (itsAstate.talking && (nvisits % 10 == 0))
+          if (itsOpts.talking && (nvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                        int(itsAstate.numFunEvals.at(itsRunNum)),
+                        int(itsNumFunEvals.at(itsRunNum)),
                         temp,
-                        itsAstate.energy.column(itsRunNum).min());
+                        itsOpts.energy.column(itsRunNum).min());
             }
 
-          itsAstate.energy.at(nvisits-1,itsRunNum) =
+          itsOpts.energy.at(nvisits-1,itsRunNum) =
             visitParameters(bestModel, temp);
 
           for (int i = 0; i < bestModel.nelems(); ++i)
@@ -672,25 +700,25 @@ DOTRACE("AnnealingRun::oneRun");
                                              double(bestModel.at(i)));
             }
 
-          itsAstate.modelHist.column(nvisits-1) = bestModel;
+          itsOpts.modelHist.column(nvisits-1) = bestModel;
         }
     }
 
 
   // Update deltas
   {
-    for (int i = 0; i < itsAstate.deltas.nelems(); ++i)
+    for (int i = 0; i < itsDeltas.nelems(); ++i)
       {
-        itsAstate.deltas.at(i) =
+        itsDeltas.at(i) =
           0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
       }
   }
 
   updateBests();
 
-  if (itsAstate.doNewton) runSimplex();
+  if (itsOpts.doNewton) runSimplex();
 
-  itsAstate.startValues.column(0) = itsAstate.mhat.column(itsRunNum);
+  itsOpts.startValues.column(0) = itsOpts.mhat.column(itsRunNum);
 
   ++itsRunNum;
 }
@@ -712,7 +740,7 @@ public:
   {
     int numruns = int(mxGetScalar(Mx::getField(astate_mx, "numruns")));
 
-    Astate astate(astate_mx, numruns);
+    AnnealOpts astate(astate_mx, numruns);
 
     AnnealingRun ar(func_name, astate, nvararg, pvararg);
 
@@ -721,24 +749,7 @@ public:
         ar.oneRun();
       }
 
-    const char* fieldnames[] =
-      {
-        "bestCost",
-        "mhat",
-        "model",
-        "energy",
-        "numFunEvals"
-      };
-
-    mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
-
-    mxSetField(output, 0, "bestCost", astate.bestCost.makeMxArray());
-    mxSetField(output, 0, "mhat", astate.mhat.makeMxArray());
-    mxSetField(output, 0, "model", astate.modelHist.makeMxArray());
-    mxSetField(output, 0, "energy", astate.energy.makeMxArray());
-    mxSetField(output, 0, "numFunEvals", astate.numFunEvals.makeMxArray());
-
-    return output;
+    return ar.getOutput();
   }
 };
 
