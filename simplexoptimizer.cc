@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Apr 18 15:05:18 2001
+// written: Wed Apr 18 15:07:44 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -49,11 +49,11 @@ SimplexOptimizer::SimplexOptimizer(MultivarFunction& objective,
 
   itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
   itsPrnt(extractPrinttype(printtype)),
+  itsNparams(nparams),
+  itsMaxFevals(maxfun > 0 ? maxfun : 200*nparams),
+  itsMaxIters(maxiter > 0 ? maxiter : 200*nparams),
   itsTolx(tolx),
   itsTolf(tolf),
-  itsNparams(nparams),
-  itsMaxFevals(maxfun),
-  itsMaxIters(maxiter),
 
   itsSimplex(nparams, nparams+1),
   itsFvals(1, nparams+1),
