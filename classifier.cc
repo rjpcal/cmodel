@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Mar  8 11:10:05 2001
+// written: Thu Mar  8 11:39:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,8 +35,8 @@
 
 #include "classifier.h"
 
+#include "error.h"
 #include "rutil.h"
-
 #include "trace.h"
 
 #include <cmath>
@@ -270,8 +270,8 @@ ModelCssm::ModelCssm(const Rat& objParams_,
   cat2(new constDblPtr[num2])
 {
   if (num1 != num2) {
-	 mexErrMsgTxt("the two categories must have the "
-					  "same number of training exemplars");
+	 throw ErrorWithMsg("the two categories must have the "
+							  "same number of training exemplars");
   }
 
   // Find the category 1 and category 2 training exemplars
@@ -315,8 +315,8 @@ DOTRACE("ModelCssm::scaleWeights");
   int ncols = numTrainingExemplars;
 
   if ( numRawWeights != (mrows*ncols) )
-	 mexErrMsgTxt("weights must have "
-					  "2*numStoredExemplars*numTrainingExemplars elements");
+	 throw ErrorWithMsg("weights must have "
+							  "2*numStoredExemplars*numTrainingExemplars elements");
 
   for (int i = 0; i < mrows; ++i)
 	 {
@@ -411,7 +411,7 @@ DOTRACE("ModelCssm::loglikelihoodFor");
 
   if (modelParams.length() !=
 		(2*numTrainingExemplars*numStoredExemplars + 6)) {
-    mexErrMsgTxt("wrong number of model parameters");
+    throw ErrorWithMsg("wrong number of model parameters");
   }
 
   //---------------------------------------------------------------------
