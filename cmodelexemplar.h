@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Mon Mar 12 17:05:04 2001
+// written: Mon Mar 12 17:08:50 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -61,7 +61,7 @@ private:
   virtual void computeDiffEv(Mtx& modelParams);
   virtual double fetchSigmaNoise(const Mtx& modelParams) const;
 
-  virtual void loadModelParams(Mtx& modelParams);
+  virtual void loadModelParams(Slice& modelParams);
 
   // The result of this function is only valid until the next call to
   // the function

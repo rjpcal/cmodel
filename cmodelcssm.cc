@@ -41,7 +41,6 @@ DOTRACE("CModelCssm::scaleWeights");
   int mrows = numStoredExemplars()*2;
   int ncols = numTrainingExemplars();
 
-//    if ( numRawWeights != (mrows*ncols) )
   if ( weights.nelems() != (mrows*ncols) )
 	 throw ErrorWithMsg("weights must have "
 							  "2*numStoredExemplars*numTrainingExemplars elements");
@@ -60,24 +59,17 @@ DOTRACE("CModelCssm::scaleWeights");
 	 }
 }
 
-void CModelCssm::loadModelParams(Mtx& modelParams)
+void CModelCssm::loadModelParams(Slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
-
-  if (modelParams.length() !=
-		(2*numTrainingExemplars()*numStoredExemplars() + 6)) {
-    throw ErrorWithMsg("wrong number of model parameters");
-  }
 
   //
   // Rescale the stored exemplar weights so that they sum to 1.
   //
 
-  Slice rawWeights = modelParams.asSlice().rightmost(modelParams.nelems()-6);
+  scaleWeights(modelParams);
 
-  scaleWeights(rawWeights);
-
-  itsScaledWeights = rawWeights;
+  itsScaledWeights = modelParams;
 }
 
 ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)

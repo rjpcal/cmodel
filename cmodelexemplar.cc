@@ -27,8 +27,7 @@ double minkDist(const ConstSlice& wts,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
-//    for (int k = 0; k < nelems; ++k)
-//  	 {
+
   for (ConstSlice::ConstIterator
 			wt = wts.begin(),
 			wend = wts.end();
@@ -214,7 +213,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
   for (int i = 0; i < attWeights.nelems(); ++i)
 	 attWeights[i] = abs(attWeights[i]);
 
-  loadModelParams(modelParams);
+  Slice otherParams = modelParams.asSlice().rightmost(modelParams.nelems()-6);
+
+  loadModelParams(otherParams);
 
   //---------------------------------------------------------------------
   //
@@ -244,7 +245,7 @@ double CModelExemplar::fetchSigmaNoise(const Mtx& modelParams) const
   return modelParams.at(5) * sqrt(itsNumStoredExemplars*2.0);
 }
 
-void CModelExemplar::loadModelParams(Mtx& modelParams) {}
+void CModelExemplar::loadModelParams(Slice& modelParams) {}
 
 static const char vcid_cmodelexemplar_cc[] = "$Header$";
 #endif // !CMODELEXEMPLAR_CC_DEFINED

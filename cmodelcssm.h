@@ -36,7 +36,7 @@ public:
 
   virtual ~CModelCssm();
 
-  virtual void loadModelParams(Mtx& modelParams);
+  virtual void loadModelParams(Slice& modelParams);
 
   // The result of this function is only valid until the next call to
   // the function
