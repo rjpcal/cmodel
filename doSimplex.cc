@@ -731,14 +731,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
   double fxcc = 0.0;
   double fxc = 0.0;
-//    mxArray* xc_mx = mclGetUninitializedArray();
-  mxArray* fxe_mx = mclGetUninitializedArray();
+  double fxe = 0.0;
   mxArray* xe_mx = mclGetUninitializedArray();
-  mxArray* fxr_mx = mclGetUninitializedArray();
+  double fxr = 0.0;
   mxArray* xr_mx = mclGetUninitializedArray();
   mxArray* formatsave_mx = mclGetUninitializedArray();
   mxArray* how_mx = mclGetUninitializedArray();
-  mxArray* f_mx = mclGetUninitializedArray();
   mxArray* y_mx = mclGetUninitializedArray();
   mxArray* j_mx = mclGetUninitializedArray();
   mxArray* zero_term_delta_mx = mclGetUninitializedArray();
@@ -774,6 +772,11 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     // 
     // % Initialize parameters
     // rho_mx = 1; chi_mx = 2; psi_mx = 0.5; sigma_mx = 0.5;
+	 const double rho = 1.0;
+	 const double chi = 2.0;
+	 const double psi = 0.5;
+	 const double sigma = 0.5;
+
     mxArray* rho_mx = mclInitialize(_mxarray11_);
     mxArray* chi_mx = mclInitialize(_mxarray24_);
     mxArray* psi_mx = mclInitialize(_mxarray30_);
@@ -862,21 +865,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  // end     
 				  theSimplex_dr.ncMtx().column(j_one_based-1+1) = Mtx(y_mx);
 
-				  // f = feval(funfcn,y,varargin{:});
-				  mlfAssign(
-								&f_mx,
-								mlfFeval(
-											mclValueVarargout(),
-											mclVa(funfcn_mx, "funfcn"),
-											mclVv(y_mx, "y_mx"),
-											mclVe(
-													mlfIndexRef(
-																	mclVsa(varargin, "varargin"),
-																	"{?}",
-																	mlfCreateColonIndex())),
-											NULL));
-				  // funcVals(1,j_mx+1) = f;
-				  funcVals_dr.ncMtx().at(0,v_) = mxGetScalar(f_mx);
+				  // funcVals(1,j_mx+1) = feval(funfcn,y,varargin{:});
+				  funcVals_dr.ncMtx().at(0,v_) = fevaluator.evaluate(y_mx);
 				  if (v_ == e_) {
 					 break;
 				  }
@@ -1017,28 +1007,28 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		}
 
 		{DOTRACE("compute xr");
-      // xr_mx = (1 + rho_mx)*xbar - rho_mx*theSimplex(:,end);
+      // xr_mx = (1 + rho)*xbar - rho*theSimplex(:,end);
 		const Mtx xbar(xbar_dr.asMtx());
 
-		Mtx xr = xbar*(1.0+mxGetScalar(rho_mx)) - 
-		  theSimplex_dr.asMtx().columns(numModelParams,1) * mxGetScalar(rho_mx);
+		Mtx xr = xbar*(1.0+rho) - 
+		  theSimplex_dr.asMtx().columns(numModelParams,1) * rho;
 
 		mlfAssign(&xr_mx, xr.makeMxArray());
 		}
 
-		mlfAssign(&fxr_mx, fevaluator.evaluate_mx(xr_mx));
+		fxr = fevaluator.evaluate(xr_mx);
 
 		++func_evals;
 		}
 
       // 
-      // if fxr_mx < funcVals(:,1)
-      if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,0))
+      // if fxr < funcVals(:,1)
+      if (fxr < funcVals_dr.asMtx().at(0,0))
 		  {
-			 DOTRACE("if fxr_mx < funcVals(:,1)");
+			 DOTRACE("if fxr < funcVals(:,1)");
 
           // % Calculate the expansion point
-          // xe_mx = (1 + rho_mx*chi_mx)*xbar - rho_mx*chi_mx*theSimplex(:,end);
+          // xe_mx = (1 + rho*chi_mx)*xbar - rho*chi_mx*theSimplex(:,end);
           mlfAssign(
             &xe_mx,
             mclMinus(
@@ -1056,18 +1046,18 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 					 )));
 
 
-          mlfAssign(&fxe_mx, fevaluator.evaluate_mx(xe_mx));
+			 fxe = fevaluator.evaluate(xe_mx);
 
 			 ++func_evals;
 
-          // if fxe_mx < fxr_mx
-          if (mclLtBool(mclVv(fxe_mx, "fxe_mx"), mclVv(fxr_mx, "fxr_mx"))) {
+          // if fxe < fxr
+          if (fxe < fxr) {
 
 				// theSimplex(:,end) = xe_mx;
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xe_mx);
 
-				// funcVals(:,end) = fxe_mx;
-				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxe_mx);
+				// funcVals(:,end) = fxe;
+				funcVals_dr.ncMtx().at(0,numModelParams) = fxe;
 
 				// how_mx = 'expand';
 				mlfAssign(&how_mx, _mxarray53_);
@@ -1078,8 +1068,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				// theSimplex(:,end) = xr_mx; 
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
 
-				// funcVals(:,end) = fxr_mx;
-				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxr_mx);
+				// funcVals(:,end) = fxr;
+				funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
 
 				// how_mx = 'reflect';
 				mlfAssign(&how_mx, _mxarray55_);
@@ -1087,61 +1077,46 @@ static mxArray * doSimplexImpl(mxArray * * fval,
           // end
           }
 
-      // else % funcVals(:,1) <= fxr_mx
+      // else % funcVals(:,1) <= fxr
       } else {
-			 DOTRACE("else funcVals(:,1) <= fxr_mx");
+			 DOTRACE("else funcVals(:,1) <= fxr");
 
-          // if fxr_mx < funcVals(:,numModelParams)
-          if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,numModelParams-1)) {
+          // if fxr < funcVals(:,numModelParams)
+          if (fxr < funcVals_dr.asMtx().at(0,numModelParams-1)) {
 
 				// theSimplex(:,end) = xr_mx; 
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
 
-				// funcVals(:,end) = fxr_mx;
-				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxr_mx);
+				// funcVals(:,end) = fxr;
+				funcVals_dr.ncMtx().at(0,numModelParams) = fxr;
 
 				// how_mx = 'reflect';
 				mlfAssign(&how_mx, _mxarray55_);
 
-          // else % fxr_mx >= funcVals(:,numModelParams) 
+          // else % fxr >= funcVals(:,numModelParams) 
           } else {
 
 				// % Perform contraction
-				// if fxr_mx < funcVals(:,end)
-				if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,numModelParams)) {
+				// if fxr < funcVals(:,end)
+				if (fxr < funcVals_dr.asMtx().at(0,numModelParams)) {
 
 				  // % Perform an outside contraction
-				  // xc_mx = (1 + psi_mx*rho_mx)*xbar -
+				  // xc = (1 + psi_mx*rho_mx)*xbar -
 				  //            psi_mx*rho_mx*theSimplex(:,end);
-				  xc_dr.assignMtx(xbar_dr.asMtx()*(1.0 + mxGetScalar(psi_mx)*
-															  mxGetScalar(rho_mx))
+				  xc_dr.assignMtx(xbar_dr.asMtx()*(1.0 + psi*
+															  rho)
 										- (theSimplex_dr.asMtx().columns(numModelParams,1)
-											* (mxGetScalar(psi_mx) * mxGetScalar(rho_mx))));
-//  				  mlfAssign(
-//  								&xc_mx,
-//  								mclMinus(
-//                        mclMtimes(
-//                          mclPlus(
-//                            _mxarray11_,
-//                            mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx"))),
-//                          xbar_dr.asArray()),
-//                        mclMtimes(
-//                          mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx")),
-//                          mclVe(
-//  										theSimplex_dr.asMtx().columns(numModelParams,1)
-//  										.makeMxArray()
-//  										)
-//  								)));
+											* (psi * rho)));
 
 
 				  fxc = fevaluator.evaluate(xc_dr.asArray());
 
 				  ++func_evals;
 
-				  // if fxc <= fxr_mx
-				  if (fxc <= mxGetScalar(fxr_mx)) {
+				  // if fxc <= fxr
+				  if (fxc <= fxr) {
 
-					 // theSimplex(:,end) = xc_mx; 
+					 // theSimplex(:,end) = xc; 
 					 theSimplex_dr.ncMtx().column(numModelParams) = xc_dr.asMtx();
 
 					 // funcVals(:,end) = fxc;
@@ -1162,10 +1137,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 				  // % Perform an inside contraction
 				  // xcc = (1-psi_mx)*xbar + psi_mx*theSimplex(:,end);
-				  xcc_dr.assignMtx(xbar_dr.asMtx()*(1.0-mxGetScalar(psi_mx))
+				  xcc_dr.assignMtx(xbar_dr.asMtx()*(1.0-psi)
 										 + 
 										 (theSimplex_dr.asMtx().columns(numModelParams,1)
-										  * mxGetScalar(psi_mx)));
+										  * psi));
 
 				  fxcc = fevaluator.evaluate(xcc_dr.asArray());
 
@@ -1209,7 +1184,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 						  theSimplex_dr.ncMtx().column(j_zero_based) =
 							 theSimplex_dr.asMtx().columns(0,1) +
 							 (theSimplex_dr.asMtx().columns(j_zero_based,1) -
-							  theSimplex_dr.asMtx().columns(0,1)) * mxGetScalar(sigma_mx);
+							  theSimplex_dr.asMtx().columns(0,1)) * sigma;
 
 						  // funcVals(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
 						  funcVals_dr.ncMtx().at(0,j_zero_based) =
@@ -1397,14 +1372,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(zero_term_delta_mx);
     mxDestroyArray(j_mx);
     mxDestroyArray(y_mx);
-    mxDestroyArray(f_mx);
     mxDestroyArray(how_mx);
     mxDestroyArray(formatsave_mx);
     mxDestroyArray(xr_mx);
-    mxDestroyArray(fxr_mx);
     mxDestroyArray(xe_mx);
-    mxDestroyArray(fxe_mx);
-//      mxDestroyArray(xc_mx);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(funfcn_mx);
