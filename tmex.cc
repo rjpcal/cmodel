@@ -23,6 +23,9 @@ namespace
   MexPkg* mexPkg = 0;
 
   void terminateModule() { delete mexPkg; }
+
+  const int NARGIN = 0;
+  const int NARGOUT = 0;
 }
 
 void tmex(int nlhs, mxArray* plhs[],
@@ -39,7 +42,7 @@ DOTRACE("mexFunction");
   if (mexPkg == 0)
     {
       mexPkg = new MexPkg("tmex", &terminateModule);
-      mexPkg->addFcn("tmex", &tmex, 1, 1);
+      mexPkg->addFcn("tmex", &tmex, NARGIN, NARGOUT);
     }
 
   return mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
