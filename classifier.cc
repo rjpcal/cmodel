@@ -137,7 +137,7 @@ DOTRACE("Classifier::forwardProbit");
   for (; ppiter.has_more(); ++diffev, ++ppiter) {
     double alpha_val = thresh - *diffev;
 
-    *ppiter = 0.5*Num::erfc(alpha_val * divisor);
+    *ppiter = 0.5*dash::erfc(alpha_val * divisor);
   }
 
   return pp;
