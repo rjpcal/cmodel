@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 14:31:36 2001
+// written: Wed Apr 18 14:41:34 2001
 // $Id$
 //
 //
@@ -31,7 +31,7 @@
 #include "multivarfunction.h"
 #include "strings.h"
 
-#include <fstream.h>
+#include <iostream.h>
 #include <iomanip.h>
 #include "libmatlbm.h"
 
@@ -747,8 +747,7 @@ DOTRACE("MdoSimplex");
 		if (debugFlag)
 		  {
 			 if (mxGetScalar(debugFlag) == -1) {
-				ofstream ofs("profdata.out");
-				Util::Prof::printAllProfData(ofs);
+				Util::Prof::printAllProfData(cerr);
 				return mxCreateScalarDouble(-1.0);
 			 }
 
