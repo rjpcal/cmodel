@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Mar  8 11:39:53 2001
+// written: Thu Mar  8 11:56:56 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,17 +14,14 @@
 #define CLASSIFIER_CC_DEFINED
 
 /*
-  forwardProbit should be a member function, should:
-  return a double*, OR
-  return its result into a data member, OR
-  return its result into a reference parameter?
+  forwardProbit should return its result into a reference parameter?
+
+  move functions and data members into the base class:
+  double loglikelihoodFor(Rat& modelParams);
+  double devianceFor(Rat& modelParams);
 
   the pure virtual function should be:
   virtual void void computeMu(Rat& modelParams, double* muOut) = 0;
-
-  then functions in the base class could be:
-  double loglikelihoodFor(Rat& modelParams);
-  double devianceFor(Rat& modelParams);
 
 
   can call from MATLAB like this:
@@ -254,42 +251,44 @@ DOTRACE("linearCombo");
 //
 ///////////////////////////////////////////////////////////////////////
 
-ModelCssm::ModelCssm(const Rat& objParams_,
-							const Rat& observedIncidence_,
-							int numStoredExemplars_) :
-  objParams(objParams_),
-  observedIncidence(observedIncidence_),
-  numStoredExemplars(numStoredExemplars_),
-  num1(countCategory(objParams_, 0)),
-  num2(countCategory(objParams_, 1)),
-  numTrainingExemplars(num1),
-  numAllExemplars(objParams_.mrows()),
-  dimObjParams(4),
-  mu(new double[numAllExemplars]),
-  cat1(new constDblPtr[num1]),
-  cat2(new constDblPtr[num2])
+ModelCssm::ModelCssm(const Rat& objParams,
+							const Rat& observedIncidence,
+							int numStoredExemplars) :
+  itsObjParams(objParams),
+  itsObservedIncidence(observedIncidence),
+  itsNumStoredExemplars(numStoredExemplars),
+  itsNum1(countCategory(objParams, 0)),
+  itsNum2(countCategory(objParams, 1)),
+  itsNumTrainingExemplars(itsNum1),
+  itsNumAllExemplars(objParams.mrows()),
+  itsDimObjParams(4),
+  itsDiffEvidence(new double[itsNumAllExemplars]),
+  itsCat1(new constDblPtr[itsNum1]),
+  itsCat2(new constDblPtr[itsNum2]),
+  itsPredictedProbability(new double[itsNumAllExemplars])
 {
-  if (num1 != num2) {
+  if (itsNum1 != itsNum2) {
 	 throw ErrorWithMsg("the two categories must have the "
 							  "same number of training exemplars");
   }
 
   // Find the category 1 and category 2 training exemplars
   int c1=0,c2=0;
-  for (int i = 0; i < objParams.mrows(); ++i)
+  for (int i = 0; i < itsObjParams.mrows(); ++i)
 	 {
-		if (int(objParams.at(i,0)) == 0)
-		  cat1[c1++] = objParams.address(i,1);
-		else if (int(objParams.at(i,0)) == 1)
-		  cat2[c2++] = objParams.address(i,1);
+		if (int(itsObjParams.at(i,0)) == 0)
+		  itsCat1[c1++] = itsObjParams.address(i,1);
+		else if (int(itsObjParams.at(i,0)) == 1)
+		  itsCat2[c2++] = itsObjParams.address(i,1);
 	 }
 }
 
 ModelCssm::~ModelCssm()
 {
-  delete [] cat2;
-  delete [] cat1;
-  delete [] mu;
+  delete [] itsPredictedProbability;
+  delete [] itsCat2;
+  delete [] itsCat1;
+  delete [] itsDiffEvidence;
 }
 
 // Count the category training exemplars
@@ -304,15 +303,12 @@ int ModelCssm::countCategory(const Rat& params, int category) {
 }
 
 
-void ModelCssm::scaleWeights(double* weights,
-									  int numRawWeights,
-									  int numStoredExemplars,
-									  int numTrainingExemplars)
+void ModelCssm::scaleWeights(double* weights, int numRawWeights)
 {
 DOTRACE("ModelCssm::scaleWeights");
 
-  int mrows = numStoredExemplars*2;
-  int ncols = numTrainingExemplars;
+  int mrows = itsNumStoredExemplars*2;
+  int ncols = itsNumTrainingExemplars;
 
   if ( numRawWeights != (mrows*ncols) )
 	 throw ErrorWithMsg("weights must have "
@@ -341,25 +337,25 @@ void ModelCssm::computeSimilarity(const double* attWeights,
 {
 DOTRACE("ModelCssm::computeSimilarity");
 
-  for (int y = 0; y < numAllExemplars; ++y) {
+  for (int y = 0; y < itsNumAllExemplars; ++y) {
 
 	 // compute similarity of ex-y to stored-1-x
 	 double sim1 =
-		minkDist(attWeights, dimObjParams,
-					objParams.data()+y+numAllExemplars, numAllExemplars,
+		minkDist(attWeights, itsDimObjParams,
+					itsObjParams.data()+y+itsNumAllExemplars, itsNumAllExemplars,
 					storedExemplar1, 1,
 					minkPower, minkPowerInv);
 
-	 mu[y] += exp(-sim1);
+	 itsDiffEvidence[y] += exp(-sim1);
 
 		// compute similarity of ex-y to stored-2-x
 	 double sim2 =
-		minkDist(attWeights, dimObjParams,
-					objParams.data()+y+numAllExemplars, numAllExemplars,
+		minkDist(attWeights, itsDimObjParams,
+					itsObjParams.data()+y+itsNumAllExemplars, itsNumAllExemplars,
 					storedExemplar2, 1,
 					minkPower, minkPowerInv);
 
-	 mu[y] -= exp(-sim2);
+	 itsDiffEvidence[y] -= exp(-sim2);
   }
 }
 
@@ -370,19 +366,19 @@ void ModelCssm::computeSimilarity2(const double* attWeights,
 {
 DOTRACE("ModelCssm::computeSimilarity2");
 
-  MinkDist2Binder binder1(attWeights, dimObjParams,
-								  numAllExemplars,
+  MinkDist2Binder binder1(attWeights, itsDimObjParams,
+								  itsNumAllExemplars,
 								  storedExemplar1);
 
-  MinkDist2Binder binder2(attWeights, dimObjParams,
-								  numAllExemplars,
+  MinkDist2Binder binder2(attWeights, itsDimObjParams,
+								  itsNumAllExemplars,
 								  storedExemplar2);
 
   // This finds the first testExemplar data point (skipping the
-  // first column of objParams, which contains category labels)
-  const double* testExemplar = objParams.data()+numAllExemplars;
+  // first column of itsObjParams, which contains category labels)
+  const double* testExemplar = itsObjParams.data()+itsNumAllExemplars;
 
-  for (int y = 0; y < numAllExemplars; ++y, ++testExemplar) {
+  for (int y = 0; y < itsNumAllExemplars; ++y, ++testExemplar) {
 
 	 // compute similarity of ex-y to stored-1-x
 	 const double sim1 = binder1.minkDist2(testExemplar);
@@ -390,7 +386,7 @@ DOTRACE("ModelCssm::computeSimilarity2");
 	 // compute similarity of ex-y to stored-2-x
 	 const double sim2 = binder2.minkDist2(testExemplar);
 
-	 mu[y] += exp(-sim1) - exp(-sim2);
+	 itsDiffEvidence[y] += exp(-sim1) - exp(-sim2);
   }
 }
 
@@ -410,7 +406,7 @@ double ModelCssm::loglikelihoodFor(Rat& modelParams) {
 DOTRACE("ModelCssm::loglikelihoodFor");
 
   if (modelParams.length() !=
-		(2*numTrainingExemplars*numStoredExemplars + 6)) {
+		(2*itsNumTrainingExemplars*itsNumStoredExemplars + 6)) {
     throw ErrorWithMsg("wrong number of model parameters");
   }
 
@@ -423,7 +419,7 @@ DOTRACE("ModelCssm::loglikelihoodFor");
   double* attWeights = modelParams.data();
 
   {
-    for (int i = 0; i < dimObjParams; ++i)
+    for (int i = 0; i < itsDimObjParams; ++i)
       attWeights[i] = abs(attWeights[i]);
   }
 
@@ -436,35 +432,34 @@ DOTRACE("ModelCssm::loglikelihoodFor");
   double* rawWeights = modelParams.data() + 6;
   const int numRawWeights = modelParams.nelems() - 6;
 
-  scaleWeights(rawWeights, numRawWeights,
-					numStoredExemplars, numTrainingExemplars);
+  scaleWeights(rawWeights, numRawWeights);
 
   const double* scaledWeights = rawWeights;
 
   //---------------------------------------------------------------------
   //
-  // Compute mu, a matrix of differences of summed similarities.
+  // Compute itsDiffEvidence, a matrix of differences of summed similarities.
   //
   //---------------------------------------------------------------------
 
   const double minkPower = 2.0;
   const double minkPowerInv = 1.0/minkPower;
 
-  resetMu();
+  reset();
 
-  double stored1[dimObjParams];
-  double stored2[dimObjParams];
+  double stored1[itsDimObjParams];
+  double stored2[itsDimObjParams];
 
-  for (int x = 0; x < numStoredExemplars; ++x) {
+  for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-    linearCombo(numTrainingExemplars, scaledWeights+x,
-                2*numStoredExemplars,
-                cat1, numAllExemplars, dimObjParams,
+    linearCombo(itsNumTrainingExemplars, scaledWeights+x,
+                2*itsNumStoredExemplars,
+                itsCat1, itsNumAllExemplars, itsDimObjParams,
                 &stored1[0]);
 
-    linearCombo(numTrainingExemplars, scaledWeights+x+numStoredExemplars,
-                2*numStoredExemplars,
-                cat2, numAllExemplars, dimObjParams,
+    linearCombo(itsNumTrainingExemplars, scaledWeights+x+itsNumStoredExemplars,
+                2*itsNumStoredExemplars,
+                itsCat2, itsNumAllExemplars, itsDimObjParams,
                 &stored2[0]);
 
 	 {
@@ -482,7 +477,7 @@ DOTRACE("ModelCssm::loglikelihoodFor");
   //---------------------------------------------------------------------
   //
   // Compute the predicted probabilities based on the similarity
-  // differences in mu.
+  // differences in itsDiffEvidence.
   //
   //---------------------------------------------------------------------
 
@@ -491,12 +486,11 @@ DOTRACE("ModelCssm::loglikelihoodFor");
 
   // sigmaNoise = sqrt(n1+n2)*modelParams(6);
   const double sigmaNoise =
-    sqrt(numStoredExemplars*2)*modelParams.data()[5];
+    sqrt(itsNumStoredExemplars*2)*modelParams.data()[5];
 
-  // predictedProbability = forwardProbit(mu, thresh, sigmaNoise);
-  double* predictedProbability = new double[numAllExemplars];
-  forwardProbit(mu, numAllExemplars, thresh, sigmaNoise,
-					 predictedProbability);
+  // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
+  forwardProbit(itsDiffEvidence, itsNumAllExemplars, thresh, sigmaNoise,
+					 itsPredictedProbability);
 
   //---------------------------------------------------------------------
   //
@@ -505,12 +499,10 @@ DOTRACE("ModelCssm::loglikelihoodFor");
   //
   //---------------------------------------------------------------------
 
-  double ll = -loglikelihood(predictedProbability,
-									  numAllExemplars,
-									  observedIncidence.data(),
-									  observedIncidence.data()+numAllExemplars);
-
-  delete [] predictedProbability;
+  double ll = -loglikelihood(itsPredictedProbability,
+									  itsNumAllExemplars,
+									  itsObservedIncidence.data(),
+									  itsObservedIncidence.data()+itsNumAllExemplars);
 
   return ll;
 }

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar  8 10:57:29 2001
+// written: Thu Mar  8 11:54:49 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,37 +35,36 @@ public:
 
 class ModelCssm : public Classifier {
 private:
-  const Rat& objParams;
-  const Rat& observedIncidence;
-  const int numStoredExemplars;
-  const int num1;
-  const int num2;
-  const int numTrainingExemplars;
-  const int numAllExemplars;
+  const Rat& itsObjParams;
+  const Rat& itsObservedIncidence;
+  const int itsNumStoredExemplars;
+  const int itsNum1;
+  const int itsNum2;
+  const int itsNumTrainingExemplars;
+  const int itsNumAllExemplars;
 
-  const int dimObjParams;
+  const int itsDimObjParams;
 
-  double* const mu;
+  double* const itsDiffEvidence;
 
   typedef const double* constDblPtr;
 
-  constDblPtr* const cat1;
-  constDblPtr* const cat2;
+  constDblPtr* const itsCat1;
+  constDblPtr* const itsCat2;
+
+  double* itsPredictedProbability;
 
   // Count the category training exemplars
   int countCategory(const Rat& params, int category);
 
-  void resetMu()
+  void reset()
   {
-    for (int i = 0; i < numAllExemplars; ++i)
-      mu[i] = 0.0;
+    for (int i = 0; i < itsNumAllExemplars; ++i)
+      itsDiffEvidence[i] = 0.0;
   }
 
   // Scales the weights in place; weights is an input/output argument
-  static void scaleWeights(double* weights,
-									int numRawWeights,
-									int numStoredExemplars,
-									int numTrainingExemplars);
+  void scaleWeights(double* weights, int numRawWeights);
 
   void computeSimilarity(const double* attWeights,
 								 const double* storedExemplar1,
@@ -78,9 +77,9 @@ private:
 								  const double* storedExemplar2);
 
 public:
-  ModelCssm(const Rat& objParams_,
-				const Rat& observedIncidence_,
-				int numStoredExemplars_);
+  ModelCssm(const Rat& objParams,
+				const Rat& observedIncidence,
+				int numStoredExemplars);
 
   ~ModelCssm();
 
