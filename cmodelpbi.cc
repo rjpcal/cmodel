@@ -33,10 +33,10 @@ DOTRACE("CModelPbi::computeDiffEv");
     static_cast<const slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();
 
   int i = 0;
-  mtx_iter diffEv = diffEvOut.columnIter(0);
+  mtx_iter diffEv = diffEvOut.column_iter(0);
 
   for (; diffEv.has_more(); ++i, ++diffEv)
-    *diffEv = -1.0 * innerProduct(attWeights, objects.rowIter(i));
+    *diffEv = -1.0 * inner_product(attWeights, objects.row_iter(i));
 }
 
 double CModelPbi::computeSigmaNoise(double /* rawSigma */) const

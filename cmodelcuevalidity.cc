@@ -56,18 +56,18 @@ DOTRACE("CModelCueValidity::computeDiffEv");
 
   for (int d = 0; d < DIM_OBJ_PARAMS; ++d)
     {
-      const mtx_const_iter objectsColumn = objects.columnIter(d);
+      const mtx_const_iter objectsColumn = objects.column_iter(d);
 
       std::map<double, int> t1counts, t2counts, allcounts;
-      countCue(t1counts, itsTraining1.columnIter(d));
-      countCue(t2counts, itsTraining2.columnIter(d));
-      countCue(allcounts, objects.columnIter(d));
+      countCue(t1counts, itsTraining1.column_iter(d));
+      countCue(t2counts, itsTraining2.column_iter(d));
+      countCue(allcounts, objects.column_iter(d));
 
       mtx_const_iter objectIter = objectsColumn;
 
       const double attWeight = attWeights.at(d,0);
 
-      mtx_iter diffEvIter = diffEvOut.columnIter(0);
+      mtx_iter diffEvIter = diffEvOut.column_iter(0);
 
       for (; objectIter.has_more(); ++objectIter, ++diffEvIter)
         {

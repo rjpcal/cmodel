@@ -147,7 +147,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   std::vector<mtx_const_iter> exemplars;
 
   for (int yy = 0; yy < objects.mrows(); ++yy) {
-    exemplars.push_back(objects.rowIter(yy));
+    exemplars.push_back(objects.row_iter(yy));
   }
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
@@ -162,9 +162,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
     if (compute1) {
     DOTRACE("compute1");
 
-      const mtx_iter distrust1 = itsEvidence1Cache.rowIter(x);
+      const mtx_iter distrust1 = itsEvidence1Cache.row_iter(x);
 
-      MinkowskiBinder binder1(attWts, stored1.rowIter(x),
+      MinkowskiBinder binder1(attWts, stored1.row_iter(x),
                               minkPower, minkPowerInv);
 
       int y = 0;
@@ -195,9 +195,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
     DOTRACE("compute2");
       itsStored2Cache.row(x) = stored2.row(x);
 
-      const mtx_iter distrust2 = itsEvidence2Cache.rowIter(x);
+      const mtx_iter distrust2 = itsEvidence2Cache.row_iter(x);
 
-      MinkowskiBinder binder2(attWts, stored2.rowIter(x),
+      MinkowskiBinder binder2(attWts, stored2.row_iter(x),
                               minkPower, minkPowerInv);
 
       int y = 0;
@@ -227,10 +227,10 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-    const mtx_iter distrust1 = itsEvidence1Cache.rowIter(x);
-    const mtx_iter distrust2 = itsEvidence2Cache.rowIter(x);
+    const mtx_iter distrust1 = itsEvidence1Cache.row_iter(x);
+    const mtx_iter distrust2 = itsEvidence2Cache.row_iter(x);
 
-    const mtx_iter diffEv = diffEvOut.columnIter(0);
+    const mtx_iter diffEv = diffEvOut.column_iter(0);
 
     for (mtx_iter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
          iter1.has_more() && diff.has_more();

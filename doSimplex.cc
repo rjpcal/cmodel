@@ -91,7 +91,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
 
   // Now return results back to the matlab caller
 
-  plhs[0] = opt.bestParams().makeMxArray();
+  plhs[0] = opt.bestParams().make_mxarray();
 
   plhs[1] = mxCreateScalarDouble(opt.bestFval());
   plhs[2] = mxCreateScalarDouble(exitFlag);
