@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sun Feb 17 17:48:53 2002
+// written: Sun Feb 17 18:01:18 2002
 // $Id$
 //
 //
@@ -374,8 +374,6 @@ public:
     itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
     itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
     itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
-//     itsMinUsedParams(Mx::getField(itsAstate_mx, "bestModel"), Mtx::COPY),
-//     itsMaxUsedParams(Mx::getField(itsAstate_mx, "bestModel"), Mtx::COPY),
     itsMinUsedParams(0,0),
     itsMaxUsedParams(0,0),
     itsDeltas(Mx::getField(itsAstate_mx, "currentDeltas"), Mtx::REFER),
@@ -398,24 +396,10 @@ public:
   {
     DOTRACE("createStartingModel");
 
-//     Mtx startingCosts(Mx::getField(itsAstate_mx, "startingCosts"), Mtx::BORROW);
+    Mtx startingCosts(Mx::getField(itsAstate_mx, "startingCosts"), Mtx::BORROW);
 
-//     int best_pos = 0;
-//     double best_cost = startingCosts.at(0);
-//     for (int i = 1; i < startingCosts.nelems(); ++i)
-//       {
-//         if (startingCosts.at(i) < best_cost)
-//           {
-//             best_cost = startingCosts.at(i);
-//             best_pos = i;
-//           }
-//       }
-
-    int startingPos =
-      int(mxGetScalar(Mx::getField(itsAstate_mx, "startingPos"))) - 1;
-
-    double startingCost =
-      mxGetScalar(Mx::getField(itsAstate_mx, "startingCost"));
+    int startingPos = 0;
+    const double startingCost = startingCosts.min(&startingPos);
 
     printRunHeader(startingCost);
 
@@ -426,9 +410,7 @@ public:
     itsMinUsedParams = startingModel;
     itsMaxUsedParams = startingModel;
 
-    startingModel.print();
-    int id = mxAddField(itsAstate_mx, "bestModel");
-    mexPrintf("id == %d\n", id);
+    mxAddField(itsAstate_mx, "bestModel");
     mxSetField(itsAstate_mx, 0, "bestModel", startingModel.makeMxArray());
   }
 
@@ -437,9 +419,6 @@ public:
     DOTRACE("printRunHeader");
 
     if (!itsTalking) return;
-
-//     const double startingCost =
-//       mxGetScalar(Mx::getField(itsAstate_mx, "startingCost"));
 
     mexPrintf("\nStarting cost %7.2f", startingCost);
     mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
@@ -481,16 +460,10 @@ public:
   {
     // FIXME ought to use a smarter algorithm to keep track of the best cost
 
+    Mtx currentEnergy = itsEnergy.column(itsRunNum);
+
     int best_pos = 0;
-    double best_energy = itsEnergy.at(0, itsRunNum);
-    for (int i = 1; i < itsEnergy.mrows(); ++i)
-      {
-        if (itsEnergy.at(i, itsRunNum) < best_energy)
-          {
-            best_pos = i;
-            best_energy = itsEnergy.at(i, itsRunNum);
-          }
-      }
+    const double best_energy = currentEnergy.min(&best_pos);
 
     Mtx bestCost(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
     Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
@@ -598,11 +571,6 @@ DOTRACE("AnnealingRun::go");
 #endif
 
   createStartingModel();
-
-  {
-    Mtx x(Mx::getField(itsAstate_mx, "bestModel"), Mtx::BORROW);
-    x.print();
-  }
 
   for (int temps_i = 0; temps_i < itsNumTemps; ++temps_i)
     {
