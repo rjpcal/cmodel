@@ -5,16 +5,18 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 13:43:17 2002
+// written: Thu Feb 14 14:22:39 2002
 // $Id$
 //
 //
 // MATLAB Compiler: 2.1
 // Date: Fri Mar 23 17:17:00 2001
+//
 // Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
-// "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
-// "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
-// "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "annealVisitParameters"
+// "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on"
+// "-O" "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex"
+// "-L" "C" "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h"
+// "annealVisitParameters"
 //
 ///////////////////////////////////////////////////////////////////////
 
@@ -133,63 +135,6 @@ static mexFunctionTableEntry local_function_table_[5]
 
 _mexLocalFunctionTable _local_function_table_annealVisitParameters
   = { 5, local_function_table_ };
-
-/*
- * The function "mlfAnnealVisitParameters" contains the normal interface for
- * the "annealVisitParameters" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 1-28). This function processes any input arguments and passes them to
- * the implementation version of the function, appearing above.
- */
-mxArray* mlfAnnealVisitParameters(mxArray* bestModel,
-                                   mxArray* valueScalingRange,
-                                   mxArray* deltas,
-                                   mxArray* bounds,
-                                   mxArray* canUseMatrix,
-                                   mxArray* FUN,
-                                   mxArray* temp,
-                                   ...)
-{
-DOTRACE("mlfAnnealVisitParameters");
-    mxArray* varargin = NULL;
-    int nargout = 1;
-    mxArray* S = mclGetUninitializedArray();
-    mlfVarargin(&varargin, temp, 0);
-    mlfEnterNewContext(
-      0,
-      -8,
-      bestModel,
-      valueScalingRange,
-      deltas,
-      bounds,
-      canUseMatrix,
-      FUN,
-      temp,
-      varargin);
-    S
-      = MannealVisitParameters(
-          nargout,
-          bestModel,
-          valueScalingRange,
-          deltas,
-          bounds,
-          canUseMatrix,
-          FUN,
-          temp,
-          varargin);
-    mlfRestorePreviousContext(
-      0,
-      7,
-      bestModel,
-      valueScalingRange,
-      deltas,
-      bounds,
-      canUseMatrix,
-      FUN,
-      temp);
-    mxDestroyArray(varargin);
-    return mlfReturnValue(S);
-}
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
