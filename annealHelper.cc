@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:02:09 2002
+// written: Mon Feb 18 16:08:04 2002
 // $Id$
 //
 //
@@ -359,8 +359,10 @@ struct Astate
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
     numModelParams(int(mxGetScalar(Mx::getField(arr, "numModelParams")))),
     numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
+    numFunEvals(numruns, 1),
     bestCost(numruns, 1),
     modelHist(numModelParams, int(tempRepeats.sum())),
+    mhat(numModelParams, numruns),
     energy(int(tempRepeats.sum()), numruns)
   {
     energy.setAll(std::numeric_limits<double>::max());
@@ -372,8 +374,10 @@ struct Astate
   const Mtx tempScales;
   const int numModelParams;
   const int numStartingPoints;
+  Mtx numFunEvals;
   Mtx bestCost;
   Mtx modelHist;
+  Mtx mhat;
   Mtx energy;
 };
 
@@ -389,11 +393,8 @@ private:
   mxArray* const itsAstate_mx;
   Astate& itsAstate;
   const int itsRunNum;
-//   const bool itsTalking;
   int itsNvisits;
   double itsCriticalTemp;
-  Mtx itsNumFunEvals;
-//   Mtx itsEnergy;
   Mtx itsMinUsedParams;
   Mtx itsMaxUsedParams;
   Mtx itsDeltas;
@@ -402,7 +403,6 @@ private:
   const bool itsCanUseMatrix;
   fstring itsFunFunName;
   const bool itsDoNewton;
-  Mtx itsMhat;
   Mtx itsStartValues;
   int itsNvararg;
   mxArray** itsPvararg;
@@ -418,11 +418,8 @@ public:
     itsAstate_mx(mxDuplicateArray(old_astate_mx)),
     itsAstate(astate),
     itsRunNum(runNum),
-//     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
-    itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
-//     itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
     itsMinUsedParams(0,0),
     itsMaxUsedParams(0,0),
     itsDeltas(Mx::getField(itsAstate_mx, "currentDeltas"), Mtx::REFER),
@@ -434,7 +431,6 @@ public:
     itsFunFunName(funcName),
     itsDoNewton(mxGetScalar(Mx::getField(itsAstate_mx, "newton")) != 0.0),
 
-    itsMhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER),
     itsStartValues(Mx::getField(itsAstate_mx, "startValues"), Mtx::REFER),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
@@ -553,24 +549,22 @@ public:
     const double best_energy = currentEnergy.min(&best_pos);
 
     itsAstate.bestCost.at(itsRunNum) = best_energy;
-    itsMhat.column(itsRunNum) = itsAstate.modelHist.column(best_pos);
+    itsAstate.mhat.column(itsRunNum) = itsAstate.modelHist.column(best_pos);
 
-    displayParams(itsMhat.column(itsRunNum), itsAstate.bestCost.at(itsRunNum));
+    displayParams(itsAstate.mhat.column(itsRunNum), itsAstate.bestCost.at(itsRunNum));
   }
 
   void runSimplex()
   {
-    int numModelParams = itsMhat.mrows();
-
     mxArray* funfun_mx = 0;
     mlfAssign(&funfun_mx, mxCreateString(itsFunFunName.c_str()));
 
     MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
 
     SimplexOptimizer opt(objective,
-                         Mtx(itsMhat.column(itsRunNum)),
+                         Mtx(itsAstate.mhat.column(itsRunNum)),
                          fstring("notify"),
-                         numModelParams,
+                         itsAstate.numModelParams,
                          10000000, // maxFunEvals
                          10000, // maxIter
                          1e-4, // tolx
@@ -601,7 +595,7 @@ public:
 
         if (inBounds)
           {
-            itsMhat.column(itsRunNum) = mstar;
+            itsAstate.mhat.column(itsRunNum) = mstar;
             itsAstate.bestCost.at(itsRunNum) = Ostar;
             if (itsAstate.talking)
               mexPrintf("\nSimplex method lowered cost "
@@ -656,7 +650,7 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
                    "there were no non-zero deltas");
     }
 
-  itsNumFunEvals.at(itsRunNum) += nevals;
+  itsAstate.numFunEvals.at(itsRunNum) += nevals;
 
   return costs.at(s);
 }
@@ -702,7 +696,7 @@ DOTRACE("AnnealingRun::go");
           if (itsAstate.talking && (itsNvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                        int(itsNumFunEvals.at(itsRunNum)),
+                        int(itsAstate.numFunEvals.at(itsRunNum)),
                         temp,
                         itsAstate.energy.column(itsRunNum).min());
             }
@@ -722,7 +716,7 @@ DOTRACE("AnnealingRun::go");
 
   if (itsDoNewton) runSimplex();
 
-  itsStartValues.column(0) = itsMhat.column(itsRunNum);
+  itsStartValues.column(0) = itsAstate.mhat.column(itsRunNum);
 
   return itsAstate_mx;
 }
@@ -770,16 +764,10 @@ public:
     mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
     mxSetField(output, 0, "bestCost", astate.bestCost.makeMxArray());
-
-    mxSetField(output, 0, fieldnames[1],
-               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[1])));
-
+    mxSetField(output, 0, "mhat", astate.mhat.makeMxArray());
     mxSetField(output, 0, "model", astate.modelHist.makeMxArray());
-
     mxSetField(output, 0, "energy", astate.energy.makeMxArray());
-
-    mxSetField(output, 0, fieldnames[4],
-               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[4])));
+    mxSetField(output, 0, "numFunEvals", astate.numFunEvals.makeMxArray());
 
     mxDestroyArray(astate_mx);
 
