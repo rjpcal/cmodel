@@ -61,5 +61,5 @@ DOTRACE("CModelWpsm::findStoredExemplar");
   return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
-static const char vcid_cmodelwpsm_cc[] = "$Header$";
+static const char vcid_cmodelwpsm_cc[] = "$Id$ $URL$";
 #endif // !CMODELWPSM_CC_DEFINED

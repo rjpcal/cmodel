@@ -71,5 +71,5 @@ inline void free_matrix(double **m, long nrl, long nrh, long ncl, long nch)
   free(m+nrl-NR_END);
 }
 
-static const char vcid_nrutil_h[] = "$Header$";
+static const char vcid_nrutil_h[] = "$Id$ $URL$";
 #endif // !NRUTIL_H_DEFINED

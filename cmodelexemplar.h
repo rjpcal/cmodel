@@ -79,5 +79,5 @@ private:
   virtual const mtx& getStoredExemplars(Category cat) = 0;
 };
 
-static const char vcid_cmodelexemplar_h[] = "$Header$";
+static const char vcid_cmodelexemplar_h[] = "$Id$ $URL$";
 #endif // !CMODELEXEMPLAR_H_DEFINED

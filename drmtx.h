@@ -99,5 +99,5 @@ public:
   }
 };
 
-static const char vcid_drmtx_h[] = "$Header$";
+static const char vcid_drmtx_h[] = "$Id$ $URL$";
 #endif // !DRMTX_H_DEFINED

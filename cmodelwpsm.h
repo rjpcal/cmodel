@@ -29,5 +29,5 @@ public:
   virtual ~CModelWpsm();
 };
 
-static const char vcid_cmodelwpsm_h[] = "$Header$";
+static const char vcid_cmodelwpsm_h[] = "$Id$ $URL$";
 #endif // !CMODELWPSM_H_DEFINED

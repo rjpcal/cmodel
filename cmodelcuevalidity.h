@@ -35,5 +35,5 @@ private:
   const mtx itsTraining2;
 };
 
-static const char vcid_cmodelcuevalidity_h[] = "$Header$";
+static const char vcid_cmodelcuevalidity_h[] = "$Id$ $URL$";
 #endif // !CMODELCUEVALIDITY_H_DEFINED

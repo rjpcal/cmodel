@@ -121,5 +121,5 @@ DOTRACE("CModelRxm::fillModelParamsBounds");
   return startRow + n*2;
 }
 
-static const char vcid_cmodelrxm_cc[] = "$Header$";
+static const char vcid_cmodelrxm_cc[] = "$Id$ $URL$";
 #endif // !CMODELRXM_CC_DEFINED

@@ -63,5 +63,5 @@ private:
   double itsX2[Dim];
 };
 
-static const char vcid_eucbinder_h[] = "$Header$";
+static const char vcid_eucbinder_h[] = "$Id$ $URL$";
 #endif // !EUCBINDER_H_DEFINED

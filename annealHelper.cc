@@ -74,5 +74,5 @@ DOTRACE("mexFunction");
   mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
 }
 
-static const char vcid_annealHelper_cc[] = "$Header$";
+static const char vcid_annealHelper_cc[] = "$Id$ $URL$";
 #endif // !ANNEALHELPER_CC_DEFINED

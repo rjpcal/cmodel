@@ -183,5 +183,5 @@ DOTRACE("CModelSPC::fillModelParamsBounds");
   return startRow + n*2;
 }
 
-static const char vcid_cmodelspc_cc[] = "$Header$";
+static const char vcid_cmodelspc_cc[] = "$Id$ $URL$";
 #endif // !CMODELSPC_CC_DEFINED

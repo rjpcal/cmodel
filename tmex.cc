@@ -48,5 +48,5 @@ DOTRACE("mexFunction");
   return mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
 }
 
-static const char vcid_tmex_cc[] = "$Header$";
+static const char vcid_tmex_cc[] = "$Id$ $URL$";
 #endif // !TMEX_CC_DEFINED

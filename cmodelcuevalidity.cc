@@ -97,5 +97,5 @@ double CModelCueValidity::computeSigmaNoise(double rawSigma) const
   return rawSigma * sqrt(2.0);
 }
 
-static const char vcid_cmodelcuevalidity_cc[] = "$Header$";
+static const char vcid_cmodelcuevalidity_cc[] = "$Id$ $URL$";
 #endif // !CMODELCUEVALIDITY_CC_DEFINED

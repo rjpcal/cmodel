@@ -25,5 +25,5 @@ namespace CModelUtil
   mtx getHiLo(const mtx& src);
 }
 
-static const char vcid_cmodelutil_h[] = "$Header$";
+static const char vcid_cmodelutil_h[] = "$Id$ $URL$";
 #endif // !CMODELUTIL_H_DEFINED

@@ -40,5 +40,5 @@ private:
   const mtx itsHiLo2;
 };
 
-static const char vcid_cmodelrxm_h[] = "$Header$";
+static const char vcid_cmodelrxm_h[] = "$Id$ $URL$";
 #endif // !CMODELRXM_H_DEFINED

@@ -26,5 +26,5 @@ public:
   virtual ~CModelGcm();
 };
 
-static const char vcid_cmodelgcm_h[] = "$Header$";
+static const char vcid_cmodelgcm_h[] = "$Id$ $URL$";
 #endif // !CMODELGCM_H_DEFINED

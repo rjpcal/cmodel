@@ -267,5 +267,5 @@ DOTRACE("mexFunction");
   mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
 }
 
-static const char vcid_classifier_mex_cc[] = "$Header$";
+static const char vcid_classifier_mex_cc[] = "$Id$ $URL$";
 #endif // !CLASSIFIER_MEX_CC_DEFINED

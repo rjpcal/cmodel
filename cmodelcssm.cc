@@ -112,5 +112,5 @@ DOTRACE("CModelCssm::fillModelParamsBounds");
     + 2 * numStoredExemplars() * numTrainingExemplars();
 }
 
-static const char vcid_cmodelcssm_cc[] = "$Header$";
+static const char vcid_cmodelcssm_cc[] = "$Id$ $URL$";
 #endif // !CMODELCSSM_CC_DEFINED

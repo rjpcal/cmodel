@@ -530,5 +530,5 @@ DOTRACE("Classifier::fillModelParamsBounds");
   return DIM_OBJ_PARAMS+2;
 }
 
-static const char vcid_classifier_cc[] = "$Header$";
+static const char vcid_classifier_cc[] = "$Id$ $URL$";
 #endif // !CLASSIFIER_CC_DEFINED

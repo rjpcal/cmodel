@@ -120,5 +120,5 @@ private:
   int exemplarCategory(int i) const;
 };
 
-static const char vcid_classifier_h[] = "$Header$";
+static const char vcid_classifier_h[] = "$Id$ $URL$";
 #endif // !CLASSIFIER_H_DEFINED

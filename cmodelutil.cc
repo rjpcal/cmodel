@@ -69,5 +69,5 @@ DOTRACE("CModelUtil::getHiLo");
   return result;
 }
 
-static const char vcid_cmodelutil_cc[] = "$Header$";
+static const char vcid_cmodelutil_cc[] = "$Id$ $URL$";
 #endif // !CMODELUTIL_CC_DEFINED

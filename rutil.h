@@ -16,5 +16,5 @@
 
 #define validateVariable(x) (x) = mlfAssign(&(x), mclVv((x), #x))
 
-static const char vcid_rutil_h[] = "$Header$";
+static const char vcid_rutil_h[] = "$Id$ $URL$";
 #endif // !RUTIL_H_DEFINED

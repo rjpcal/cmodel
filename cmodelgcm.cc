@@ -55,5 +55,5 @@ DOTRACE("CModelGcm::findStoredExemplar");
   return mtx::empty_mtx(); // can't happen, but placate the compiler
 }
 
-static const char vcid_cmodelgcm_cc[] = "$Header$";
+static const char vcid_cmodelgcm_cc[] = "$Id$ $URL$";
 #endif // !CMODELGCM_CC_DEFINED

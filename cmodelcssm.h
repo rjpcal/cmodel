@@ -40,5 +40,5 @@ private:
   mtx itsCachedRawWts2;
 };
 
-static const char vcid_cmodelcssm_h[] = "$Header$";
+static const char vcid_cmodelcssm_h[] = "$Id$ $URL$";
 #endif // !CMODELCSSM_H_DEFINED

@@ -56,5 +56,5 @@ private:
   const double itsRinv;
 };
 
-static const char vcid_minkbinder_h[] = "$Header$";
+static const char vcid_minkbinder_h[] = "$Id$ $URL$";
 #endif // !MINKBINDER_H_DEFINED

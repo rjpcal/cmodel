@@ -119,5 +119,5 @@ asm(
 #endif
 }
 
-static const char vcid_minkbinder_cc[] = "$Header$";
+static const char vcid_minkbinder_cc[] = "$Id$ $URL$";
 #endif // !MINKBINDER_CC_DEFINED

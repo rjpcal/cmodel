@@ -249,5 +249,5 @@ double CModelExemplar::computeSigmaNoise(double rawSigma) const
 
 void CModelExemplar::loadModelParams(slice& modelParams) {}
 
-static const char vcid_cmodelexemplar_cc[] = "$Header$";
+static const char vcid_cmodelexemplar_cc[] = "$Id$ $URL$";
 #endif // !CMODELEXEMPLAR_CC_DEFINED

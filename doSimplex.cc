@@ -133,5 +133,5 @@ DOTRACE("mexFunction");
   mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
 }
 
-static const char vcid_doSimplex_cc[] = "$Header$";
+static const char vcid_doSimplex_cc[] = "$Id$ $URL$";
 #endif // !DOSIMPLEX_CC_DEFINED

@@ -44,5 +44,5 @@ double CModelPbi::computeSigmaNoise(double /* rawSigma */) const
   return 1.0;
 }
 
-static const char vcid_cmodelpbi_cc[] = "$Header$";
+static const char vcid_cmodelpbi_cc[] = "$Id$ $URL$";
 #endif // !CMODELPBI_CC_DEFINED

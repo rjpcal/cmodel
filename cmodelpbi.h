@@ -28,5 +28,5 @@ private:
   virtual double computeSigmaNoise(double rawSigma) const;
 };
 
-static const char vcid_cmodelpbi_h[] = "$Header$";
+static const char vcid_cmodelpbi_h[] = "$Id$ $URL$";
 #endif // !CMODELPBI_H_DEFINED
