@@ -8,9 +8,13 @@
  */
 #include "annealVisitParameters.h"
 
+#include "mtx.h"
 #include "rutil.h"
 
 #include "libmatlbm.h"
+
+#define LOCAL_DEBUG
+#include "debug.h"
 
 
 static mxArray * _mxarray20_;
@@ -229,7 +233,6 @@ static mxArray * MannealVisitParameters(int nargout_,
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-  mxArray * S = mclGetUninitializedArray();
   mxArray * s = mclGetUninitializedArray();
   mxArray * costs = mclGetUninitializedArray();
   mxArray * modelmatrix = mclGetUninitializedArray();
@@ -315,16 +318,18 @@ static mxArray * MannealVisitParameters(int nargout_,
 	 mclDestroyForLoopIterator(viter__);
   }
 
+  const char* fieldNames[] = { "nevals", "newModel", "cost" };
+  mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
+
   // S.nevals = 0;
-  mlfIndexAssign(&S, ".nevals", mxCreateScalarDouble(nevals));
+  mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
 
   // S.newModel = bestModel;
-  mlfIndexAssign(&S, ".newModel", bestModel);
+  mxSetField(output, 0, "newModel", bestModel);
 
   // S.cost = costs(s);
-  mlfIndexAssign(&S, ".cost", mclArrayRef1(costs, s));
-
-  mclValidateOutput(S, 1, nargout_, "S", "annealVisitParameters");
+  mxSetField(output, 0, "cost",
+				 mxCreateScalarDouble(mxGetPr(costs)[int(mxGetScalar(s))-1]));
 
   mxDestroyArray(x);
   mxDestroyArray(modelmatrix);
@@ -337,10 +342,10 @@ static mxArray * MannealVisitParameters(int nargout_,
   mxDestroyArray(bounds);
   mxDestroyArray(deltas);
   mxDestroyArray(valueScalingRange);
-  mxDestroyArray(bestModel);
+
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-  return S;
+  return output;
 }
 
 /*
