@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Apr  6 17:56:52 2001
+// written: Tue Apr 10 10:29:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -48,10 +48,10 @@ DOTRACE("Classifier::forwardProbit");
 
   const double divisor = (1.0 / Num::SQRT_2) * (1.0 / sigmaNoise);
 
-  MtxConstIter diffev = diffEv.colIter(0);
+  MtxConstIter diffev = diffEv.columnIter(0);
 
   Mtx pp(diffEv.mrows(), 1);
-  MtxIter ppiter = pp.colIter(0);
+  MtxIter ppiter = pp.columnIter(0);
 
   // alpha = (thresh - diffEvidence) / sigmaNoise
   //
@@ -97,10 +97,10 @@ DOTRACE("Classifier::computeLogL");
 
   const double LOG_10_MINUS_50 = -115.1293;
 
-  MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
-  MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
+  MtxConstIter oi1iter = itsObservedIncidence.columnIter(0);
+  MtxConstIter oi2iter = itsObservedIncidence.columnIter(1);
 
-  MtxConstIter ppiter = predictedProbability.colIter(0);
+  MtxConstIter ppiter = predictedProbability.columnIter(0);
 
   for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter) {
 	 double oi1 = *oi1iter;
@@ -164,10 +164,10 @@ double Classifier::fullLogL()
 DOTRACE("Classifier::fullLogL");
 
   Mtx observedProb(numAllExemplars(), 1);
-  MtxIter opiter = observedProb.colIter(0);
+  MtxIter opiter = observedProb.columnIter(0);
 
-  MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
-  MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
+  MtxConstIter oi1iter = itsObservedIncidence.columnIter(0);
+  MtxConstIter oi2iter = itsObservedIncidence.columnIter(1);
 
   for (; opiter.hasMore(); ++opiter, ++oi1iter, ++oi2iter)
 	 *opiter = (*oi1iter / (*oi1iter + *oi2iter));
@@ -190,7 +190,7 @@ int Classifier::countCategory(int category) const
 {
 DOTRACE("Classifier::countCategory");
   int n = 0;
-  MtxConstIter iter = itsObjCategories.colIter(0);
+  MtxConstIter iter = itsObjCategories.columnIter(0);
   for (; iter.hasMore(); ++iter)
 	 {
 		if (*iter == category)

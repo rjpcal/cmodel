@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Apr  6 16:49:37 2001
+// written: Tue Apr 10 10:32:16 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -244,7 +244,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
 
-	 const MtxIter diffEv = diffEvOut.colIter(0);
+	 const MtxIter diffEv = diffEvOut.columnIter(0);
 
 	 for (MtxIter iter1 = distrust1, iter2 = distrust2, diff = diffEv;
 			iter1.hasMore() && diff.hasMore();

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Fri Apr  6 11:14:03 2001
+// written: Tue Apr 10 10:32:38 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ DOTRACE("CModelPbi::computeDiffEv");
 	 static_cast<const Slice&>(modelParams.leftmost(DIM_OBJ_PARAMS)).begin();
 
   int i = 0;
-  MtxIter diffEv = diffEvOut.colIter(0);
+  MtxIter diffEv = diffEvOut.columnIter(0);
 
   for (; diffEv.hasMore(); ++i, ++diffEv)
 	 *diffEv = -1.0 * innerProduct(attWeights, objects.rowIter(i));
