@@ -1,4 +1,4 @@
-#include <iostream.h>
+#include <iostream>
 #include <cmath>
 #include <cstdlib>
 
@@ -176,7 +176,7 @@ void svdcmp(
       }
       if (its == 30)
         {
-          cerr << "no convergence in 30 svdcmp iterations\n";
+          std::cerr << "no convergence in 30 svdcmp iterations\n";
           exit(-1);
         }
       x=w[l];                    // Shift from bottom 2-by-2 minor.
