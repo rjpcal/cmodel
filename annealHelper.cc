@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 19:45:00 2002
+// written: Mon Feb 18 19:48:48 2002
 // $Id$
 //
 //
@@ -622,7 +622,7 @@ public:
         displayParams(mstar, Ostar);
 
         if (itsOpts.talking)
-          mexPrintf("%d iterations\n", opt.iterCount());
+          std::cerr << opt.iterCount() << " iterations\n";
 
         bool inBounds = true;
 
@@ -638,14 +638,14 @@ public:
             itsBestModels.column(itsRunNum) = mstar;
             itsBestCosts.at(itsRunNum) = Ostar;
             if (itsOpts.talking)
-              mexPrintf("\nSimplex method lowered cost "
-                        "and remained within constraints.\n\n");
+              std::cerr << "\nSimplex method lowered cost "
+                        << "and remained within constraints.\n\n";
           }
         else
           {
             if (itsOpts.talking)
-              mexPrintf("\nSimplex method lowered cost "
-                        "but failed to remain within constraints.\n\n");
+              std::cerr << "\nSimplex method lowered cost "
+                        << "but failed to remain within constraints.\n\n";
           }
       }
   }
@@ -733,10 +733,14 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
           if (itsOpts.talking && (nvisits % 10 == 0))
             {
-              mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                        int(itsNumFunEvals.at(itsRunNum)),
-                        temp,
-                        itsEnergy.column(itsRunNum).min());
+              std::cerr << std::setw(7) << int(itsNumFunEvals.at(itsRunNum))
+                        << "\t\t"
+                        << std::setw(7) << std::fixed << std::setprecision(2)
+                        << temp
+                        << "\t\t"
+                        << std::setw(7) << std::fixed << std::setprecision(2)
+                        << itsEnergy.column(itsRunNum).min()
+                        << "\n";
             }
 
           itsEnergy.at(nvisits-1,itsRunNum) =
