@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Tue Apr 10 10:32:16 2001
+// written: Tue Apr 10 15:19:23 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,6 +19,7 @@
 #include "minivec.h"
 #include "mtx.h"
 #include "num.h"
+#include "strings.h"
 
 #include "trace.h"
 
@@ -101,6 +102,38 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
 CModelExemplar::~CModelExemplar()
 {}
 
+Classifier::RequestResult
+CModelExemplar::handleRequest(fixed_string action,
+										const Mtx& allModelParams,
+										mxArray* extraArgs_mx)
+{
+DOTRACE("CModelExemplar::handleRequest");
+
+  if ( action == "getStoredExemplars" )
+	 {
+		Mtx category_ = Mtx::extractStructField(extraArgs_mx, "category");
+		int category = int(category_.at(0));
+
+		Slice modelParams = allModelParams.column(0);
+
+		Slice otherParams = modelParams.rightmost(modelParams.nelems()-
+																(DIM_OBJ_PARAMS+2));
+
+		loadModelParams(otherParams);
+
+		if (category == 0)
+		  return getStoredExemplars(CAT1);
+
+		if (category == 1)
+		  return getStoredExemplars(CAT2);
+
+		throw ErrorWithMsg("unknown category while processing request"
+								 "'getStoredExemplars'");
+	 }
+
+  return Classifier::handleRequest(action, allModelParams, extraArgs_mx);
+}
+
 //---------------------------------------------------------------------
 //
 // compute the minus loglikelihood for the constrained summed
@@ -114,7 +147,8 @@ CModelExemplar::~CModelExemplar()
 //---------------------------------------------------------------------
 
 void CModelExemplar::computeDiffEv(const Mtx& objects,
-											  Slice& modelParams, Mtx& diffEvOut) {
+											  Slice& modelParams, Mtx& diffEvOut)
+{
 DOTRACE("CModelExemplar::computeDiffEv");
 
   const bool newObjects = (objects != itsObjectsCache);
