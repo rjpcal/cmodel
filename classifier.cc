@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Mar 21 13:56:04 2001
+// written: Wed Mar 21 13:58:02 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -111,9 +111,7 @@ double Classifier::currentLogL(Slice& modelParams)
 {
 DOTRACE("Classifier::currentLogL");
 
-  itsDiffEvidence = 0.0;
-
-  computeDiffEv(modelParams);
+  computeDiffEv(modelParams, itsDiffEvidence);
 
   //---------------------------------------------------------------------
   //

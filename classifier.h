@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Mar 21 11:23:21 2001
+// written: Wed Mar 21 13:57:31 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,7 +34,7 @@ private:
   double computeLogL(LogLType type);
 
   // Must be overridden by subclasses
-  virtual void computeDiffEv(Slice& modelParams) = 0;
+  virtual void computeDiffEv(Slice& modelParams, Mtx& diffEvOut) = 0;
 
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
@@ -49,7 +49,6 @@ public:
   double deviance(Slice& modelParams);
 
 protected:
-  double& diffEvidence(int i) { return *(itsDiffEvidence.rowIter(i)); }
   int numAllExemplars() const { return itsNumAllExemplars; }
 
   Slice exemplar(int i) const;
