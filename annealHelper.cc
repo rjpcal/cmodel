@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:32:35 2002
+// written: Fri Feb 15 14:56:22 2002
 // $Id$
 //
 //
@@ -426,12 +426,12 @@ mxArray* annealHelper(mxArray* old_astate_mx,
 DOTRACE("annealHelper");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
- if (nvararg > 0 && int(mxGetScalar(pvararg[0])) = -1)
+ if (nvararg > 0 && int(mxGetScalar(pvararg[0])) == -1)
    {
      Util::Prof::printAllProfData(std::cerr);
      return mxCreateScalarDouble(-1.0);
    }
- if (nvararg > 0 && int(mxGetScalar(pvararg[0])) = -2)
+ if (nvararg > 0 && int(mxGetScalar(pvararg[0])) == -2)
    {
      Util::Prof::resetAllProfData();
      return mxCreateScalarDouble(-2.0);
@@ -453,10 +453,8 @@ DOTRACE("annealHelper");
   const bool astate_talk =
     (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
 
-  Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
-                  Mtx::REFER);
-
-  const Mtx energy(mxGetField(astate_mx, 0, "energy"));
+  Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
+  Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
 
   const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
 
@@ -471,27 +469,27 @@ DOTRACE("annealHelper");
   mxArray* bestModel_mx = mxGetField(astate_mx, 0, "bestModel");
 
   VisitResult vresult = annealVisitParameters(bestModel_mx,
-                                             valueScalingRange,
-                                             deltas,
-                                             bounds,
-                                             canUseMatrix,
-                                             func_name,
-                                             temp,
-                                             nvararg,
-                                             pvararg);
+                                              valueScalingRange,
+                                              deltas,
+                                              bounds,
+                                              canUseMatrix,
+                                              func_name,
+                                              temp,
+                                              nvararg,
+                                              pvararg);
 
   mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
   numFunEvals.at(k_onebased-1) = numFunEvals.at(k_onebased-1) + vresult.nevals;
 
+  energy.at(astate_c-1,k_onebased-1) = vresult.cost;
+
   //
   // Build the output struct
   //
 
-  const char* fieldNames[] = { "cost", "new_astate" };
-  mxArray* output = mxCreateStructMatrix(1,1,2,fieldNames);
-
-  mxSetField(output, 0, "cost", mxCreateScalarDouble(vresult.cost));
+  const char* fieldNames[] = { "new_astate" };
+  mxArray* output = mxCreateStructMatrix(1,1,1,fieldNames);
 
   mxSetField(output, 0, "new_astate", astate_mx);
 
