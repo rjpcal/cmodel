@@ -642,6 +642,10 @@ private:
 
   int itsIterCount;
 
+  enum IterType { INITIAL, EXPAND, REFLECT, CONTRACT_OUTSIDE, CONTRACT_INSIDE, SHRINK };
+
+  IterType itsCurIter;
+
   void buildInitialSimplex()
   {
 	 // Following improvement suggested by L.Pfeffer at Stanford
@@ -771,9 +775,7 @@ private:
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
   }
 
-  enum IterType { INITIAL, EXPAND, REFLECT, CONTRACT_OUTSIDE, CONTRACT_INSIDE, SHRINK };
-
-  const char* iterTypeString(IterType how)
+  static const char* iterTypeString(IterType how)
   {
 	 switch (how)
 		{
@@ -801,21 +803,21 @@ private:
 		}
   }
 
-  void printIter(IterType how)
+  void printIter()
   {
 	 if (itsPrnt == ITER)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
 						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
-		  mexPrintf("%s\n", iterTypeString(how));
+		  mexPrintf("%s\n", iterTypeString(itsCurIter));
 		}
   }
 
-  void printSimplex(IterType how)
+  void printSimplex()
   {
 	 if (itsPrnt == SIMPLEX)
 		{
-		  mexPrintf("\n%s\n", iterTypeString(how));
+		  mexPrintf("\n%s\n", iterTypeString(itsCurIter));
 		  itsSimplex.print("simplex");
 		  itsFvals.print("fvals");
 		  mexPrintf("funcEvals: %d\n", funcCount());
@@ -837,11 +839,6 @@ private:
 
 	 return NOTIFY;
   }
-
-  static const double RHO = 1.0;
-  static const double CHI = 2.0;
-  static const double PSI = 0.5;
-  static const double SIGMA = 0.5;
 
 public:
   SimplexOptimizer(FuncEvaluator& objective,
@@ -899,8 +896,9 @@ public:
 int SimplexOptimizer::optimize()
 {
   printHeader();
-  printIter(INITIAL);
-  printSimplex(INITIAL);
+  itsCurIter = INITIAL;
+  printIter();
+  printSimplex();
 
   // Iterate until the diameter of the simplex is less than itsTolx AND
   // the function values differ from the min by less than itsTolf, or
@@ -933,98 +931,66 @@ void SimplexOptimizer::doOneIter()
 {
 DOTRACE("SimplexOptimizer::doOneIter");
 
-  IterType how = INITIAL;
-
   // compute average of the itsNparams (NOT itsNparams+1) best points
   Mtx xbar(itsSimplex.columns(0,itsNparams).meanColumn());
 
-
   // Calculate the reflection point
-  FuncPoint rflPt = evaluate(xbar*(1.0+RHO) -
-									  itsSimplex.columns(itsNparams,1) * RHO);
+  FuncPoint rflPt = evaluate(xbar*2.0 - itsSimplex.columns(itsNparams,1));
 
 
-//    if (rflPt.f < itsFvals.at(0,0))
   if (rflPt.betterThan(simplexAt(0)))
-	 {
-		DOTRACE("rflPt.betterThan(simplexAt(0))");
+ 	 {
+ 		DOTRACE("rflPt.betterThan(simplexAt(0))");
 
-		// Calculate the expansion point
-		FuncPoint expPt =
-		  evaluate((xbar * (1.0 + RHO*CHI)) -
-					  (itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
+ 		// Calculate the expansion point
+ 		FuncPoint expPt = evaluate(xbar*3.0 -
+											itsSimplex.columns(itsNparams,1)*2.0);
 
-//  		if (expPt.f < rflPt.f)
-		if (expPt.betterThan(rflPt))
-		  {
-			 putInSimplex(expPt, itsNparams);
-			 how = EXPAND;
-		  }
-		else
-		  {
-			 putInSimplex(rflPt, itsNparams);
-			 how = REFLECT;
-		  }
-	 }
+ 		if (expPt.betterThan(rflPt))
+ 		  { putInSimplex(expPt, itsNparams); itsCurIter = EXPAND; }
+ 		else
+ 		  { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
+ 	 }
   else
 	 {
-		DOTRACE("rflPt.f >= itsFvals(:,1)");
+		DOTRACE("!addReflection");
 
-//  		if (rflPt.f < itsFvals.at(0,itsNparams-1))
 		if (rflPt.betterThan(simplexAt(itsNparams-1)))
-		  {
-			 putInSimplex(rflPt, itsNparams);
-			 how = REFLECT;
-		  }
+		  { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
 		else
 		  {
 			 // Perform contraction
 
-//  			 if (rflPt.f < itsFvals.at(0,itsNparams))
 			 if (rflPt.betterThan(simplexAt(itsNparams)))
 				{
 				  // Perform an outside contraction
 				  FuncPoint ictPt =
-					 evaluate(xbar*(1.0 + PSI*RHO) -
-								 (itsSimplex.columns(itsNparams,1) * (PSI*RHO)));
+					 evaluate(xbar*1.5 - itsSimplex.columns(itsNparams,1)*0.5);
 
-//  				  if (ictPt.f <= rflPt.f)
 				  if (ictPt.betterThan(rflPt))
-					 {
-						putInSimplex(ictPt, itsNparams);
-						how = CONTRACT_OUTSIDE;
-					 }
+					 { putInSimplex(ictPt, itsNparams); itsCurIter = CONTRACT_OUTSIDE; }
 				  else
-					 {
-						how = SHRINK;
-					 }
+					 { itsCurIter = SHRINK; }
 				}
 			 else
 				{
 				  // Perform an inside contraction
 				  FuncPoint octPt =
-					 evaluate(xbar*(1.0-PSI) +
-								 (itsSimplex.columns(itsNparams,1)* PSI));
+					 evaluate(xbar*0.5 + itsSimplex.columns(itsNparams,1)*0.5);
 
-//  				  if (octPt.f < itsFvals.at(0,itsNparams))
 				  if (octPt.betterThan(simplexAt(itsNparams)))
-					 {
-						putInSimplex(octPt, itsNparams);
-						how = CONTRACT_INSIDE;
-					 }
+					 { putInSimplex(octPt, itsNparams); itsCurIter = CONTRACT_INSIDE; }
 				  else
-					 {
-						how = SHRINK;
-					 }
+					 { itsCurIter = SHRINK; }
 				}
 
-			 if (SHRINK == how)
+			 if (SHRINK == itsCurIter)
 				{
 				  for (int j = 1; j < itsNparams+1; ++j)
 					 {
 						putInSimplex(itsSimplex.columns(0,1) +
 										 (itsSimplex.columns(j,1) -
-										  itsSimplex.columns(0,1)) * SIGMA,
+										  itsSimplex.columns(0,1)) * 0.5,
 										 j);
 					 }
 				}
@@ -1035,8 +1001,8 @@ DOTRACE("SimplexOptimizer::doOneIter");
 
   ++itsIterCount;
 
-  printIter(how);
-  printSimplex(how);
+  printIter();
+  printSimplex();
 }
 
 
