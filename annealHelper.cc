@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:00:34 2002
+// written: Mon Feb 18 17:05:57 2002
 // $Id$
 //
 //
@@ -352,8 +352,8 @@ DOTRACE("sampleFromPdf");
 
 struct AnnealOpts
 {
-  AnnealOpts(mxArray* arr, int numruns) :
-    numRuns(numruns),
+  AnnealOpts(mxArray* arr) :
+    numRuns(int(mxGetScalar(Mx::getField(arr, "numruns")))),
     talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
     canUseMatrix(mxGetScalar(Mx::getField(arr, "canUseMatrix")) != 0.0),
     doNewton(mxGetScalar(Mx::getField(arr, "newton")) != 0.0),
@@ -385,11 +385,11 @@ struct AnnealOpts
 
 //---------------------------------------------------------------------
 //
-// class AnnealingRun
+// class AnnealingOptimizer
 //
 //---------------------------------------------------------------------
 
-class AnnealingRun
+class AnnealingOptimizer
 {
 private:
   AnnealOpts& itsOpts;
@@ -407,10 +407,10 @@ private:
   mxArray** const itsPvararg;
 
 public:
-  AnnealingRun(const fstring& funcName,
-               AnnealOpts& astate,
-               int nvararg,
-               mxArray** pvararg)
+  AnnealingOptimizer(const fstring& funcName,
+                     AnnealOpts& astate,
+                     int nvararg,
+                     mxArray** pvararg)
     :
     itsOpts(astate),
     itsRunNum(0),
@@ -429,7 +429,13 @@ public:
     itsEnergy.setAll(std::numeric_limits<double>::max());
   }
 
-  void oneRun();
+  void doOneRun();
+
+  void doAllRuns()
+  {
+    for (int i = 0; i < itsOpts.numRuns; ++i)
+      doOneRun();
+  }
 
   mxArray* getOutput()
   {
@@ -582,7 +588,7 @@ public:
   }
 };
 
-double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
+double AnnealingOptimizer::visitParameters(Mtx& bestModel, const double temp)
 {
   int nevals = 0;
   int s = -1;
@@ -625,13 +631,13 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
 
 //---------------------------------------------------------------------
 //
-// AnnealingRun::oneRun()
+// AnnealingOptimizer::doOneRun()
 //
 //---------------------------------------------------------------------
 
-void AnnealingRun::oneRun()
+void AnnealingOptimizer::doOneRun()
 {
-DOTRACE("AnnealingRun::oneRun");
+DOTRACE("AnnealingOptimizer::doOneRun");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
   if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
@@ -723,36 +729,6 @@ DOTRACE("AnnealingRun::oneRun");
   ++itsRunNum;
 }
 
-///////////////////////////////////////////////////////////////////////
-//
-// class Annealer
-//
-///////////////////////////////////////////////////////////////////////
-
-class Annealer
-{
-public:
-
-  mxArray* go(mxArray* astate_mx,
-              const fstring& func_name,
-              int nvararg,
-              mxArray** pvararg)
-  {
-    int numruns = int(mxGetScalar(Mx::getField(astate_mx, "numruns")));
-
-    AnnealOpts astate(astate_mx, numruns);
-
-    AnnealingRun ar(func_name, astate, nvararg, pvararg);
-
-    for (int i = 0; i < numruns; ++i)
-      {
-        ar.oneRun();
-      }
-
-    return ar.getOutput();
-  }
-};
-
 /*
  * The function "mlxAnnealHelper" contains the feval interface for the
  * "annealHelper" M-function from file
@@ -786,12 +762,16 @@ DOTRACE("mlxAnnealHelper");
 
   try
     {
-      Annealer a;
+      AnnealOpts astate(prhs[0]);
 
-      plhs[0] = a.go(prhs[0], // astate
-                     MxWrapper::extractString(prhs[1]), // funcName
-                     nvararg,
-                     pvararg);
+      AnnealingOptimizer ar(MxWrapper::extractString(prhs[1]), // funcName
+                            astate,
+                            nvararg,
+                            pvararg);
+
+      ar.doAllRuns();
+
+      plhs[0] = ar.getOutput();
     }
   catch (Util::Error& err)
     {
