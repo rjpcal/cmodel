@@ -16,6 +16,24 @@
 #define LOCAL_DEBUG
 #include "trace.h"
 
+namespace {
+  template <class T>
+  inline void localswap(T& t1, T& t2)
+  {
+	 T t1_(t1);
+	 t1 = t2;
+	 t2 = t1_;
+  }
+
+  inline void memswap(double* buf1, double* buf2, double* tempbuf1,
+							 size_t nelems)
+  {
+	 memcpy(tempbuf1, buf1, nelems*sizeof(double));
+	 memcpy(buf1, buf2, nelems*sizeof(double));
+	 memcpy(buf2, tempbuf1, nelems*sizeof(double));
+  }
+}
+
 class FuncEvaluator {
   mxArray* itsFunfcn;
   mxArray* itsVarargin_ref;
@@ -678,7 +696,7 @@ DOTRACE("MdoSimplex");
     // numModelParams = prod(size(x));
 	 const int numModelParams = mxGetM(x) * mxGetN(x);
 
-//  	 double* const oldcopy = new double[numModelParams*(numModelParams+1)];
+  	 double* const parmBuffer = new double[numModelParams];
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
@@ -1426,10 +1444,13 @@ DOTRACE("MdoSimplex");
 
 		{DOTRACE("sort funcVals");
       // [funcVals,j] = sort(funcVals);
-      mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
+//        mlfAssign(&funcVals, mlfSort(&j, funcVals, NULL));
+
+		// Throw away the actual sorted result; just keep the indices
+		mxDestroyArray(mlfSort(&j, funcVals, NULL));
 		}
 
-#if 1
+#if 0
 		{DOTRACE("reorder simplex");
 		mlfAssign(
 					 &theSimplex,
@@ -1439,34 +1460,48 @@ DOTRACE("MdoSimplex");
 									  mclVsv(j, "j")));
 		}
 #else
-		{DOTRACE("copy old simplex");
-		int nelems = numModelParams*(numModelParams+1);
-		memcpy(oldcopy, mxGetPr(theSimplex), nelems*sizeof(double));
-		}
-
 		{DOTRACE("reorder simplex");
-      // theSimplex = theSimplex(:,j);
+		Mtx jref(j, Mtx::BORROW);
+		int smallest = int(jref.at(0)) - 1;
+		int largest = int(jref.at(numModelParams)) - 1;
+		int largest2 = int(jref.at(numModelParams-1)) - 1;
 
-		double* const dest_begin = mxGetPr(theSimplex);
-		const double* const src_begin = oldcopy;
-		double* j_ptr = mxGetPr(j);
-
-		for (int i = 0; i < numModelParams+1; ++i, ++j_ptr)
+		if (smallest != 0)
 		  {
-			 DOTRACE("inner loop");
-			 int source_row = int(*j_ptr) - 1;
+			 DOTRACE("hit smallest");
+			 localswap(mxGetPr(funcVals)[smallest],
+						  mxGetPr(funcVals)[0]);
 
-			 if (i == source_row)
-				; // do nothing
-			 else
-				{
-				  DOTRACE("do copy");
-				  double* dest = dest_begin + i*numModelParams;
-				  const double* source =
-					 src_begin + source_row*numModelParams;
-				  memcpy(dest, source, numModelParams*sizeof(double));
-				}
+			 memswap(mxGetPr(theSimplex),
+						mxGetPr(theSimplex)+smallest*numModelParams,
+						parmBuffer,
+						numModelParams);
 		  }
+
+		if (largest != numModelParams)
+		  {
+			 DOTRACE("hit largest");
+			 localswap(mxGetPr(funcVals)[largest],
+						  mxGetPr(funcVals)[numModelParams]);
+
+			 memswap(mxGetPr(theSimplex)+largest*numModelParams,
+						mxGetPr(theSimplex)+numModelParams*numModelParams,
+						parmBuffer,
+						numModelParams);
+		  }
+
+		if (largest2 != numModelParams-1)
+		  {
+			 DOTRACE("hit largest2");
+			 localswap(mxGetPr(funcVals)[largest2],
+						  mxGetPr(funcVals)[numModelParams-1]);
+
+			 memswap(mxGetPr(theSimplex)+largest2*numModelParams,
+						mxGetPr(theSimplex)+(numModelParams-1)*numModelParams,
+						parmBuffer,
+						numModelParams);
+		  }
+
 		}
 #endif
 
@@ -1652,7 +1687,7 @@ DOTRACE("MdoSimplex");
     mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
     mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
 
-//  	 delete [] oldcopy;
+  	 delete [] parmBuffer;
 
     mxDestroyArray(numModelParams_mx);
     mxDestroyArray(ans);
