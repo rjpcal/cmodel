@@ -788,27 +788,26 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 // Even smaller delta for zero elements of x
 	 const double zero_term_delta = 0.00025;
 
-	 for (int j_zero_based = 0; j_zero_based < numModelParams;
-			++j_zero_based)
+	 // zero-based index
+	 for (int j = 0; j < numModelParams; ++j)
 		{
 		  Mtx y = initialParams;
 
-		  if (y.at(j_zero_based) != 0.0)
+		  if (y.at(j) != 0.0)
 			 {
-				y.at(j_zero_based) *= (1.0 + usual_delta);
+				y.at(j) *= (1.0 + usual_delta);
 			 }
 		  else
 			 {
-				y.at(j_zero_based) = zero_term_delta;
+				y.at(j) = zero_term_delta;
 			 }
 
-		  theSimplex_dr.ncMtx().column(j_zero_based+1) = y;
+		  theSimplex_dr.ncMtx().column(j+1) = y;
 
-		  funcVals_dr.ncMtx().at(0,j_zero_based+1) = objective.evaluate(y);
+		  funcVals_dr.ncMtx().at(0,j+1) = objective.evaluate(y);
 		}
   }
 
-  // 
   // % sort so theSimplex(1,:) has the lowest function value 
   // [funcVals,j_mx] = sort(funcVals);
   funcVals_dr.assignArray(mlfSort(&j_mx, funcVals_dr.asArray(), NULL));
@@ -871,12 +870,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
 	 {DOTRACE("compute reflection point");
 
-	 // 
-	 // Compute the reflection point
-	 // 
-
 	 // xbar = average of the numModelParams (NOT numModelParams+1) best points
-	 // xbar = sum(theSimplex(:,one2n), 2)/numModelParams;
 
 	 {DOTRACE("compute xbar");
 
@@ -899,8 +893,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 fxr = objective.evaluate(xr);
 	 }
 
-	 // 
-	 // if fxr < funcVals(:,1)
 	 if (fxr < funcVals_dr.asMtx().at(0,0))
 		{
 		  DOTRACE("if fxr < funcVals(:,1)");
