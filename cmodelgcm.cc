@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Wed Feb 20 17:52:43 2002
+// written: Wed Jul 31 15:08:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CMODELGCM_CC_DEFINED
 #define CMODELGCM_CC_DEFINED
 
-#include "cmodelgcm.h"
+#include "cmodel/cmodelgcm.h"
 
 #include "mtx/mtx.h"
 

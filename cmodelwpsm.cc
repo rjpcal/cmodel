@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Wed Feb 20 17:52:53 2002
+// written: Wed Jul 31 15:08:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CMODELWPSM_CC_DEFINED
 #define CMODELWPSM_CC_DEFINED
 
-#include "cmodelwpsm.h"
+#include "cmodel/cmodelwpsm.h"
 
 #include "mtx/mtx.h"
 

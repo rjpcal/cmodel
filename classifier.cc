@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Jul 30 13:08:55 2002
+// written: Wed Jul 31 15:06:16 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,11 +13,11 @@
 #ifndef CLASSIFIER_CC_DEFINED
 #define CLASSIFIER_CC_DEFINED
 
-#include "classifier.h"
+#include "cmodel/classifier.h"
 
-#include "annealingoptimizer.h"
-#include "multivarfunction.h"
-#include "simplexoptimizer.h"
+#include "cmodel/annealingoptimizer.h"
+#include "cmodel/multivarfunction.h"
+#include "cmodel/simplexoptimizer.h"
 
 #include "mtx/num.h"
 

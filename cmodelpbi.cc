@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Mon Mar  4 12:01:03 2002
+// written: Wed Jul 31 15:08:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CMODELPBI_CC_DEFINED
 #define CMODELPBI_CC_DEFINED
 
-#include "cmodelpbi.h"
+#include "cmodel/cmodelpbi.h"
 
 #include "mtx/mtx.h"
 

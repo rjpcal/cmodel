@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:10:06 2002
-// written: Thu Jun  6 16:53:10 2002
+// written: Wed Jul 31 15:08:46 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef MATLABFUNCTION_CC_DEFINED
 #define MATLABFUNCTION_CC_DEFINED
 
-#include "matlabfunction.h"
+#include "cmodel/matlabfunction.h"
 
 #include "mtx/mtx.h"
 

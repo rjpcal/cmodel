@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Mon Mar  4 12:02:04 2002
+// written: Wed Jul 31 15:08:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CMODELCUEVALIDITY_CC_DEFINED
 #define CMODELCUEVALIDITY_CC_DEFINED
 
-#include "cmodelcuevalidity.h"
+#include "cmodel/cmodelcuevalidity.h"
 
 #include "mtx/mtx.h"
 

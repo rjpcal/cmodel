@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Jul 30 18:17:57 2002
+// written: Wed Jul 31 15:06:09 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,10 +13,10 @@
 #ifndef ANNEALINGOPTIMIZER_CC_DEFINED
 #define ANNEALINGOPTIMIZER_CC_DEFINED
 
-#include "annealingoptimizer.h"
+#include "cmodel/annealingoptimizer.h"
 
-#include "multivarfunction.h"
-#include "simplexoptimizer.h"
+#include "cmodel/multivarfunction.h"
+#include "cmodel/simplexoptimizer.h"
 
 #include "mx/mx.h"
 

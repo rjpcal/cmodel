@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:45 2001
-// written: Thu Feb 14 13:19:32 2002
+// written: Wed Jul 31 15:08:55 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef MINKBINDER_CC_DEFINED
 #define MINKBINDER_CC_DEFINED
 
-#include "minkbinder.h"
+#include "cmodel/minkbinder.h"
 
 //#define USE_ASM
 

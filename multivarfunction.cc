@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:15:55 2002
-// written: Wed Feb 20 17:53:11 2002
+// written: Wed Jul 31 15:09:06 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef MULTIVARFUNCTION_CC_DEFINED
 #define MULTIVARFUNCTION_CC_DEFINED
 
-#include "multivarfunction.h"
+#include "cmodel/multivarfunction.h"
 
 #include "mtx/mtx.h"
 

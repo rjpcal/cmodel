@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar  4 12:04:22 2002
+// written: Wed Jul 31 15:08:07 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,8 +13,8 @@
 #ifndef CMODELEXEMPLAR_CC_DEFINED
 #define CMODELEXEMPLAR_CC_DEFINED
 
-#include "cmodelexemplar.h"
-#include "minkbinder.h"
+#include "cmodel/cmodelexemplar.h"
+#include "cmodel/minkbinder.h"
 
 #include "mtx/mtx.h"
 #include "mtx/num.h"

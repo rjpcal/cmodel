@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:08:46 2001
-// written: Wed Feb 20 18:09:40 2002
+// written: Wed Jul 31 15:06:43 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
 #define CMODELPBI_H_DEFINED
 
 #if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CLASSIFIER_H_DEFINED)
-#include "classifier.h"
+#include "cmodel/classifier.h"
 #endif
 
 class CModelPbi : public Classifier

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Tue Mar  5 14:08:08 2002
+// written: Wed Jul 31 15:07:43 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef CMODELCSSM_CC_DEFINED
 #define CMODELCSSM_CC_DEFINED
 
-#include "cmodelcssm.h"
+#include "cmodel/cmodelcssm.h"
 
 #include "util/error.h"
 

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Jun  6 16:54:58 2002
+// written: Wed Jul 31 15:06:35 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,13 +17,13 @@
 #define MLF_V2 1
 #endif
 
-#include "classifier.h"
-#include "cmodelcssm.h"
-#include "cmodelcuevalidity.h"
-#include "cmodelgcm.h"
-#include "cmodelpbi.h"
-#include "cmodelspc.h"
-#include "cmodelwpsm.h"
+#include "cmodel/classifier.h"
+#include "cmodel/cmodelcssm.h"
+#include "cmodel/cmodelcuevalidity.h"
+#include "cmodel/cmodelgcm.h"
+#include "cmodel/cmodelpbi.h"
+#include "cmodel/cmodelspc.h"
+#include "cmodel/cmodelwpsm.h"
 
 #include "mtx/mtx.h"
 

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Mon Mar  4 17:37:17 2002
+// written: Wed Jul 31 15:11:11 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,7 +13,7 @@
 #ifndef SIMPLEXOPTIMIZER_CC_DEFINED
 #define SIMPLEXOPTIMIZER_CC_DEFINED
 
-#include "simplexoptimizer.h"
+#include "cmodel/simplexoptimizer.h"
 
 #include "util/strings.h"
 

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 13:59:00 2002
-// written: Wed Feb 20 18:09:49 2002
+// written: Wed Jul 31 15:06:45 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,7 +14,7 @@
 #define CMODELSPC_H_DEFINED
 
 #if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CLASSIFIER_H_DEFINED)
-#include "classifier.h"
+#include "cmodel/classifier.h"
 #endif
 
 class CModelSPC : public Classifier
