@@ -42,7 +42,9 @@ DOTRACE("annealHelper");
 
   ar.optimize();
 
-  plhs[0] = ar.getOutput().release();
+  mx_wrapper result;
+  ar.getOutput(result);
+  plhs[0] = result.release();
 }
 
 namespace
