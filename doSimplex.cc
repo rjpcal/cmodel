@@ -669,6 +669,7 @@ DOTRACE("MdoSimplex");
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
 
+
 	 const double tolx = mxGetScalar(tolx_mx);
 	 const double tolf = mxGetScalar(tolf_mx);
 
@@ -676,6 +677,8 @@ DOTRACE("MdoSimplex");
 
     // numModelParams = prod(size(x));
 	 const int numModelParams = mxGetM(x) * mxGetN(x);
+
+//  	 double* const oldcopy = new double[numModelParams*(numModelParams+1)];
 
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
@@ -1424,15 +1427,48 @@ DOTRACE("MdoSimplex");
 		{DOTRACE("sort funcVals");
       // [funcVals,j] = sort(funcVals);
       mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
-
-      // theSimplex = theSimplex(:,j);
-      mlfAssign(
-        &theSimplex,
-        mclArrayRef2(
-          theSimplex,
-          mlfCreateColonIndex(),
-          mclVsv(j, "j")));
 		}
+
+#if 1
+		{DOTRACE("reorder simplex");
+		mlfAssign(
+					 &theSimplex,
+					 mclArrayRef2(
+									  theSimplex,
+									  mlfCreateColonIndex(),
+									  mclVsv(j, "j")));
+		}
+#else
+		{DOTRACE("copy old simplex");
+		int nelems = numModelParams*(numModelParams+1);
+		memcpy(oldcopy, mxGetPr(theSimplex), nelems*sizeof(double));
+		}
+
+		{DOTRACE("reorder simplex");
+      // theSimplex = theSimplex(:,j);
+
+		double* const dest_begin = mxGetPr(theSimplex);
+		const double* const src_begin = oldcopy;
+		double* j_ptr = mxGetPr(j);
+
+		for (int i = 0; i < numModelParams+1; ++i, ++j_ptr)
+		  {
+			 DOTRACE("inner loop");
+			 int source_row = int(*j_ptr) - 1;
+
+			 if (i == source_row)
+				; // do nothing
+			 else
+				{
+				  DOTRACE("do copy");
+				  double* dest = dest_begin + i*numModelParams;
+				  const double* source =
+					 src_begin + source_row*numModelParams;
+				  memcpy(dest, source, numModelParams*sizeof(double));
+				}
+		  }
+		}
+#endif
 
       // itercount = itercount + 1;
       mlfAssign(
@@ -1615,6 +1651,8 @@ DOTRACE("MdoSimplex");
     mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
     mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
     mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
+
+//  	 delete [] oldcopy;
 
     mxDestroyArray(numModelParams_mx);
     mxDestroyArray(ans);
