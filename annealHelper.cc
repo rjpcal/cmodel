@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 14:22:39 2002
+// written: Thu Feb 14 14:27:17 2002
 // $Id$
 //
 //
@@ -119,22 +119,12 @@ mxArray* doFuncEvals(bool canUseMatrix,
 int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 
 
-mxArray* makePDF(mxArray* temp,
-                 mxArray* costs);
+mxArray* makePDF(mxArray* temp, mxArray* costs);
 
-mxArray* eprob(mxArray* temp,
-               mxArray* costs);
-
-static mexFunctionTableEntry local_function_table_[5]
-  = { { "makeTestModels",
-        NULL /*mlxmakeTestModels*/, 5, 1, NULL },
-      { "doFuncEvals", NULL/*mlxdoFuncEvals*/, 2, 1, NULL },
-      { "sampleFromPdf", NULL/*mlxsampleFromPdf*/, 2, 1, NULL },
-      { "makePDF", NULL/*mlxmakePDF*/, 2, 1, NULL },
-      { "eprob", NULL/*mlxeprob*/, 2, 1, NULL } };
+mxArray* eprob(mxArray* temp, mxArray* costs);
 
 _mexLocalFunctionTable _local_function_table_annealVisitParameters
-  = { 5, local_function_table_ };
+  = { 0, (mexFunctionTableEntry *)NULL };
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
@@ -151,60 +141,61 @@ void mlxAnnealVisitParameters(int nlhs,
                               mxArray* prhs[])
 {
 DOTRACE("mlxAnnealVisitParameters");
-    mxArray* mprhs[8];
-    mxArray* mplhs[1];
-    int i;
-    if (nlhs > 1) {
-        mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
-                     "Column: 1 The function \"annealVisitParameters\" was "
-                     "called with more than the declared number of outputs "
-                     "(1).");
+  mxArray* mprhs[8];
+  mxArray* mplhs[1];
+  int i;
+  if (nlhs > 1)
+    {
+      mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
+                   "Column: 1 The function \"annealVisitParameters\" was "
+                   "called with more than the declared number of outputs "
+                   "(1).");
     }
-    for (i = 0; i < 1; ++i) {
-        mplhs[i] = mclGetUninitializedArray();
+  for (i = 0; i < 1; ++i)
+    {
+      mplhs[i] = mclGetUninitializedArray();
     }
-    for (i = 0; i < 7 && i < nrhs; ++i) {
-        mprhs[i] = prhs[i];
+  for (i = 0; i < 7 && i < nrhs; ++i)
+    {
+      mprhs[i] = prhs[i];
     }
-    for (; i < 7; ++i) {
-        mprhs[i] = NULL;
+  for (; i < 7; ++i)
+    {
+      mprhs[i] = NULL;
     }
-    mlfEnterNewContext(
-      0,
-      7,
-      mprhs[0],
-      mprhs[1],
-      mprhs[2],
-      mprhs[3],
-      mprhs[4],
-      mprhs[5],
-      mprhs[6]);
-    mprhs[7] = NULL;
-    mlfAssign(&mprhs[7], mclCreateVararginCell(nrhs - 7, prhs + 7));
-    mplhs[0]
-      = MannealVisitParameters(
-          nlhs,
-          mprhs[0],
-          mprhs[1],
-          mprhs[2],
-          mprhs[3],
-          mprhs[4],
-          mprhs[5],
-          mprhs[6],
-          mprhs[7]);
+  mlfEnterNewContext(0,
+                     7,
+                     mprhs[0],
+                     mprhs[1],
+                     mprhs[2],
+                     mprhs[3],
+                     mprhs[4],
+                     mprhs[5],
+                     mprhs[6]);
+  mprhs[7] = NULL;
+  mlfAssign(&mprhs[7], mclCreateVararginCell(nrhs - 7, prhs + 7));
 
-    mlfRestorePreviousContext(
-      0,
-      7,
-      mprhs[0],
-      mprhs[1],
-      mprhs[2],
-      mprhs[3],
-      mprhs[4],
-      mprhs[5],
-      mprhs[6]);
-    plhs[0] = mplhs[0];
-    mxDestroyArray(mprhs[7]);
+  mplhs[0] = MannealVisitParameters(nlhs,
+                                    mprhs[0],
+                                    mprhs[1],
+                                    mprhs[2],
+                                    mprhs[3],
+                                    mprhs[4],
+                                    mprhs[5],
+                                    mprhs[6],
+                                    mprhs[7]);
+
+  mlfRestorePreviousContext(0,
+                            7,
+                            mprhs[0],
+                            mprhs[1],
+                            mprhs[2],
+                            mprhs[3],
+                            mprhs[4],
+                            mprhs[5],
+                            mprhs[6]);
+  plhs[0] = mplhs[0];
+  mxDestroyArray(mprhs[7]);
 }
 
 /*
@@ -290,10 +281,8 @@ DOTRACE("MannealVisitParameters");
       // for x = find(deltas' ~= 0)
       {
         mclForLoopIterator viter__;
-        for (mclForStart(
-                         &viter__,
-                         mlfFind(
-                                 NULL,
+        for (mclForStart(&viter__,
+                         mlfFind(NULL,
                                  NULL,
                                  mclNe(mlfCtranspose(deltas_mx), _mxarray20_)),
                          NULL,
@@ -524,17 +513,13 @@ DOTRACE("doFuncEvals");
             //costs(e) = feval(func, models(:,e), varargin{:});
             for (; ; )
               {
-                mclIntArrayAssign1(
-                                   &costs_mx,
-                                   mlfFeval(
-                                            mclValueVarargout(),
+                mclIntArrayAssign1(&costs_mx,
+                                   mlfFeval(mclValueVarargout(),
                                             func,
-                                            mclArrayRef2(
-                                                         models_mx,
+                                            mclArrayRef2(models_mx,
                                                          mlfCreateColonIndex(),
                                                          mlfScalar(v_)),
-                                            mlfIndexRef(
-                                                        varargin_mx,
+                                            mlfIndexRef(varargin_mx,
                                                         "{?}",
                                                         mlfCreateColonIndex()),
                                             NULL),
