@@ -127,8 +127,11 @@ void TerminateModule_doSimplex(void)
 
   Util::Prof::printAtExit(false);
 
-  std::cout.rdbuf(coutOrigBuf);
-  std::cerr.rdbuf(cerrOrigBuf);
+  // For some reason we get crashses if we try to reset these to their
+  // original streambuf*'s; setting them to 0 effectively just shuts the
+  // streams down
+  std::cout.rdbuf(0);
+  std::cerr.rdbuf(0);
 
   delete mexBuf;
 }
