@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:17:15 2002
+// written: Fri Feb 15 11:43:30 2002
 // $Id$
 //
 //
@@ -332,21 +332,22 @@ DOTRACE("sampleFromPdf");
 
 //---------------------------------------------------------------------
 //
-// MannealVisitParameters()
+// annealVisitParameters()
 //
 //---------------------------------------------------------------------
 
-mxArray* MannealVisitParameters(mxArray* bestModel_mx,
-                                mxArray* valueScalingRange_mx,
-                                mxArray* deltas_mx,
-                                mxArray* bounds_mx,
-                                mxArray* canUseMatrix_mx,
-                                mxArray* FUN_mx,
-                                mxArray* temp_mx,
-                                int nvararg,
-                                mxArray** pvararg)
+mxArray* annealVisitParameters(mxArray* astate_mx,
+                               mxArray* bestModel_mx,
+                               mxArray* valueScalingRange_mx,
+                               mxArray* deltas_mx,
+                               mxArray* bounds_mx,
+                               mxArray* canUseMatrix_mx,
+                               mxArray* FUN_mx,
+                               mxArray* temp_mx,
+                               int nvararg,
+                               mxArray** pvararg)
 {
-DOTRACE("MannealVisitParameters");
+DOTRACE("annealVisitParameters");
 
   try
     {
@@ -369,6 +370,28 @@ DOTRACE("MannealVisitParameters");
         }
 #endif
 
+      int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+
+      const bool astate_talk =
+        (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
+
+      const double temp = mxGetScalar(mxGetField(astate_mx, 0, "temp"));
+
+      const Mtx numFunEvals(mxGetField(astate_mx, 0, "numFunEvals"),
+                            Mtx::BORROW);
+
+      const Mtx energy(mxGetField(astate_mx, 0, "energy"));
+
+      const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
+
+      if (astate_talk && (astate_c % 10 == 0))
+        {
+          mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
+                    int(numFunEvals.at(k_onebased -1)),
+                    temp,
+                    energy.column(k_onebased-1).leftmost(astate_c-1).min());
+        }
+
       mclCopyArray(&bestModel_mx);
 
       Mtx bestModel(bestModel_mx, Mtx::REFER);
@@ -381,7 +404,6 @@ DOTRACE("MannealVisitParameters");
       const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
       const Mtx deltas(deltas_mx, Mtx::BORROW);
       const Mtx bounds(bounds_mx, Mtx::BORROW);
-      const double temp = mxGetScalar(temp_mx);
 
       const fstring func_name = MxWrapper::extractString(FUN_mx);
 
@@ -463,32 +485,36 @@ DOTRACE("mlxAnnealVisitParameters");
       mexErrMsgTxt("Error: annealVisitParameters was called with more "
                    "than the declared number of outputs (1).");
     }
-  if (nrhs < 7)
+
+  const int NDECLARED = 8;
+
+  if (nrhs < NDECLARED)
     {
       mexErrMsgTxt("Error: annealVisitParameters was called with fewer "
                    "than the declared number of inputs (7).");
     }
 
-  mlfEnterNewContext(0, 7,
+  mlfEnterNewContext(0, NDECLARED,
                      prhs[0], prhs[1], prhs[2], prhs[3],
-                     prhs[4], prhs[5], prhs[6]);
+                     prhs[4], prhs[5], prhs[6], prhs[7]);
 
-  int nvararg = nrhs - 7;
-  mxArray** pvararg = prhs + 7;
+  int nvararg = nrhs - NDECLARED;
+  mxArray** pvararg = prhs + NDECLARED;
 
-  plhs[0] = MannealVisitParameters(prhs[0],
-                                   prhs[1],
-                                   prhs[2],
-                                   prhs[3],
-                                   prhs[4],
-                                   prhs[5],
-                                   prhs[6],
-                                   nvararg,
-                                   pvararg);
+  plhs[0] = annealVisitParameters(prhs[0],
+                                  prhs[1],
+                                  prhs[2],
+                                  prhs[3],
+                                  prhs[4],
+                                  prhs[5],
+                                  prhs[6],
+                                  prhs[7],
+                                  nvararg,
+                                  pvararg);
 
-  mlfRestorePreviousContext(0, 7,
+  mlfRestorePreviousContext(0, NDECLARED,
                             prhs[0], prhs[1], prhs[2], prhs[3],
-                            prhs[4], prhs[5], prhs[6]);
+                            prhs[4], prhs[5], prhs[6], prhs[7]);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
