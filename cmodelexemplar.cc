@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 28 09:49:07 2001
+// written: Wed Mar 28 10:15:36 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -134,8 +134,6 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 //
 //---------------------------------------------------------------------
 
-#include "libmatlb.h"
-
 void CModelExemplar::computeDiffEv(Slice& modelParams, Mtx& diffEvOut) {
 DOTRACE("CModelExemplar::computeDiffEv");
 
@@ -181,19 +179,16 @@ DOTRACE("CModelExemplar::computeDiffEv");
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 	 DOTRACE("minkowski loop");
 
-	 MinkowskiBinder binder1(attWts, stored1.rowIter(x),
-									 minkPower, minkPowerInv);
-	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
-									 minkPower, minkPowerInv);
-
-	 const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
-	 const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
-
   	 bool compute1 = newAttWts || (itsStored1Cache.row(x) != stored1.row(x));
   	 bool compute2 = newAttWts || (itsStored2Cache.row(x) != stored2.row(x));
 
 	 if (compute1) {
 		DOTRACE("compute1");
+
+		const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
+
+		MinkowskiBinder binder1(attWts, stored1.rowIter(x),
+										minkPower, minkPowerInv);
 
 		int y = 0;
 		for (MtxIter iter1 = distrust1; iter1.hasMore(); ++y, ++iter1) {
@@ -222,6 +217,11 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 if (compute2) {
 		DOTRACE("compute2");
 		itsStored2Cache.row(x) = stored2.row(x);
+
+		const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);
+
+		MinkowskiBinder binder2(attWts, stored2.rowIter(x),
+										minkPower, minkPowerInv);
 
 		int y = 0;
 		for (MtxIter iter2 = distrust2; iter2.hasMore(); ++y, ++iter2) {
