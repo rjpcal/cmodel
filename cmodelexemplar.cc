@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 18:40:54 2001
+// written: Fri Mar  9 19:03:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -234,7 +234,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
 double CModelExemplar::fetchSigmaNoise(const Rat& modelParams) const
 {
-  return modelParams.at(5) * sqrt(itsNumStoredExemplars*2);
+  return modelParams.at(5) * sqrt(itsNumStoredExemplars*2.0);
 }
 
 static const char vcid_cmodelexemplar_cc[] = "$Header$";
