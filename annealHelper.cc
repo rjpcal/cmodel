@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 15:37:22 2002
+// written: Thu Feb 14 15:55:59 2002
 // $Id$
 //
 //
@@ -405,7 +405,8 @@ DOTRACE("doFuncEvals");
       const int MAX_NRHS = 32;
       mxArray* prhs[MAX_NRHS];
 
-      prhs[0] = mxDuplicateArray(models_mx);
+      prhs[0] = models_mx;
+      // need this? seems like no. prhs[0] = mxDuplicateArray(models_mx);
 
       int nrhs = 1;
 
