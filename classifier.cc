@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Mar  9 18:31:23 2001
+// written: Mon Mar 12 12:34:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 
 #include "error.h"
 #include "num.h"
-#include "rutil.h"
+#include "mtx.h"
 #include "strings.h"
 #include "trace.h"
 
@@ -29,8 +29,8 @@
 //
 ///////////////////////////////////////////////////////////////////////
 
-Classifier::Classifier(const Rat& objParams,
-							  const Rat& observedIncidence) :
+Classifier::Classifier(const Mtx& objParams,
+							  const Mtx& observedIncidence) :
   itsObjParams(objParams),
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
@@ -112,7 +112,7 @@ DOTRACE("Classifier::computeLogL");
   return ll;
 }
 
-double Classifier::currentLogL(Rat& modelParams)
+double Classifier::currentLogL(Mtx& modelParams)
 {
 DOTRACE("Classifier::currentLogL");
 
@@ -150,7 +150,7 @@ double Classifier::fullLogL() {
   return computeLogL(FULL);
 }
 
-double Classifier::deviance(Rat& modelParams) {
+double Classifier::deviance(Mtx& modelParams) {
   double llc = currentLogL(modelParams);
   double llf = fullLogL();
 

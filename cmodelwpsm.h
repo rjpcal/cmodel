@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Fri Mar  9 17:37:23 2001
+// written: Mon Mar 12 12:31:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -20,15 +20,15 @@ private:
   double itsPrototype1[DIM_OBJ_PARAMS];
   double itsPrototype2[DIM_OBJ_PARAMS];
 
-  virtual void loadModelParams(Rat& modelParams);
+  virtual void loadModelParams(Mtx& modelParams);
 
   // The result of this function is only valid until the next call to
   // the function
   virtual Slice findStoredExemplar(Category cat, int n);
 
 public:
-  CModelWpsm(const Rat& objParams,
-				 const Rat& observedIncidence);
+  CModelWpsm(const Mtx& objParams,
+				 const Mtx& observedIncidence);
 
   virtual ~CModelWpsm();
 };

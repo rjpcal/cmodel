@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 19:03:30 2001
+// written: Mon Mar 12 12:34:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,7 +16,7 @@
 #include "cmodelexemplar.h"
 
 #include "error.h"
-#include "rutil.h"
+#include "mtx.h"
 #include "trace.h"
 
 #include <cmath>
@@ -81,8 +81,8 @@ private:
 //
 ///////////////////////////////////////////////////////////////////////
 
-CModelExemplar::CModelExemplar(const Rat& objParams,
-										 const Rat& observedIncidence,
+CModelExemplar::CModelExemplar(const Mtx& objParams,
+										 const Mtx& observedIncidence,
 										 int numStoredExemplars) :
   Classifier(objParams,
 				 observedIncidence),
@@ -113,7 +113,7 @@ CModelExemplar::~CModelExemplar()
 {}
 
 // Count the category training exemplars
-int CModelExemplar::countCategory(const Rat& params, int category) {
+int CModelExemplar::countCategory(const Mtx& params, int category) {
   int n = 0;
   for (int i = 0; i < params.mrows(); ++i)
 	 {
@@ -194,7 +194,7 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
 //
 //---------------------------------------------------------------------
 
-void CModelExemplar::computeDiffEv(Rat& modelParams) {
+void CModelExemplar::computeDiffEv(Mtx& modelParams) {
 DOTRACE("CModelExemplar::computeDiffEv");
 
   //---------------------------------------------------------------------
@@ -232,7 +232,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   }
 }
 
-double CModelExemplar::fetchSigmaNoise(const Rat& modelParams) const
+double CModelExemplar::fetchSigmaNoise(const Mtx& modelParams) const
 {
   return modelParams.at(5) * sqrt(itsNumStoredExemplars*2.0);
 }

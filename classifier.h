@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Mar  9 18:28:23 2001
+// written: Mon Mar 12 12:32:04 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,14 +17,14 @@
 #define MLF_V2 1
 #endif
 
-class Rat;
+class Mtx;
 class Slice;
 
 class Classifier {
 private:
-  const Rat& itsObjParams;
+  const Mtx& itsObjParams;
   int itsNumAllExemplars;
-  const Rat& itsObservedIncidence;
+  const Mtx& itsObservedIncidence;
   double* const itsDiffEvidence;
   double* const itsPredictedProbability;
 
@@ -41,19 +41,19 @@ private:
   }
 
   // Must be overridden by subclasses
-  virtual void computeDiffEv(Rat& modelParams) = 0;
+  virtual void computeDiffEv(Mtx& modelParams) = 0;
 
-  virtual double fetchSigmaNoise(const Rat& modelParams) const = 0;
+  virtual double fetchSigmaNoise(const Mtx& modelParams) const = 0;
 
 public:
-  Classifier(const Rat& objParams, const Rat& observedIncidence);
+  Classifier(const Mtx& objParams, const Mtx& observedIncidence);
   virtual ~Classifier();
 
-  double currentLogL(Rat& modelParams);  
+  double currentLogL(Mtx& modelParams);  
 
   double fullLogL();
 
-  double deviance(Rat& modelParams);
+  double deviance(Mtx& modelParams);
 
 protected:
   double& diffEvidence(int i) { return itsDiffEvidence[i]; }

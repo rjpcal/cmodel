@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Fri Mar  9 17:49:13 2001
+// written: Mon Mar 12 12:34:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,13 +16,13 @@
 #include "cmodelgcm.h"
 
 #include "error.h"
-#include "rutil.h"
+#include "mtx.h"
 
 #include "trace.h"
 
 
-CModelGcm::CModelGcm(const Rat& objParams,
-							const Rat& observedIncidence) :
+CModelGcm::CModelGcm(const Mtx& objParams,
+							const Mtx& observedIncidence) :
   CModelExemplar(objParams, observedIncidence, countCategory(objParams,0))
 {
 DOTRACE("CModelGcm::CModelGcm");
@@ -32,7 +32,7 @@ DOTRACE("CModelGcm::CModelGcm");
 CModelGcm::~CModelGcm() {}
 
 
-void CModelGcm::loadModelParams(Rat& modelParams)
+void CModelGcm::loadModelParams(Mtx& modelParams)
 {
 DOTRACE("CModelGcm::loadModelParams");
 }

@@ -28,13 +28,13 @@ private:
   void scaleWeights(double* weights, int numRawWeights);
 
 public:
-  CModelCssm(const Rat& objParams,
-				 const Rat& observedIncidence,
+  CModelCssm(const Mtx& objParams,
+				 const Mtx& observedIncidence,
 				 int numStoredExemplars);
 
   virtual ~CModelCssm();
 
-  virtual void loadModelParams(Rat& modelParams);
+  virtual void loadModelParams(Mtx& modelParams);
 
   // The result of this function is only valid until the next call to
   // the function

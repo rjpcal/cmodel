@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar  9 18:41:07 2001
+// written: Mon Mar 12 12:34:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,14 +15,14 @@
 
 #include "classifier.h"
 
-#include "rutil.h"
+#include "mtx.h"
 
 #include "util/arrays.h"
 
 class CModelExemplar : public Classifier {
 public:
-  CModelExemplar(const Rat& objParams,
-					  const Rat& observedIncidence,
+  CModelExemplar(const Mtx& objParams,
+					  const Mtx& observedIncidence,
 					  int numStoredExemplars);
 
   virtual ~CModelExemplar();
@@ -33,7 +33,7 @@ protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
 
   // Count the category training exemplars
-  static int countCategory(const Rat& params, int category);
+  static int countCategory(const Mtx& params, int category);
 
   const fixed_block<Slice>& training1() const { return itsTraining1; }
   const fixed_block<Slice>& training2() const { return itsTraining2; }
@@ -58,10 +58,10 @@ private:
 							  const Slice& storedExemplar1,
 							  const Slice& storedExemplar2);
 
-  virtual void computeDiffEv(Rat& modelParams);
-  virtual double fetchSigmaNoise(const Rat& modelParams) const;
+  virtual void computeDiffEv(Mtx& modelParams);
+  virtual double fetchSigmaNoise(const Mtx& modelParams) const;
 
-  virtual void loadModelParams(Rat& modelParams) = 0;
+  virtual void loadModelParams(Mtx& modelParams) = 0;
 
   // The result of this function is only valid until the next call to
   // the function

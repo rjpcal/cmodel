@@ -17,13 +17,13 @@
 
 #include "error.h"
 #include "num.h"
-#include "rutil.h"
+#include "mtx.h"
 #include "trace.h"
 
 #include <cmath>
 
-CModelCssm::CModelCssm(const Rat& objParams,
-							  const Rat& observedIncidence,
+CModelCssm::CModelCssm(const Mtx& objParams,
+							  const Mtx& observedIncidence,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
   itsScaledWeights(0)
@@ -58,7 +58,7 @@ DOTRACE("CModelCssm::scaleWeights");
 	 }
 }
 
-void CModelCssm::loadModelParams(Rat& modelParams)
+void CModelCssm::loadModelParams(Mtx& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
 

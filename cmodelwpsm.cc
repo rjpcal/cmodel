@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Fri Mar  9 18:02:53 2001
+// written: Mon Mar 12 12:34:25 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,13 +16,13 @@
 #include "cmodelwpsm.h"
 
 #include "error.h"
-#include "rutil.h"
+#include "mtx.h"
 
 #include "trace.h"
 
 
-CModelWpsm::CModelWpsm(const Rat& objParams,
-							const Rat& observedIncidence) :
+CModelWpsm::CModelWpsm(const Mtx& objParams,
+							const Mtx& observedIncidence) :
   CModelExemplar(objParams, observedIncidence, 1)
 {
 DOTRACE("CModelWpsm::CModelWpsm");
@@ -51,7 +51,7 @@ DOTRACE("CModelWpsm::CModelWpsm");
 CModelWpsm::~CModelWpsm() {}
 
 
-void CModelWpsm::loadModelParams(Rat& modelParams)
+void CModelWpsm::loadModelParams(Mtx& modelParams)
 {
 DOTRACE("CModelWpsm::loadModelParams");
 }

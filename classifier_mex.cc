@@ -26,6 +26,7 @@
 #include "cmodelwpsm.h"
 
 #include "error.h"
+#include "mtx.h"
 #include "rutil.h"
 #include "strings.h"
 #include "trace.h"
@@ -62,8 +63,8 @@ namespace Local {
 }
 
 shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
-												  const Rat& objParams,
-												  const Rat& observedIncidence,
+												  const Mtx& objParams,
+												  const Mtx& observedIncidence,
 												  mxArray* optArgs_mx)
 {
 DOTRACE("makeClassifier");
@@ -139,15 +140,15 @@ DOTRACE("Mclassifier");
 	 validateInput(modelParams_mx);
 
 	 validateInput(objParams_mx);
-	 const Rat objParams(objParams_mx);
+	 const Mtx objParams(objParams_mx);
 
 	 validateInput(observedIncidence_mx);
-	 const Rat observedIncidence(observedIncidence_mx);
+	 const Mtx observedIncidence(observedIncidence_mx);
 
-	 Rat allModelParams(modelParams_mx);
+	 Mtx allModelParams(modelParams_mx);
 
 	 mxArray* result_mx = mxCreateDoubleMatrix(allModelParams.ncols(), 1, mxREAL);
-	 Rat result(result_mx);
+	 Mtx result(result_mx);
 
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
@@ -174,7 +175,7 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Rat modelParams(allModelParams.columnSlice(i));
+				Mtx modelParams(allModelParams.columnSlice(i));
 				result.at(i) = multiplier * model->currentLogL(modelParams);
 			 }
 		}
@@ -182,7 +183,7 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Rat modelParams(allModelParams.columnSlice(i));
+				Mtx modelParams(allModelParams.columnSlice(i));
 				result.at(i) = multiplier * model->fullLogL();
 			 }
 		}
@@ -190,7 +191,7 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Rat modelParams(allModelParams.columnSlice(i));
+				Mtx modelParams(allModelParams.columnSlice(i));
 				result.at(i) = multiplier * model->deviance(modelParams);
 			 }
 		}

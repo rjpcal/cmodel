@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Fri Mar  9 18:32:37 2001
+// written: Mon Mar 12 12:34:25 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,17 +15,17 @@
 
 #include "cmodelpbi.h"
 
-#include "rutil.h"
+#include "mtx.h"
 
 #include "trace.h"
 
-CModelPbi::CModelPbi(const Rat& objParams, const Rat& observedIncidence) :
+CModelPbi::CModelPbi(const Mtx& objParams, const Mtx& observedIncidence) :
   Classifier(objParams, observedIncidence)
 {}
 
 CModelPbi::~CModelPbi() {}
 
-void CModelPbi::computeDiffEv(Rat& modelParams)
+void CModelPbi::computeDiffEv(Mtx& modelParams)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
@@ -36,7 +36,7 @@ DOTRACE("CModelPbi::computeDiffEv");
 													 DIM_OBJ_PARAMS);
 }
 
-double CModelPbi::fetchSigmaNoise(const Rat& /*modelParams*/) const
+double CModelPbi::fetchSigmaNoise(const Mtx& /*modelParams*/) const
 {
   return 1.0;
 }
