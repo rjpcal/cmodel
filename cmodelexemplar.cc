@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 14 15:45:42 2001
+// written: Wed Mar 14 17:23:41 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,13 +24,13 @@
 #include <cmath>
 
 double minkDist(const ConstSlice& wts,
-                ConstSlice::ConstIterator x1,
-                ConstSlice::ConstIterator x2,
+                MtxConstIter x1,
+                MtxConstIter x2,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
 
-  for (ConstSlice::ConstIterator wt = wts.begin();
+  for (MtxConstIter wt = wts.begin();
 		 wt.hasMore();
 		 ++wt, ++x1, ++x2)
 	 {
@@ -47,18 +47,18 @@ double minkDist(const ConstSlice& wts,
 
 class MinkDist2Binder {
 public:
-  MinkDist2Binder(ConstSlice::ConstIterator attWeights,
-						ConstSlice::ConstIterator x2) :
+  MinkDist2Binder(MtxConstIter attWeights,
+						MtxConstIter x2) :
 	 itsAttWeights(attWeights),
 	 itsX2(x2)
   {}
 
   // Specialized Minkowski distance for r==2
-  double minkDist2(Slice::ConstIterator x1) const
+  double minkDist2(MtxConstIter x1) const
   {
 	 double wt_sum = 0.0;
-	 Slice::ConstIterator wt = itsAttWeights;
-	 Slice::ConstIterator x2 = itsX2;
+	 MtxConstIter wt = itsAttWeights;
+	 MtxConstIter x2 = itsX2;
 
 	 for (; wt.hasMore(); ++wt, ++x1, ++x2)
 		{
@@ -70,8 +70,8 @@ public:
   }
 
 private:
-  const ConstSlice::ConstIterator itsAttWeights;
-  const ConstSlice::ConstIterator itsX2;
+  const MtxConstIter itsAttWeights;
+  const MtxConstIter itsX2;
 };
 
 
@@ -201,18 +201,18 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const Mtx& stored2(getStoredExemplars(CAT2));
 
   if (minkPower == 2.0) {
-	 ConstSlice::ConstIterator attWts =
+	 MtxConstIter attWts =
 		static_cast<ConstSlice&>(attWeights).begin();
 
-	 minivec<ConstSlice::ConstIterator> exemplars;
+	 minivec<MtxConstIter> exemplars;
 
 	 for (int yy = 0; yy < numAllExemplars(); ++yy) {
 		exemplars.push_back(exemplar(yy).begin());
 	 }
 
 	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
-		ConstSlice::ConstIterator storedExemplar1 = stored1.rowIter(x);
-		ConstSlice::ConstIterator storedExemplar2 = stored2.rowIter(x);
+		MtxConstIter storedExemplar1 = stored1.rowIter(x);
+		MtxConstIter storedExemplar2 = stored2.rowIter(x);
 
 		MinkDist2Binder binder1(attWts, storedExemplar1);
 
