@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 19 16:20:06 2001
-// written: Wed Feb 21 13:24:34 2001
+// written: Wed Feb 21 14:14:56 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,6 +16,8 @@
 #define validateInput(x) (x) = mlfAssign(&(x), mclVa((x), #x))
 
 #define validateVariable(x) (x) = mlfAssign(&(x), mclVv((x), #x))
+
+#include "libmatlb.h"
 
 class Rat {
 public:
