@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Apr 18 15:07:44 2001
+// written: Wed Apr 18 17:47:45 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -71,6 +71,12 @@ DOTRACE("SimplexOptimizer::SimplexOptimizer");
 
 SimplexOptimizer::~SimplexOptimizer() {}
 
+void SimplexOptimizer::putInSimplex(const FuncPoint& p, int pointNumber)
+{
+  itsSimplex.column(pointNumber) = p.x.column(0);
+  itsFvals.at(0, pointNumber) = p.f;
+}
+
 void SimplexOptimizer::printIter()
 {
   if (itsPrnt == ITER)
@@ -117,6 +123,8 @@ DOTRACE("SimplexOptimizer::minimalSort");
 
 int SimplexOptimizer::optimize()
 {
+DOTRACE("SimplexOptimizer::optimize");
+
   printHeader();
   itsCurIter = INITIAL;
   printIter();
@@ -143,7 +151,6 @@ int SimplexOptimizer::optimize()
 
   return 1;
 }
-
 
 void SimplexOptimizer::doOneIter()
 {
