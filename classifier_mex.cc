@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 19 11:51:15 2002
+// written: Tue Feb 19 15:01:56 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,7 +35,7 @@
 #include "util/strings.h"
 
 #include <exception>
-#include <iostream.h>
+#include <iostream>
 #include <libmatlb.h>
 
 #include "util/trace.h"
@@ -63,8 +63,8 @@ void InitializeModule_classifier()
   cout = mexBuf;
   cerr = mexBuf;
 #else
-  cout.rdbuf(mexBuf);
-  cerr.rdbuf(mexBuf);
+  std::cout.rdbuf(mexBuf);
+  std::cerr.rdbuf(mexBuf);
 #endif
 
   mexPrintf("loading '" MEXFUNCNAME "' mex file\n");
@@ -88,8 +88,8 @@ void TerminateModule_classifier()
   delete recentModel;
 
   mexPrintf("\tdeleting recentModel...\n");
-  cout.rdbuf(0);
-  cerr.rdbuf(0);
+  std::cout.rdbuf(0);
+  std::cerr.rdbuf(0);
   delete mexBuf;
   mexPrintf("\tdone.\n");
 }
@@ -191,7 +191,7 @@ static mxArray* Mclassifier(const Mtx& modelParams,
     {
       int debugFlag = Mx::getIntField(extraArgs_mx, "debugFlag");
 
-      if (debugFlag == -1)       Util::Prof::printAllProfData(cerr);
+      if (debugFlag == -1)       Util::Prof::printAllProfData(std::cerr);
       else if (debugFlag == -2)  Util::Prof::resetAllProfData();
 
       return mxCreateScalarDouble(debugFlag);

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Feb 14 11:57:46 2002
+// written: Tue Feb 19 15:01:14 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,8 +21,6 @@
 #include "num.h"
 #include "simplexoptimizer.h"
 #include "util/strings.h"
-
-#include <iostream.h>
 
 #include "util/trace.h"
 #include "util/debug.h"
@@ -131,21 +129,22 @@ DOTRACE("Classifier::computeLogL");
 
   MtxConstIter ppiter = predictedProbability.columnIter(0);
 
-  for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter) {
-    double oi1 = *oi1iter;
-    double oi2 = *oi2iter;
+  for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter)
+    {
+      double oi1 = *oi1iter;
+      double oi2 = *oi2iter;
 
-    // term3
-    double pp_val = *ppiter;
+      // term3
+      double pp_val = *ppiter;
 
-    if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
-    else                logL_3 += oi1 * log(pp_val);
+      if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
+      else                logL_3 += oi1 * log(pp_val);
 
-    pp_val = 1.0 - pp_val;
+      pp_val = 1.0 - pp_val;
 
-    if (pp_val < 1e-50) logL_3 += oi2 * LOG_10_MINUS_50;
-    else                logL_3 += oi2 * log(pp_val);
-  }
+      if (pp_val < 1e-50) logL_3 += oi2 * LOG_10_MINUS_50;
+      else                logL_3 += oi2 * log(pp_val);
+    }
 
   return itsCachedLogL_1_2 + logL_3;
 }

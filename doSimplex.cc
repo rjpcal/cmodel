@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Feb 19 11:15:42 2002
+// written: Tue Feb 19 15:02:12 2002
 // $Id$
 //
 //
@@ -32,7 +32,7 @@
 #include "util/error.h"
 #include "util/strings.h"
 
-#include <iostream.h>
+#include <iostream>
 #include <libmatlbm.h>
 
 #define LOCAL_PROF
@@ -59,9 +59,6 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 namespace
 {
   MexBuf* mexBuf = 0;
-
-  std::streambuf* coutOrigBuf = 0;
-  std::streambuf* cerrOrigBuf = 0;
 }
 
 void InitializeModule_doSimplex(void)
@@ -73,8 +70,8 @@ void InitializeModule_doSimplex(void)
   std::cout = mexBuf;
   std::cerr = mexBuf;
 #else
-  coutOrigBuf = std::cout.rdbuf(mexBuf);
-  cerrOrigBuf = std::cerr.rdbuf(mexBuf);
+  std::cout.rdbuf(mexBuf);
+  std::cerr.rdbuf(mexBuf);
 #endif
 }
 
