@@ -24,8 +24,8 @@
 CModelWpsm::CModelWpsm(const mtx& objParams,
                        TransferFunction transferFunc) :
   CModelExemplar(objParams, 1, transferFunc),
-  itsPrototype1(1, DIM_OBJ_PARAMS),
-  itsPrototype2(1, DIM_OBJ_PARAMS)
+  itsPrototype1(mtx::zeros(1, DIM_OBJ_PARAMS)),
+  itsPrototype2(mtx::zeros(1, DIM_OBJ_PARAMS))
 {
 DOTRACE("CModelWpsm::CModelWpsm");
 

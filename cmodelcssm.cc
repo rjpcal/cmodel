@@ -28,10 +28,10 @@ CModelCssm::CModelCssm(const mtx& objParams,
                        int numStoredExemplars) :
   CModelExemplar(objParams,
                  numStoredExemplars, transferFunc),
-  itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsCachedRawWts1(numStoredExemplars, numTrainingExemplars()),
-  itsCachedRawWts2(numStoredExemplars, numTrainingExemplars())
+  itsStored1(mtx::zeros(numStoredExemplars, DIM_OBJ_PARAMS)),
+  itsStored2(mtx::zeros(numStoredExemplars, DIM_OBJ_PARAMS)),
+  itsCachedRawWts1(mtx::zeros(numStoredExemplars, numTrainingExemplars())),
+  itsCachedRawWts2(mtx::zeros(numStoredExemplars, numTrainingExemplars()))
 {
 DOTRACE("CModelCssm::CModelCssm");
 }

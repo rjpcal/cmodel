@@ -48,8 +48,10 @@ public:
                   const mtx& testObjects,
                   const mtx& observedIncidence);
 
-  struct RequestResult {
-    RequestResult() : requestHandled(false), result(mtx(0,0)) {}
+  struct RequestResult
+  {
+    RequestResult() :
+      requestHandled(false), result(mtx::empty_mtx()) {}
 
     RequestResult(mtx res) :
       requestHandled(true), result(res) {}

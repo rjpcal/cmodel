@@ -28,8 +28,8 @@ CModelRxm::CModelRxm(const mtx& objParams,
                      TransferFunction transferFunc,
                      int numStoredExemplars) :
   CModelExemplar(objParams, numStoredExemplars, transferFunc),
-  itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
+  itsStored1(mtx::zeros(numStoredExemplars, DIM_OBJ_PARAMS)),
+  itsStored2(mtx::zeros(numStoredExemplars, DIM_OBJ_PARAMS)),
   itsHiLo1(CModelUtil::getHiLo(objectsOfCategory(0))),
   itsHiLo2(CModelUtil::getHiLo(objectsOfCategory(1)))
 {

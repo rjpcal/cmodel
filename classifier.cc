@@ -77,8 +77,8 @@ Classifier::Classifier(const mtx& objParams) :
   itsObjCategories(objParams(col_range_n(0, 1))),
   itsObjects(objParams(col_range_n(1, DIM_OBJ_PARAMS))),
   itsNumAllExemplars(objParams.mrows()),
-  itsDiffEvidence(itsNumAllExemplars,1),
-  itsObservedIncidenceCache(0,0),
+  itsDiffEvidence(mtx::zeros(itsNumAllExemplars,1)),
+  itsObservedIncidenceCache(mtx::empty_mtx()),
   itsCachedLogL_1_2(0.0)
 {
 DOTRACE("Classifier::Classifier");
@@ -102,7 +102,7 @@ mtx Classifier::modelParamsBounds() const
 {
 DOTRACE("Classifier::modelParamsBounds");
 
-  mtx bounds(numModelParams(), 2);
+  mtx bounds = mtx::zeros(numModelParams(), 2);
 
   const int row = fillModelParamsBounds(bounds, 0);
 
@@ -126,7 +126,7 @@ DOTRACE("Classifier::forwardProbit");
 
   mtx_const_iter diffev = diffEv.column_iter(0);
 
-  mtx pp(diffEv.mrows(), 1);
+  mtx pp = mtx::zeros(diffEv.mrows(), 1);
   mtx_iter ppiter = pp.column_iter(0);
 
   // alpha = (thresh - diffEvidence) / sigmaNoise
@@ -249,7 +249,7 @@ double Classifier::fullLogL(const mtx& observedIncidence)
 {
 DOTRACE("Classifier::fullLogL");
 
-  mtx observedProb(numAllExemplars(), 1);
+  mtx observedProb = mtx::zeros(numAllExemplars(), 1);
   mtx_iter opiter = observedProb.column_iter(0);
 
   mtx_const_iter oi1iter = observedIncidence.column_iter(0);
@@ -341,7 +341,7 @@ DOTRACE("Classifier::handleRequest");
 
       checkModelParams(allModelParams, numModelParams());
 
-      mtx result(allModelParams.ncols(), 1);
+      mtx result = mtx::zeros(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           slice modelParams(allModelParams.column(i));
@@ -360,7 +360,7 @@ DOTRACE("Classifier::handleRequest");
 
       checkModelParams(allModelParams, numModelParams());
 
-      mtx result(allModelParams.ncols(), 1);
+      mtx result = mtx::zeros(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           result.at(i) = multiplier * fullLogL(observedIncidence);
@@ -379,7 +379,7 @@ DOTRACE("Classifier::handleRequest");
 
       checkModelParams(allModelParams, numModelParams());
 
-      mtx result(allModelParams.ncols(), 1);
+      mtx result = mtx::zeros(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
           slice modelParams(allModelParams.column(i));
@@ -398,7 +398,7 @@ DOTRACE("Classifier::handleRequest");
 
       checkModelParams(allModelParams, numModelParams());
 
-      mtx result(testObjects.mrows(), allModelParams.ncols());
+      mtx result = mtx::zeros(testObjects.mrows(), allModelParams.ncols());
 
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -491,7 +491,7 @@ DOTRACE("Classifier::objectsOfCategory");
     throw rutz::error(fstring("no objects found in category ", category),
                       SRC_POS);
 
-  mtx result(nobjs, DIM_OBJ_PARAMS);
+  mtx result = mtx::zeros(nobjs, DIM_OBJ_PARAMS);
 
   int r = 0;
   for (int i = 0; i < itsObjects.mrows(); ++i)

@@ -45,12 +45,12 @@ CModelExemplar::CModelExemplar(const mtx& objParams,
                         itsNumTrainingExemplars : numStoredExemplars),
   itsTransferFunc(transferFunc),
 
-  itsObjectsCache(0,0),
-  itsStored1Cache(itsNumStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2Cache(itsNumStoredExemplars, DIM_OBJ_PARAMS),
-  itsEvidence1Cache(0,0),
-  itsEvidence2Cache(0,0),
-  itsAttWtsCache(DIM_OBJ_PARAMS,1)
+  itsObjectsCache(mtx::empty_mtx()),
+  itsStored1Cache(mtx::zeros(itsNumStoredExemplars, DIM_OBJ_PARAMS)),
+  itsStored2Cache(mtx::zeros(itsNumStoredExemplars, DIM_OBJ_PARAMS)),
+  itsEvidence1Cache(mtx::empty_mtx()),
+  itsEvidence2Cache(mtx::empty_mtx()),
+  itsAttWtsCache(mtx::zeros(DIM_OBJ_PARAMS,1))
 {
   if (itsNumStoredExemplars <= 0)
     throw rutz::error("must have at least one stored exemplar", SRC_POS);
@@ -109,8 +109,10 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   if (newObjects)
     {
-      itsEvidence1Cache = mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
-      itsEvidence2Cache = mtx(itsNumStoredExemplars, itsObjectsCache.mrows());
+      itsEvidence1Cache =
+        mtx::zeros(itsNumStoredExemplars, itsObjectsCache.mrows());
+      itsEvidence2Cache =
+        mtx::zeros(itsNumStoredExemplars, itsObjectsCache.mrows());
     }
 
   //---------------------------------------------------------------------

@@ -58,7 +58,7 @@ mtx CModelUtil::getHiLo(const mtx& src)
 {
 DOTRACE("CModelUtil::getHiLo");
 
-  mtx result(2, src.ncols());
+  mtx result = mtx::zeros(2, src.ncols());
 
   for (int i = 0; i < src.ncols(); ++i)
     {
