@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Mon Mar 12 16:44:54 2001
+// written: Mon Mar 12 17:06:17 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,8 +17,6 @@
 
 class CModelGcm : public CModelExemplar {
 private:
-  virtual void loadModelParams(Mtx& modelParams);
-
   // The result of this function is only valid until the next call to
   // the function
   virtual ConstSlice findStoredExemplar(Category cat, int n);

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Mon Mar 12 16:45:14 2001
+// written: Mon Mar 12 17:06:05 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -30,12 +30,6 @@ DOTRACE("CModelGcm::CModelGcm");
 
 
 CModelGcm::~CModelGcm() {}
-
-
-void CModelGcm::loadModelParams(Mtx& modelParams)
-{
-DOTRACE("CModelGcm::loadModelParams");
-}
 
 
 ConstSlice CModelGcm::findStoredExemplar(Category cat, int n)

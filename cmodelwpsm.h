@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Mon Mar 12 16:44:59 2001
+// written: Mon Mar 12 17:06:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,8 +19,6 @@ class CModelWpsm : public CModelExemplar {
 private:
   double itsPrototype1[DIM_OBJ_PARAMS];
   double itsPrototype2[DIM_OBJ_PARAMS];
-
-  virtual void loadModelParams(Mtx& modelParams);
 
   // The result of this function is only valid until the next call to
   // the function

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Mon Mar 12 16:45:21 2001
+// written: Mon Mar 12 17:06:24 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -49,12 +49,6 @@ DOTRACE("CModelWpsm::CModelWpsm");
 
 
 CModelWpsm::~CModelWpsm() {}
-
-
-void CModelWpsm::loadModelParams(Mtx& modelParams)
-{
-DOTRACE("CModelWpsm::loadModelParams");
-}
 
 
 ConstSlice CModelWpsm::findStoredExemplar(Category cat, int n)
