@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Thu Mar 15 16:11:20 2001
+// written: Fri Mar 16 10:49:25 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -45,12 +45,6 @@ private:
   Mtx itsTraining2;
 
   const int itsNumStoredExemplars;
-
-  void doDiffEvidence(const Slice& attWeights,
-							 const Slice& storedExemplar1,
-							 const Slice& storedExemplar2,
-							 double minkPower,
-							 double minkPowerInv);
 
   virtual void computeDiffEv(Slice& modelParams);
   virtual double computeSigmaNoise(double rawSigma) const;
