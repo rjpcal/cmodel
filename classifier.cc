@@ -121,11 +121,12 @@ DOTRACE("Classifier::computeLogL");
   return itsCachedLogL_1_2 + logL_3;
 }
 
-double Classifier::currentLogL(Slice& modelParams)
+// Returns the classification probability for each of 'objects'
+Mtx Classifier::classifyObjects(Slice& modelParams, const Mtx& objects)
 {
-DOTRACE("Classifier::currentLogL");
+DOTRACE("Classifier::classifyObjects");
 
-  computeDiffEv(itsObjects, modelParams, itsDiffEvidence);
+  computeDiffEv(objects, modelParams, itsDiffEvidence);
 
   //---------------------------------------------------------------------
   //
@@ -140,14 +141,17 @@ DOTRACE("Classifier::currentLogL");
   const double sigmaNoise = computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]);
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
-  Mtx pp = forwardProbit(thresh, sigmaNoise);
+  return forwardProbit(thresh, sigmaNoise);
+}
 
+double Classifier::currentLogL(Slice& modelParams)
+{
+DOTRACE("Classifier::currentLogL");
 
-  //---------------------------------------------------------------------
-  //
+  Mtx pp = classifyObjects(modelParams, itsObjects);
+
   // Compute the loglikelihood based on the predicted probabilities
   // and the observed incidences.
-  //
 
   return computeLogL(pp);
 }
