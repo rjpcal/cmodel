@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 10:47:10 2002
+// written: Fri Feb 15 10:49:20 2002
 // $Id$
 //
 //
@@ -154,7 +154,6 @@ DOTRACE("makeTestModels");
 
 Mtx doParallelFuncEvals(const Mtx& models,
                         mxArray* func,
-                        mxArray* /*varargin_mx*/,
                         int nvararg,
                         mxArray** pvararg)
 {
@@ -204,7 +203,6 @@ DOTRACE("doParallelFuncEvals");
 
 Mtx doSerialFuncEvals(const Mtx& models,
                       mxArray* func,
-                      mxArray* /*varargin_mx*/,
                       int nvararg,
                       mxArray** pvararg)
 {
@@ -264,16 +262,15 @@ DOTRACE("doSerialFuncEvals");
 Mtx doFuncEvals(bool canUseMatrix,
                 const Mtx& models,
                 mxArray* func,
-                mxArray* varargin_mx,
                 int nvararg,
                 mxArray** pvararg)
 {
   if (canUseMatrix)
     {
-      return doParallelFuncEvals(models, func, varargin_mx, nvararg, pvararg);
+      return doParallelFuncEvals(models, func, nvararg, pvararg);
     }
 
-  return doSerialFuncEvals(models, func, varargin_mx, nvararg, pvararg);
+  return doSerialFuncEvals(models, func, nvararg, pvararg);
 }
 
 //---------------------------------------------------------------------
@@ -356,14 +353,11 @@ DOTRACE("sampleFromPdf");
   return s;
 }
 
-/*
- * The function "MannealVisitParameters" is the implementation version of the
- * "annealVisitParameters" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 1-28). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
+//---------------------------------------------------------------------
+//
+// MannealVisitParameters()
+//
+//---------------------------------------------------------------------
 
 mxArray* MannealVisitParameters(int nargout_,
                                 mxArray* bestModel_mx,
@@ -428,9 +422,6 @@ DOTRACE("MannealVisitParameters");
           costs = doFuncEvals(canUseMatrix,
                               modelmatrix,
                               FUN_mx,
-                              mlfIndexRef(varargin_mx,
-                                          "{?}",
-                                          mlfCreateColonIndex()),
                               nvararg,
                               pvararg);
 
