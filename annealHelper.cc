@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 15:55:59 2002
+// written: Thu Feb 14 17:54:23 2002
 // $Id$
 //
 //
@@ -52,7 +52,19 @@ namespace
 
   std::streambuf* coutOrigBuf = 0;
   std::streambuf* cerrOrigBuf = 0;
+
+  void debugDestroyArray(mxArray* arr, const char* name,
+                         const char* file, int line)
+  {
+    mexPrintf("file %s, line %d, about to destroy %s...", file, line, name);
+    mxDestroyArray(arr);
+    mexPrintf(" done.\n");
+  }
 }
+
+#ifdef MXDEBUG
+#define mxDestroyArray(x)  debugDestroyArray(x, #x, __FILE__, __LINE__);
+#endif
 
 void InitializeModule_annealVisitParameters()
 {
@@ -121,7 +133,7 @@ int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 
 mxArray* makePDF(mxArray* temp, mxArray* costs);
 
-mxArray* eprob(mxArray* temp, mxArray* costs);
+mxArray* eprob(const Mtx& temp, const Mtx& costs);
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
@@ -194,13 +206,6 @@ DOTRACE("mlxAnnealVisitParameters");
  * (lines 1-28). It contains the actual compiled code for that M-function. It
  * is a static function and must only be called from one of the interface
  * functions, appearing below.
- */
-/*
- * function S = visitAllParameters(...
-     * bestModel, valueScalingRange, deltas, bounds, ...
-     * canUseMatrix, FUN, ...
-     * temp, ...
-     * varargin)
  */
 
 mxArray* MannealVisitParameters(int nargout_,
@@ -361,17 +366,11 @@ DOTRACE("makeTestModels");
   return newModels;
 }
 
-/*
- * The function "doFuncEvals" is the implementation
- * version of the "annealVisitParameters/doFuncEvals" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 35-48). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-/*
- * function costs = doFuncEvals(canUseMatrix, models, func, varargin)
- */
+//---------------------------------------------------------------------
+//
+// doFuncEvals()
+//
+//---------------------------------------------------------------------
 
 mxArray* doFuncEvals(bool canUseMatrix,
                      const Mtx& models,
@@ -463,17 +462,11 @@ DOTRACE("doFuncEvals");
   return costs_mx;
 }
 
-/*
- * The function "sampleFromPdf" is the implementation
- * version of the "annealVisitParameters/sampleFromPdf" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 48-55). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-/*
- * function s = sampleFromPdf(temp, costs)
- */
+//---------------------------------------------------------------------
+//
+// sampleFromPdf_zerobased()
+//
+//---------------------------------------------------------------------
 
 int sampleFromPdf_zerobased(mxArray* temp_mx, mxArray* costs_mx)
 {
@@ -510,17 +503,12 @@ DOTRACE("sampleFromPdf_zerobased");
   return s_zerobased;
 }
 
-/*
- * The function "makePDF" is the implementation version
- * of the "annealVisitParameters/makePDF" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 55-72). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-/*
- * function pdf = makePDF(temp, costs)
- */
+//---------------------------------------------------------------------
+//
+// makePDF()
+//
+//---------------------------------------------------------------------
+
 mxArray* makePDF(mxArray* temp_mx, mxArray* costs_mx)
 {
 DOTRACE("makePDF");
@@ -542,7 +530,8 @@ DOTRACE("makePDF");
   // if isempty(bad)
   if (mlfTobool(mlfIsempty(bad)))
     {
-      mlfAssign(&pdf, eprob(temp_mx, costs_mx));
+      mlfAssign(&pdf, eprob(Mtx(temp_mx, Mtx::BORROW),
+                            Mtx(costs_mx, Mtx::BORROW)));
     }
   else
     {
@@ -552,7 +541,7 @@ DOTRACE("makePDF");
       // w = costs(good);
       mlfAssign(&w, mclArrayRef1(costs_mx, good));
 
-      mlfAssign(&pdf, eprob(temp_mx, w));
+      mlfAssign(&pdf, eprob(Mtx(temp_mx, Mtx::BORROW), Mtx(w, Mtx::BORROW)));
 
       // pdf(good) = pdf;
       mclArrayAssign1(&pdf, pdf, good);
@@ -576,18 +565,13 @@ DOTRACE("makePDF");
   return pdf;
 }
 
-/*
- * The function "eprob" is the implementation version of
- * the "annealVisitParameters/eprob" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 72-92). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-/*
- * function pdf = eprob(temp, costs)
- */
-mxArray* eprob(mxArray* temp_mx, mxArray* costs_mx)
+//---------------------------------------------------------------------
+//
+// eprob()
+//
+//---------------------------------------------------------------------
+
+mxArray* eprob(const Mtx& temp, const Mtx& costs)
 {
 DOTRACE("eprob");
 
@@ -595,8 +579,8 @@ DOTRACE("eprob");
   mxArray* scale = mclGetUninitializedArray();
   mxArray* mpdf = mclGetUninitializedArray();
   mxArray* toobig = mclGetUninitializedArray();
-  mclCopyArray(&temp_mx);
-  mclCopyArray(&costs_mx);
+  mxArray* temp_mx = 0; mlfAssign(&temp_mx, temp.makeMxArray());
+  mxArray* costs_mx = 0; mlfAssign(&costs_mx, costs.makeMxArray());
 
   // Scales cost vector and calculates exponential probability distribution.  The
   // scaling is necessary to permit wide ranges in temperature.  Internal
