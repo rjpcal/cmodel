@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:56:22 2002
+// written: Fri Feb 15 14:58:41 2002
 // $Id$
 //
 //
@@ -484,16 +484,7 @@ DOTRACE("annealHelper");
 
   energy.at(astate_c-1,k_onebased-1) = vresult.cost;
 
-  //
-  // Build the output struct
-  //
-
-  const char* fieldNames[] = { "new_astate" };
-  mxArray* output = mxCreateStructMatrix(1,1,1,fieldNames);
-
-  mxSetField(output, 0, "new_astate", astate_mx);
-
-  return output;
+  return astate_mx;
 }
 
 /*
