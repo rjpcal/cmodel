@@ -670,6 +670,28 @@ private:
   int itsIterCount;
   Mtx itsBestParams;
 
+  void buildInitialSimplex()
+  {
+	 // Following improvement suggested by L.Pfeffer at Stanford
+	 // 5 percent deltas for non-zero terms
+	 const double usual_delta = 0.05;
+
+	 // Even smaller delta for zero elements of x
+	 const double zero_term_delta = 0.00025;
+
+	 for (int j = 0; j < itsNparams; ++j)
+		{
+		  itsSimplex.column(j+1) = itsInitialParams;
+
+		  if (itsSimplex.at(j,j+1) != 0.0)
+			 itsSimplex.at(j,j+1) *= (1.0 + usual_delta);
+		  else
+			 itsSimplex.at(j,j+1) = zero_term_delta;
+
+		  itsFvals.at(0,j+1) = itsObjective.evaluate(itsSimplex.column(j+1));
+		}
+  }
+
   void putInSimplex(const Mtx& params, int simplexPoint)
   {
 	 itsSimplex.column(simplexPoint) = params.column(0);
@@ -736,26 +758,7 @@ int SimplexOptimizer::optimize()
   // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
   putInSimplex(itsInitialParams, 0);
 
-  {
-	 // Following improvement suggested by L.Pfeffer at Stanford
-	 // 5 percent deltas for non-zero terms
-	 const double usual_delta = 0.05;
-
-	 // Even smaller delta for zero elements of x
-	 const double zero_term_delta = 0.00025;
-
-	 for (int j = 0; j < itsNparams; ++j)
-		{
-		  itsSimplex.column(j+1) = itsInitialParams;
-
-		  if (itsSimplex.at(j,j+1) != 0.0)
-			 itsSimplex.at(j,j+1) *= (1.0 + usual_delta);
-		  else
-			 itsSimplex.at(j,j+1) = zero_term_delta;
-
-		  itsFvals.at(0,j+1) = itsObjective.evaluate(itsSimplex.column(j+1));
-		}
-  }
+  buildInitialSimplex();
 
   {
 	 // sort so itsSimplex.column(0) has the lowest function value 
