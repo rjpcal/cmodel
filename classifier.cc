@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Aug  1 11:04:29 2002
+// written: Thu Aug  1 19:47:58 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -286,6 +286,17 @@ namespace
 
     return result;
   }
+
+  void checkModelParams(const Mtx& allModelParams,
+                        const int expectedNumber)
+  {
+    if (allModelParams.mrows() != expectedNumber)
+      {
+        throw Util::Error(fstring("wrong number of model params "
+                                  "(expected ", expectedNumber,
+                                  ", got ", allModelParams.mrows(), ")"));
+      }
+  }
 }
 
 Classifier::RequestResult
@@ -302,13 +313,6 @@ DOTRACE("Classifier::handleRequest");
       multiplier = -1;
       fstring trimmed = action.c_str() + 1;
       action = trimmed;
-    }
-
-  if (allModelParams.mrows() != numModelParams())
-    {
-      throw Util::Error(fstring("wrong number of model params "
-                                "(expected ", numModelParams(),
-                                ", got ", allModelParams.mrows(), ")"));
     }
 
   //---------------------------------------------------------------------
@@ -333,6 +337,8 @@ DOTRACE("Classifier::handleRequest");
 
       const Mtx testObjects = getTestObjects(extraArgs);
 
+      checkModelParams(allModelParams, numModelParams());
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -349,6 +355,8 @@ DOTRACE("Classifier::handleRequest");
       DOTRACE("Classifier::handleRequest-llf");
 
       const Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
+
+      checkModelParams(allModelParams, numModelParams());
 
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -367,6 +375,8 @@ DOTRACE("Classifier::handleRequest");
 
       const Mtx testObjects = getTestObjects(extraArgs);
 
+      checkModelParams(allModelParams, numModelParams());
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -383,6 +393,8 @@ DOTRACE("Classifier::handleRequest");
       DOTRACE("Classifier::handleRequest-classify");
 
       const Mtx testObjects = getTestObjects(extraArgs);
+
+      checkModelParams(allModelParams, numModelParams());
 
       Mtx result(testObjects.mrows(), allModelParams.ncols());
 
@@ -404,6 +416,8 @@ DOTRACE("Classifier::handleRequest");
       const Mtx testObjects = getTestObjects(extraArgs);
 
       LLEvaluator objective(*this, testObjects, observedIncidence);
+
+      checkModelParams(allModelParams, numModelParams());
 
       SimplexOptimizer opt(objective,
                            allModelParams.asColumn(),
