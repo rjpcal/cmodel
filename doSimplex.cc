@@ -1056,16 +1056,18 @@ DOTRACE("MdoSimplex");
 		{DOTRACE("compute xbar");
       mlfAssign(
         &xbar,
-        mclMrdivide(
-          mclVe(
-            mlfSum(
-              mclVe(
-                mclArrayRef2(
-                  theSimplex,
-                  mlfCreateColonIndex(),
-						mlfColon(_mxarray11_, numModelParams_mx, NULL))),
-              _mxarray24_)),
-          numModelParams_mx));
+		  mxCreateDoubleMatrix(numModelParams,1,mxREAL));
+
+		Mtx xbar_ref(xbar, Mtx::REFER);
+		const Mtx simplex(Mtx(theSimplex, Mtx::BORROW)
+								.columns(0,numModelParams));
+
+		const double numparams_inv = 1.0/numModelParams;
+		MtxIter xbar_itr_ = xbar_ref.colIter(0);
+
+		for (int r = 0; r < numModelParams; ++r, ++xbar_itr_)
+		  *xbar_itr_ = simplex.row(r).sum() * numparams_inv;
+
 		}
 
 		{DOTRACE("compute xr");
@@ -1419,6 +1421,7 @@ DOTRACE("MdoSimplex");
 
       }
 
+		{DOTRACE("sort funcVals");
       // [funcVals,j] = sort(funcVals);
       mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
 
@@ -1429,6 +1432,7 @@ DOTRACE("MdoSimplex");
           theSimplex,
           mlfCreateColonIndex(),
           mclVsv(j, "j")));
+		}
 
       // itercount = itercount + 1;
       mlfAssign(
