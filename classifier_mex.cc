@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Fri Mar 23 15:32:14 2001
+// written: Mon Mar 26 08:49:05 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -129,7 +129,7 @@ DOTRACE("Mclassifier");
 	 fixed_string actionRequest = Local::getString(actionRequest_mx);
 
 
-#ifdef LOCAL_DEBUG
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
 	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -1) {
 		ofstream ofs("profdata.out");
 		Util::Prof::printAllProfData(ofs);
