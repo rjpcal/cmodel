@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 11:11:31 2002
+// written: Fri Feb 15 11:17:15 2002
 // $Id$
 //
 //
@@ -162,8 +162,6 @@ DOTRACE("doParallelFuncEvals");
   mxArray* costs_mx = 0;
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
 
-  mxArray* plhs[1] = { 0 };
-
   const int MAX_NRHS = 32;
   mxArray* prhs[MAX_NRHS];
 
@@ -180,16 +178,13 @@ DOTRACE("doParallelFuncEvals");
     }
 
   // costs = feval(func, models, varargin{:});
-  int result = mexCallMATLAB(1, plhs, nrhs, prhs, func_name.c_str());
+  int result = mexCallMATLAB(1, &costs_mx, nrhs, prhs, func_name.c_str());
 
   if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
 
-  mlfAssign(&costs_mx, plhs[0]);
-
-  mxDestroyArray(models_mx);
-
   Mtx costs(costs_mx, Mtx::COPY);
 
+  mxDestroyArray(models_mx);
   mxDestroyArray(costs_mx);
 
   return costs;
