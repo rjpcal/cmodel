@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Apr 26 18:22:49 2001
+// written: Thu Apr 26 18:35:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -20,17 +20,21 @@ class fixed_string;
 
 class Classifier {
 public:
-  Classifier(const Mtx& objParams, const Mtx& observedIncidence);
+  Classifier(const Mtx& objParams);
   virtual ~Classifier();
 
   // Returns the classification probability for each of 'testObjects'
   Mtx classifyObjects(Slice& modelParams, const Mtx& testObjects);
 
-  double currentLogL(Slice& modelParams);
+  double currentLogL(Slice& modelParams,
+							const Mtx& testObjects,
+							const Mtx& observedIncidence);
 
-  double fullLogL();
+  double fullLogL(const Mtx& observedIncidence);
 
-  double deviance(Slice& modelParams);
+  double deviance(Slice& modelParams,
+						const Mtx& testObjects,
+						const Mtx& observedIncidence);
 
   struct RequestResult {
 	 RequestResult() : requestHandled(false), result() {}
@@ -70,14 +74,16 @@ private:
   const Mtx itsObjCategories;
   const Mtx itsObjects;
   int itsNumAllExemplars;
-  const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
+
+  Mtx itsObservedIncidenceCache;
   double itsCachedLogL_1_2;
 
   static Mtx forwardProbit(const Mtx& diffEv,
 									double thresh, double sigmaNoise);
 
-  double computeLogL(const Mtx& predictedProbability);
+  double computeLogL(const Mtx& predictedProbability,
+							const Mtx& observedIncidence);
 
   // Count the number of objects with the given category
   int countCategory(int category) const;
