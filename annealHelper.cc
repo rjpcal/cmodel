@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 10:26:09 2002
+// written: Fri Feb 15 10:47:10 2002
 // $Id$
 //
 //
@@ -163,49 +163,35 @@ DOTRACE("doParallelFuncEvals");
   mxArray* costs_mx = 0;
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
   mclCopyArray(&func);
-//   mclCopyArray(&varargin_mx);
-
-  // costs = feval(func, models, varargin{:});
-#if 0
-  mlfAssign(&costs_mx,
-            mlfFeval(mclValueVarargout(),
-                     func,
-                     models_mx,
-                     mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
-                     NULL));
-#else
 
   mxArray* plhs[1] = { 0 };
 
   const int MAX_NRHS = 32;
   mxArray* prhs[MAX_NRHS];
 
+  // We don't need to call mxDuplicateArray, since models_mx is a bound
+  // variable due to the mlfAssign() above; that's also why we have to
+  // explicitly destroy it later on
   prhs[0] = models_mx;
-  // need this? seems like no. prhs[0] = mxDuplicateArray(models_mx);
 
   int nrhs = 1;
 
-//   const int nvararg = mxGetNumberOfElements(varargin_mx);
-
   for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
     {
-      DebugEvalNL(i);
-//       prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
       prhs[nrhs++] = mxDuplicateArray(pvararg[i]);
     }
 
   fstring cmd_name = MxWrapper::extractString(func);
 
+  // costs = feval(func, models, varargin{:});
   int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
   if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
 
   mlfAssign(&costs_mx, plhs[0]);
-#endif
 
   mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
 
-//   mxDestroyArray(varargin_mx);
   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
@@ -218,37 +204,57 @@ DOTRACE("doParallelFuncEvals");
 
 Mtx doSerialFuncEvals(const Mtx& models,
                       mxArray* func,
-                      mxArray* varargin_mx)
+                      mxArray* /*varargin_mx*/,
+                      int nvararg,
+                      mxArray** pvararg)
 {
 DOTRACE("doSerialFuncEvals");
 
   mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
   mclCopyArray(&func);
-  mclCopyArray(&varargin_mx);
 
   const int NM = models.ncols();
 
   Mtx costs(NM, 1);
 
+  mxArray* plhs[1] = { 0 };
+
+  const int MAX_NRHS = 32;
+  mxArray* prhs[MAX_NRHS];
+
+  prhs[0] = 0;
+
+  int nrhs = 1;
+
+  for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
+    {
+      prhs[nrhs] = 0; mlfAssign(prhs+nrhs, mxDuplicateArray(pvararg[i]));
+      ++nrhs;
+    }
+
+  fstring cmd_name = MxWrapper::extractString(func);
+
   for (int e = 0; e < NM; ++e)
     {
       //costs(e) = feval(func, models(:,e), varargin{:});
-      mxArray* result = mlfFeval(mclValueVarargout(),
-                                 func,
-                                 mclArrayRef2(models_mx,
-                                              mlfCreateColonIndex(),
-                                              mlfScalar(e+1)),
-                                 mlfIndexRef(varargin_mx,
-                                             "{?}",
-                                             mlfCreateColonIndex()),
-                                 NULL);
+      prhs[0] = mclArrayRef2(models_mx,
+                             mlfCreateColonIndex(),
+                             mlfScalar(e+1));
 
-      costs.at(e) = mxGetScalar(result);
+      int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
-      mxDestroyArray(result);
+      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+
+      costs.at(e) = mxGetScalar(plhs[0]);
+
+      mxDestroyArray(plhs[0]);
     }
 
-  mxDestroyArray(varargin_mx);
+  while (--nrhs >= 1)
+    {
+      mxDestroyArray(prhs[nrhs]);
+    }
+
   mxDestroyArray(func);
   mxDestroyArray(models_mx);
 
@@ -267,7 +273,7 @@ Mtx doFuncEvals(bool canUseMatrix,
       return doParallelFuncEvals(models, func, varargin_mx, nvararg, pvararg);
     }
 
-  return doSerialFuncEvals(models, func, varargin_mx);
+  return doSerialFuncEvals(models, func, varargin_mx, nvararg, pvararg);
 }
 
 //---------------------------------------------------------------------
