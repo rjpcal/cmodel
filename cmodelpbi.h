@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:08:46 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Fri Apr  6 11:19:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,7 +22,9 @@ public:
   virtual ~CModelPbi();
 
 private:
-  virtual void computeDiffEv(Slice& modelParams, Mtx& diffEvOut);
+  virtual void computeDiffEv(const Mtx& objects,
+									  Slice& modelParams, Mtx& diffEvOut);
+
   virtual double computeSigmaNoise(double rawSigma) const;
 };
 

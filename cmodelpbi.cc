@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Fri Apr  6 10:27:20 2001
+// written: Fri Apr  6 11:14:03 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,7 +25,8 @@ CModelPbi::CModelPbi(const Mtx& objParams, const Mtx& observedIncidence) :
 
 CModelPbi::~CModelPbi() {}
 
-void CModelPbi::computeDiffEv(Slice& modelParams, Mtx& diffEvOut)
+void CModelPbi::computeDiffEv(const Mtx& objects,
+										Slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
@@ -36,7 +37,7 @@ DOTRACE("CModelPbi::computeDiffEv");
   MtxIter diffEv = diffEvOut.colIter(0);
 
   for (; diffEv.hasMore(); ++i, ++diffEv)
-	 *diffEv = -1.0 * innerProduct(attWeights, exemplar(i).begin());
+	 *diffEv = -1.0 * innerProduct(attWeights, objects.rowIter(i));
 }
 
 double CModelPbi::computeSigmaNoise(double /* rawSigma */) const

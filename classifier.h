@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 10:51:44 2001
+// written: Fri Apr  6 11:26:06 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,6 +16,31 @@
 #include "mtx.h"
 
 class Classifier {
+public:
+  Classifier(const Mtx& objParams, const Mtx& observedIncidence);
+  virtual ~Classifier();
+
+  double currentLogL(Slice& modelParams);  
+
+  double fullLogL();
+
+  double deviance(Slice& modelParams);
+
+
+protected:
+  int numAllExemplars() const { return itsNumAllExemplars; }
+
+  Mtx objectsOfCategory(int category) const;
+
+  static const int DIM_OBJ_PARAMS = 4;
+
+  // Must be overridden by subclasses
+  virtual void computeDiffEv(const Mtx& objects,
+									  Slice& modelParams, Mtx& diffEvOut) = 0;
+
+  virtual double computeSigmaNoise(double rawSigma) const = 0;
+
+
 private:
   const Mtx itsObjCategories;
   const Mtx itsObjects;
@@ -31,28 +56,11 @@ private:
 
   double computeLogL(LogLType type);
 
-  // Must be overridden by subclasses
-  virtual void computeDiffEv(Slice& modelParams, Mtx& diffEvOut) = 0;
-
-  virtual double computeSigmaNoise(double rawSigma) const = 0;
-
-public:
-  Classifier(const Mtx& objParams, const Mtx& observedIncidence);
-  virtual ~Classifier();
-
-  double currentLogL(Slice& modelParams);  
-
-  double fullLogL();
-
-  double deviance(Slice& modelParams);
-
-protected:
-  int numAllExemplars() const { return itsNumAllExemplars; }
+  // Count the number of objects with the given category
+  int countCategory(int category) const;
 
   Slice exemplar(int i) const;
   int exemplarCategory(int i) const;
-
-  static const int DIM_OBJ_PARAMS = 4;
 };
 
 static const char vcid_classifier_h[] = "$Header$";

@@ -123,7 +123,7 @@ double Classifier::currentLogL(Slice& modelParams)
 {
 DOTRACE("Classifier::currentLogL");
 
-  computeDiffEv(modelParams, itsDiffEvidence);
+  computeDiffEv(itsObjects, modelParams, itsDiffEvidence);
 
   //---------------------------------------------------------------------
   //
@@ -160,6 +160,37 @@ double Classifier::deviance(Slice& modelParams) {
   double llf = fullLogL();
 
   return -2 * (llc - llf);
+}
+
+// Count the category training exemplars
+int Classifier::countCategory(int category) const
+{
+DOTRACE("Classifier::countCategory");
+  int n = 0;
+  MtxConstIter iter = itsObjCategories.colIter(0);
+  for (; iter.hasMore(); ++iter)
+	 {
+		if (*iter == category)
+		  ++n;
+	 }
+  return n;
+}
+
+Mtx Classifier::objectsOfCategory(int category) const
+{
+DOTRACE("Classifier::objectsOfCategory");
+
+  int nobjs = countCategory(category);
+  Mtx result(nobjs, DIM_OBJ_PARAMS);
+
+  int r = 0;
+  for (int i = 0; i < itsObjects.mrows(); ++i)
+	 {
+		if (exemplarCategory(i) == category)
+		  result.row(r++) = exemplar(i);
+	 }
+
+  return result;
 }
 
 int Classifier::exemplarCategory(int i) const {

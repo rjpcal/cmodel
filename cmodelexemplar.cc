@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Apr  6 10:56:54 2001
+// written: Fri Apr  6 11:24:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -75,56 +75,30 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
 										 int numStoredExemplars,
 										 TransferFunction transferFunc) :
   Classifier(objParams, observedIncidence),
-  itsNumTrainingExemplars(countCategory(objParams,0)),
-  itsTraining1(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
-  itsTraining2(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
-  itsStored1Cache(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2Cache(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsEvidence1Cache(numStoredExemplars, objParams.mrows()),
-  itsEvidence2Cache(numStoredExemplars, objParams.mrows()),
-  itsAttWtsCache(DIM_OBJ_PARAMS,1),
-  itsNumStoredExemplars(numStoredExemplars),
-  itsTransferFunc(transferFunc)
+  itsTraining1(objectsOfCategory(0)),
+  itsTraining2(objectsOfCategory(1)),
+  itsNumTrainingExemplars(itsTraining1.mrows()),
+  itsNumStoredExemplars(numStoredExemplars == MAX_STORED ?
+								itsNumTrainingExemplars : numStoredExemplars),
+  itsTransferFunc(transferFunc),
+
+  itsStored1Cache(itsNumStoredExemplars, DIM_OBJ_PARAMS),
+  itsStored2Cache(itsNumStoredExemplars, DIM_OBJ_PARAMS),
+  itsEvidence1Cache(itsNumStoredExemplars, objParams.mrows()),
+  itsEvidence2Cache(itsNumStoredExemplars, objParams.mrows()),
+  itsAttWtsCache(DIM_OBJ_PARAMS,1)
 {
   if (itsNumStoredExemplars <= 0)
 	 throw ErrorWithMsg("must have at least one stored exemplar");
 
-  int num2 = countCategory(objParams, 1);
-
-  if (itsNumTrainingExemplars != num2) {
+  if (itsTraining1.mrows() != itsTraining2.mrows()) {
 	 throw ErrorWithMsg("the two categories must have the "
 							  "same number of training exemplars");
   }
-
-  // Find the category 1 and category 2 training exemplars
-  int c1=0,c2=0;
-  for (int i = 0; i < objParams.mrows(); ++i)
-	 {
-		const int cat = exemplarCategory(i);
-		if (cat == 0)
-		  {
-			 itsTraining1.row(c1++) = exemplar(i);
-		  }
-		else if (cat == 1)
-		  {
-			 itsTraining2.row(c2++) = exemplar(i);
-		  }
-	 }
 }
 
 CModelExemplar::~CModelExemplar()
 {}
-
-// Count the category training exemplars
-int CModelExemplar::countCategory(const Mtx& params, int category) {
-  int n = 0;
-  for (int i = 0; i < params.mrows(); ++i)
-	 {
-		if (int(params.at(i,0)) == category)
-		  ++n;
-	 }
-  return n;
-}
 
 //---------------------------------------------------------------------
 //
@@ -138,7 +112,8 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 //
 //---------------------------------------------------------------------
 
-void CModelExemplar::computeDiffEv(Slice& modelParams, Mtx& diffEvOut) {
+void CModelExemplar::computeDiffEv(const Mtx& objects,
+											  Slice& modelParams, Mtx& diffEvOut) {
 DOTRACE("CModelExemplar::computeDiffEv");
 
   diffEvOut.setAll(0.0);
@@ -176,8 +151,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   minivec<MtxConstIter> exemplars;
 
-  for (int yy = 0; yy < numAllExemplars(); ++yy) {
-	 exemplars.push_back(exemplar(yy).begin());
+  for (int yy = 0; yy < objects.mrows(); ++yy) {
+	 exemplars.push_back(objects.rowIter(yy));
   }
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
