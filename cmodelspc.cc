@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Mon Mar  4 17:44:23 2002
+// written: Tue Mar  5 14:07:52 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -56,9 +56,8 @@ namespace
 
     // reshape params into a stored exemplar matrix
 
-    Mtx storedExemplars = Mtx(otherParams);
-
-    storedExemplars.reshape(2*nstored, Classifier::DIM_OBJ_PARAMS);
+    Mtx storedExemplars =
+      Mtx(otherParams).as_shape(2*nstored, Classifier::DIM_OBJ_PARAMS);
 
     clampRows(storedExemplars, 0, nstored, hilo0);
 

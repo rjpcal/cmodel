@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Sun Mar  3 14:15:58 2002
+// written: Tue Mar  5 14:08:08 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -45,9 +45,8 @@ DOTRACE("CModelCssm::loadModelParams");
 
   int nex = numStoredExemplars();
 
-  Mtx allScaledWeights = Mtx(modelParams);
-
-  allScaledWeights.reshape(2*nex, numTrainingExemplars());
+  Mtx allScaledWeights =
+    Mtx(modelParams).as_shape(2*nex, numTrainingExemplars());
 
   Mtx scaledWeights1 = allScaledWeights(row_range_n(0,nex));
   Mtx scaledWeights2 = allScaledWeights(row_range_n(nex,nex));
