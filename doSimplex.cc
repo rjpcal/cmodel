@@ -696,6 +696,28 @@ private:
   	 itsSimplex.reorderColumns(index);
   }
 
+  void minimalSort()
+  {
+	 DOTRACE("minimalSort");
+
+	 Mtx index = itsFvals.row(0).getSortOrder();
+
+	 const int smallest = int(index.at(0));
+	 const int largest = int(index.at(itsNparams));
+	 const int largest2 = int(index.at(itsNparams-1));
+
+	 // These swaps are smart enough to check if the column numbers
+	 // are the same before doing the swap
+
+	 itsFvals.swapColumns(0, smallest);
+	 itsFvals.swapColumns(largest, itsNparams);
+	 itsFvals.swapColumns(largest2, itsNparams-1);
+
+	 itsSimplex.swapColumns(0, smallest);
+	 itsSimplex.swapColumns(largest, itsNparams);
+	 itsSimplex.swapColumns(largest2, itsNparams-1);
+  }
+
   bool tooManyFevals()
   {
 	 if (funcCount() < itsMaxFevals)
@@ -886,58 +908,53 @@ DOTRACE("SimplexOptimizer::doOneIter");
 
 
   // Calculate the reflection point
-  FuncPoint r = evaluate(xbar*(1.0+RHO) -
-								 itsSimplex.columns(itsNparams,1) * RHO);
+  FuncPoint rflPt = evaluate(xbar*(1.0+RHO) -
+									  itsSimplex.columns(itsNparams,1) * RHO);
 
 
-  if (r.f < itsFvals.at(0,0))
+  if (rflPt.f < itsFvals.at(0,0))
 	 {
-		DOTRACE("r.f < itsFvals(:,1)");
+		DOTRACE("rflPt.f < itsFvals(:,1)");
 
 		// Calculate the expansion point
-		// xe = (1 + RHO*CHI)*xbar - RHO*CHI*itsSimplex(:,end);
-		Mtx xe = ((xbar * (1 + RHO*CHI)) -
-					 (itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
+		FuncPoint expPt =
+		  evaluate((xbar * (1 + RHO*CHI)) -
+					  (itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
 
-		double fxe = itsObjective.evaluate(xe);
-
-		if (fxe < r.f)
+		if (expPt.f < rflPt.f)
 		  {
-			 itsSimplex.column(itsNparams) = xe;
-			 itsFvals.at(0,itsNparams) = fxe;
+			 putInSimplex(expPt, itsNparams);
 			 how = "expand";
 		  }
 		else
 		  {
-			 putInSimplex(r, itsNparams);
+			 putInSimplex(rflPt, itsNparams);
 			 how = "reflect";
 		  }
 	 }
   else
 	 {
-		DOTRACE("r.f >= itsFvals(:,1)");
+		DOTRACE("rflPt.f >= itsFvals(:,1)");
 
-		if (r.f < itsFvals.at(0,itsNparams-1))
+		if (rflPt.f < itsFvals.at(0,itsNparams-1))
 		  {
-			 putInSimplex(r, itsNparams);
+			 putInSimplex(rflPt, itsNparams);
 			 how = "reflect";
 		  }
 		else
 		  {
 			 // Perform contraction
 
-			 if (r.f < itsFvals.at(0,itsNparams))
+			 if (rflPt.f < itsFvals.at(0,itsNparams))
 				{
 				  // Perform an outside contraction
-				  Mtx xc = (xbar*(1.0 + PSI*RHO) -
-								(itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
+				  FuncPoint ictPt =
+					 evaluate(xbar*(1.0 + PSI*RHO) -
+								 (itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
 
-				  double fxc = itsObjective.evaluate(xc);
-
-				  if (fxc <= r.f)
+				  if (ictPt.f <= rflPt.f)
 					 {
-						itsSimplex.column(itsNparams) = xc;
-						itsFvals.at(0,itsNparams) = fxc;
+						putInSimplex(ictPt, itsNparams);
 						how = "contract outside";
 					 }
 				  else
@@ -948,15 +965,13 @@ DOTRACE("SimplexOptimizer::doOneIter");
 			 else
 				{
 				  // Perform an inside contraction
-				  Mtx xcc = (xbar*(1.0-PSI) +
+				  FuncPoint octPt =
+					 evaluate(xbar*(1.0-PSI) +
 								 (itsSimplex.columns(itsNparams,1)* PSI));
 
-				  double fxcc = itsObjective.evaluate(xcc);
-
-				  if (fxcc < itsFvals.at(0,itsNparams))
+				  if (octPt.f < itsFvals.at(0,itsNparams))
 					 {
-						itsSimplex.column(itsNparams) = xcc;
-						itsFvals.at(0,itsNparams) = fxcc;
+						putInSimplex(octPt, itsNparams);
 						how = "contract inside";
 					 }
 				  else
@@ -969,37 +984,16 @@ DOTRACE("SimplexOptimizer::doOneIter");
 				{
 				  for (int j = 1; j < itsNparams+1; ++j)
 					 {
-						itsSimplex.column(j) =
-						  itsSimplex.columns(0,1) +
-						  (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
-
-						itsFvals.at(0,j) =
-						  itsObjective.evaluate(itsSimplex.columns(j,1));
+						putInSimplex(itsSimplex.columns(0,1) +
+										 (itsSimplex.columns(j,1) -
+										  itsSimplex.columns(0,1)) * SIGMA,
+										 j);
 					 }
 				}
 		  }
 	 }
 
-  {DOTRACE("reorder simplex");
-  // [dummy,index] = sort(itsFvals);
-  Mtx index = itsFvals.row(0).getSortOrder();
-
-  const int smallest = int(index.at(0));
-  const int largest = int(index.at(itsNparams));
-  const int largest2 = int(index.at(itsNparams-1));
-
-  // These swaps are smart enough to check if the column numbers
-  // are the same before doing the swap
-
-  itsFvals.swapColumns(0, smallest);
-  itsFvals.swapColumns(largest, itsNparams);
-  itsFvals.swapColumns(largest2, itsNparams-1);
-
-  itsSimplex.swapColumns(0, smallest);
-  itsSimplex.swapColumns(largest, itsNparams);
-  itsSimplex.swapColumns(largest2, itsNparams-1);
-  }
-
+  minimalSort();
 
   ++itsIterCount;
 
