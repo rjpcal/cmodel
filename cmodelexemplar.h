@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar  9 18:28:47 2001
+// written: Fri Mar  9 18:41:07 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -41,8 +41,6 @@ protected:
   int numTrainingExemplars() const { return itsNumTrainingExemplars; }
 
 private:
-  const Rat& itsObjParams;
-
   const int itsNumTrainingExemplars;
 
   fixed_block<Slice> itsTraining1;

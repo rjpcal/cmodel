@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 18:29:13 2001
+// written: Fri Mar  9 18:40:54 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,17 +22,16 @@
 #include <cmath>
 
 double minkDist(const double* w, int nelems,
-                const double* x1, int stride1,
+                Slice x1,
                 Slice x2,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
   for (int k = 0; k < nelems; ++k)
 	 {
-		wt_sum +=
-		  w[k] *
-		  pow( abs( x1[k*stride1] - *x2), r);
+		wt_sum += w[k] * pow( abs( *x1 - *x2), r);
 
+		x1.bump();
 		x2.bump();
 	 }
   return pow(wt_sum, r_inv);
@@ -87,7 +86,6 @@ CModelExemplar::CModelExemplar(const Rat& objParams,
 										 int numStoredExemplars) :
   Classifier(objParams,
 				 observedIncidence),
-  itsObjParams(objParams),
   itsNumTrainingExemplars(countCategory(objParams,0)),
   itsTraining1(itsNumTrainingExemplars),
   itsTraining2(itsNumTrainingExemplars),
@@ -140,7 +138,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 	 // compute similarity of ex-y to stored-1-x
 	 double sim1 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
-					itsObjParams.data()+y+numAllExemplars(), numAllExemplars(),
+					exemplar(y),
 					storedExemplar1,
 					minkPower, minkPowerInv);
 
@@ -149,7 +147,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 		// compute similarity of ex-y to stored-2-x
 	 double sim2 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
-					itsObjParams.data()+y+numAllExemplars(), numAllExemplars(),
+					exemplar(y),
 					storedExemplar2,
 					minkPower, minkPowerInv);
 
@@ -170,17 +168,15 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
   MinkDist2Binder binder2(attWeights, DIM_OBJ_PARAMS,
 								  storedExemplar2);
 
-  // This finds the first testExemplar data point (skipping the
-  // first column of itsObjParams, which contains category labels)
-  const double* testExemplar = itsObjParams.data()+numAllExemplars();
+  for (int y = 0; y < numAllExemplars(); ++y) {
 
-  for (int y = 0; y < numAllExemplars(); ++y, ++testExemplar) {
+	 Slice ex(exemplar(y));
 
 	 // compute similarity of ex-y to stored-1-x
-	 const double sim1 = binder1.minkDist2(Slice(testExemplar, numAllExemplars()));
+	 const double sim1 = binder1.minkDist2(ex);
 
 	 // compute similarity of ex-y to stored-2-x
-	 const double sim2 = binder2.minkDist2(Slice(testExemplar, numAllExemplars()));
+	 const double sim2 = binder2.minkDist2(ex);
 
 	 diffEvidence(y) += exp(-sim1) - exp(-sim2);
   }
