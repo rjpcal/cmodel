@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 14:56:57 2001
+// written: Tue Mar 27 15:11:47 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -103,9 +103,14 @@ DOTRACE("makeClassifier");
 		  {
 			 DOTRACE("use old");
 
-			 recentModel->reset(
-              new CModelCssm(objParams, observedIncidence,
-                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+			 Classifier* p1 = recentModel->get();
+
+  			 recentModel->reset(
+                new CModelCssm(objParams, observedIncidence,
+                               CModelExemplar::EXP_DECAY, numStoredExemplars));
+
+			 mexPrintf("before* = %x, after = %x\n",
+						  p1, recentModel->get());
 
 			 return *recentModel;
 		  }
