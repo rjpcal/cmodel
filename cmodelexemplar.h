@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar 16 10:49:25 2001
+// written: Fri Mar 16 17:48:37 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,13 +19,17 @@
 
 class CModelExemplar : public Classifier {
 public:
-  CModelExemplar(const Mtx& objParams,
-					  const Mtx& observedIncidence,
-					  int numStoredExemplars);
-
-  virtual ~CModelExemplar();
 
   enum Category { CAT1, CAT2 };
+
+  enum TransferFunction { EXP_DECAY, LINEAR_DECAY };
+
+  CModelExemplar(const Mtx& objParams,
+					  const Mtx& observedIncidence,
+					  int numStoredExemplars,
+					  TransferFunction transferFunc);
+
+  virtual ~CModelExemplar();
 
 protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
@@ -45,6 +49,8 @@ private:
   Mtx itsTraining2;
 
   const int itsNumStoredExemplars;
+
+  const TransferFunction itsTransferFunc;
 
   virtual void computeDiffEv(Slice& modelParams);
   virtual double computeSigmaNoise(double rawSigma) const;
