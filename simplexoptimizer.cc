@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Fri May 11 16:30:10 2001
+// written: Mon Jul  9 13:49:27 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -26,25 +26,25 @@ namespace
 {
   SimplexOptimizer::PrintType extractPrinttype(const fixed_string& printtype)
   {
-	 if      (printtype == "notify")   return SimplexOptimizer::NOTIFY;
-	 else if (printtype == "none")     return SimplexOptimizer::NONE;
-	 else if (printtype == "off")      return SimplexOptimizer::NONE;
-	 else if (printtype == "iter")     return SimplexOptimizer::ITER;
-	 else if (printtype == "final")    return SimplexOptimizer::FINAL;
-	 else if (printtype == "simplex")  return SimplexOptimizer::SIMPLEX;
+    if      (printtype == "notify")   return SimplexOptimizer::NOTIFY;
+    else if (printtype == "none")     return SimplexOptimizer::NONE;
+    else if (printtype == "off")      return SimplexOptimizer::NONE;
+    else if (printtype == "iter")     return SimplexOptimizer::ITER;
+    else if (printtype == "final")    return SimplexOptimizer::FINAL;
+    else if (printtype == "simplex")  return SimplexOptimizer::SIMPLEX;
 
-	 return SimplexOptimizer::NOTIFY;
+    return SimplexOptimizer::NOTIFY;
   }
 }
 
 SimplexOptimizer::SimplexOptimizer(MultivarFunction& objective,
-											  const Mtx& x_in,
-											  const fixed_string& printtype,
-											  const int nparams,
-											  const int maxfun,
-											  const int maxiter,
-											  const double tolx,
-											  const double tolf) :
+                                   const Mtx& x_in,
+                                   const fixed_string& printtype,
+                                   const int nparams,
+                                   const int maxfun,
+                                   const int maxiter,
+                                   const double tolx,
+                                   const double tolf) :
   itsObjective(objective),
 
   itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
@@ -80,23 +80,23 @@ void SimplexOptimizer::putInSimplex(const FuncPoint& p, int pointNumber)
 void SimplexOptimizer::printIter()
 {
   if (itsPrnt == ITER)
-	 {
-		cerr << setw(6) << itsIterCount
-			  << setw(13) << funcCount()
-			  << setw(17) << setprecision(6) << itsFvals.at(0,0)
-			  << "         " << iterTypeString(itsCurIter) << '\n';
-	 }
+    {
+      std::cerr << setw(6) << itsIterCount
+                << setw(13) << funcCount()
+                << setw(17) << setprecision(6) << itsFvals.at(0,0)
+                << "         " << iterTypeString(itsCurIter) << '\n';
+    }
 }
 
 void SimplexOptimizer::printSimplex()
 {
   if (itsPrnt == SIMPLEX)
-	 {
-		cerr << '\n' << iterTypeString(itsCurIter) << '\n';
-		itsSimplex.print("simplex");
-		itsFvals.print("fvals");
-		cerr << "funcEvals: " << funcCount() << '\n';
-	 }
+    {
+      std::cerr << '\n' << iterTypeString(itsCurIter) << '\n';
+      itsSimplex.print("simplex");
+      itsFvals.print("fvals");
+      std::cerr << "funcEvals: " << funcCount() << '\n';
+    }
 }
 
 void SimplexOptimizer::minimalSort()
@@ -136,18 +136,18 @@ DOTRACE("SimplexOptimizer::optimize");
   // instead of AND.)
 
   while (!withinTolf() || !withinTolx())
-	 {
-		if (tooManyIters()) return 0;
-		if (tooManyFevals()) return 0;
+    {
+      if (tooManyIters()) return 0;
+      if (tooManyFevals()) return 0;
 
-		doOneIter();
-	 } // end main algorithm loop
+      doOneIter();
+    } // end main algorithm loop
 
-  cerr << "\nOptimization terminated successfully:\n"
-		 << " the current x satisfies the termination criteria using "
-		 << "OPTIONS.TolX of " << itsTolx << '\n'
-		 << " and F(X) satisfies the convergence criteria using "
-		 << "OPTIONS.TolFun of " << itsTolf << '\n';
+  std::cerr << "\nOptimization terminated successfully:\n"
+            << " the current x satisfies the termination criteria using "
+            << "OPTIONS.TolX of " << itsTolx << '\n'
+            << " and F(X) satisfies the convergence criteria using "
+            << "OPTIONS.TolFun of " << itsTolf << '\n';
 
   return 1;
 }
@@ -166,60 +166,60 @@ DOTRACE("SimplexOptimizer::doOneIter");
   FuncPoint rflPt = evaluate(xbar + direction);
 
   if (rflPt.betterThan(simplexAt(0)))
- 	 {
- 		DOTRACE("rflPt.betterThan(simplexAt(0))");
+    {
+      DOTRACE("rflPt.betterThan(simplexAt(0))");
 
- 		// Calculate the expansion point
- 		FuncPoint expPt = evaluate(xbar + direction*2.0);
+      // Calculate the expansion point
+      FuncPoint expPt = evaluate(xbar + direction*2.0);
 
- 		if (expPt.betterThan(rflPt))
- 		  { putInSimplex(expPt, itsNparams); itsCurIter = EXPAND; }
- 		else
- 		  { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
- 	 }
+      if (expPt.betterThan(rflPt))
+        { putInSimplex(expPt, itsNparams); itsCurIter = EXPAND; }
+      else
+        { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
+    }
   else
-	 {
-		DOTRACE("!addReflection");
+    {
+      DOTRACE("!addReflection");
 
-		if (rflPt.betterThan(simplexAt(itsNparams-1)))
-		  { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
-		else
-		  {
-			 // Perform contraction
+      if (rflPt.betterThan(simplexAt(itsNparams-1)))
+        { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
+      else
+        {
+          // Perform contraction
 
-			 if (rflPt.betterThan(simplexAt(itsNparams)))
-				{
-				  // Perform an outside contraction
-				  FuncPoint ictPt = evaluate(xbar + direction*0.5);
+          if (rflPt.betterThan(simplexAt(itsNparams)))
+            {
+              // Perform an outside contraction
+              FuncPoint ictPt = evaluate(xbar + direction*0.5);
 
-				  if (ictPt.betterThan(rflPt))
-					 { putInSimplex(ictPt, itsNparams); itsCurIter = CONTRACT_OUTSIDE; }
-				  else
-					 { itsCurIter = SHRINK; }
-				}
-			 else
-				{
-				  // Perform an inside contraction
-				  FuncPoint octPt = evaluate(xbar - direction*0.5);
+              if (ictPt.betterThan(rflPt))
+                { putInSimplex(ictPt, itsNparams); itsCurIter = CONTRACT_OUTSIDE; }
+              else
+                { itsCurIter = SHRINK; }
+            }
+          else
+            {
+              // Perform an inside contraction
+              FuncPoint octPt = evaluate(xbar - direction*0.5);
 
-				  if (octPt.betterThan(simplexAt(itsNparams)))
-					 { putInSimplex(octPt, itsNparams); itsCurIter = CONTRACT_INSIDE; }
-				  else
-					 { itsCurIter = SHRINK; }
-				}
+              if (octPt.betterThan(simplexAt(itsNparams)))
+                { putInSimplex(octPt, itsNparams); itsCurIter = CONTRACT_INSIDE; }
+              else
+                { itsCurIter = SHRINK; }
+            }
 
-			 if (SHRINK == itsCurIter)
-				{
-				  for (int j = 1; j < itsNparams+1; ++j)
-					 {
-						putInSimplex(itsSimplex.columns(0,1) +
-										 (itsSimplex.columns(j,1) -
-										  itsSimplex.columns(0,1)) * 0.5,
-										 j);
-					 }
-				}
-		  }
-	 }
+          if (SHRINK == itsCurIter)
+            {
+              for (int j = 1; j < itsNparams+1; ++j)
+                {
+                  putInSimplex(itsSimplex.columns(0,1) +
+                               (itsSimplex.columns(j,1) -
+                                itsSimplex.columns(0,1)) * 0.5,
+                               j);
+                }
+            }
+        }
+    }
 
   minimalSort();
 
