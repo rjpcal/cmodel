@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Aug  1 10:54:35 2002
+// written: Thu Aug  1 11:04:29 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -304,6 +304,12 @@ DOTRACE("Classifier::handleRequest");
       action = trimmed;
     }
 
+  if (allModelParams.mrows() != numModelParams())
+    {
+      throw Util::Error(fstring("wrong number of model params "
+                                "(expected ", numModelParams(),
+                                ", got ", allModelParams.mrows(), ")"));
+    }
 
   //---------------------------------------------------------------------
   //
@@ -506,12 +512,10 @@ DOTRACE("Classifier::fillModelParamsBounds");
   const double minus_inf = -std::numeric_limits<double>::max();
   const double plus_inf = std::numeric_limits<double>::max();
 
-  // All lower bounds are "minus infinity"
-  // All upper bounds are "plus infinity"
-  bounds.sub(row_range_n(0, DIM_OBJ_PARAMS+2),
-             col_range_n(0,1)).setAll(minus_inf);
-  bounds.sub(row_range_n(0, DIM_OBJ_PARAMS+2),
-             col_range_n(1,1)).setAll(plus_inf);
+  // All lower bounds default to "minus infinity"
+  // All upper bounds default to "plus infinity"
+  bounds.sub(col_range_n(0,1)).setAll(minus_inf);
+  bounds.sub(col_range_n(1,1)).setAll(plus_inf);
 
   return DIM_OBJ_PARAMS+2;
 }
