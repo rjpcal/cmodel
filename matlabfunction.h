@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 18 11:07:28 2002
-// written: Tue Feb 19 09:47:00 2002
+// written: Tue Feb 19 09:53:23 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,12 +15,9 @@
 
 #include "multivarfunction.h"
 
-#include "mtx.h"
-
-#include "util/error.h"
 #include "util/strings.h"
 
-#include <libmatlb.h>
+typedef struct mxArray_tag mxArray;
 
 ///////////////////////////////////////////////////////////////////////
 /**
@@ -32,7 +29,7 @@
  **/
 ///////////////////////////////////////////////////////////////////////
 
-class Objective : public MultivarFunction
+class MatlabFunction : public MultivarFunction
 {
 private:
   const fstring itsFuncName;
@@ -42,111 +39,20 @@ private:
 
   mxArray** itsPrhs;
 
+  Mtx evaluateParallel(const Mtx& models) const;
+  Mtx evaluateSerial(const Mtx& models) const;
+
 public:
-  Objective(const fstring& funcName, int nvararg, mxArray** pvararg,
-            bool canUseMatrix = false)
-    :
-    itsFuncName(funcName),
-    itsNvararg(nvararg),
-    itsPvararg(pvararg),
-    itsCanUseMatrix(canUseMatrix),
-    itsPrhs(new (mxArray*)[nvararg+1])
-  {
-    itsPrhs[0] = 0;
+  MatlabFunction(const fstring& funcName,
+                 int nvararg, mxArray** pvararg,
+                 bool canUseMatrix = false);
 
-    for (int i = 0; i < itsNvararg; ++i)
-      {
-        itsPrhs[i+1] = 0;
-        mlfAssign(&itsPrhs[i+1], mxDuplicateArray(itsPvararg[i]));
-      }
-  }
-
-  virtual ~Objective()
-  {
-    for (int i = 0; i < itsNvararg; ++i)
-      {
-        mxDestroyArray(itsPrhs[i+1]);
-      }
-
-    delete [] itsPrhs;
-  }
-
-private:
-  Mtx evaluateParallel(const Mtx& models) const
-  {
-//     DOTRACE("evaluateParallel");
-
-    mxArray* costs_mx = 0;
-
-    // Since there is no mlfAssign here, this is treated as an unbound
-    // (temporary) array, which is automatically destroyed during
-    // mexCallMATLAB() below
-    itsPrhs[0] = models.makeMxArray();
-
-    int err =
-      mexCallMATLAB(1, &costs_mx, itsNvararg+1, itsPrhs, itsFuncName.c_str());
-
-    itsPrhs[0] = 0;
-
-    if (err != 0)
-      throw Util::Error("mexCallMATLAB failed in evaluateParallel");
-
-    Mtx costs(costs_mx, Mtx::COPY);
-
-    mxDestroyArray(costs_mx);
-
-    return costs;
-  }
-
-  Mtx evaluateSerial(const Mtx& models) const
-  {
-//     DOTRACE("evaluateSerial");
-
-    const int numModels = models.ncols();
-
-    Mtx result(numModels, 1);
-
-    mxArray* cost_mx = 0;
-
-    for (int e = 0; e < numModels; ++e)
-      {
-        Mtx currentModel = models.column(e);
-
-        // Since there is no mlfAssign here, this is treated as an unbound
-        // (temporary) array, which is automatically destroyed during
-        // mexCallMATLAB() below
-        itsPrhs[0] = currentModel.makeMxArray();
-
-        int err =
-          mexCallMATLAB(1, &cost_mx, itsNvararg+1, itsPrhs, itsFuncName.c_str());
-
-        itsPrhs[0] = 0;
-
-        if (err != 0)
-          throw Util::Error("mexCallMATLAB failed in evaluateSerial");
-
-        result.at(e) = mxGetScalar(cost_mx);
-
-        mxDestroyArray(cost_mx);
-      }
-
-    return result;
-  }
+  virtual ~MatlabFunction();
 
 protected:
-  virtual Mtx doEvaluateEach(const Mtx& models)
-  {
-    if (itsCanUseMatrix)
-      return evaluateParallel(models);
+  virtual Mtx doEvaluateEach(const Mtx& models);
 
-    return evaluateSerial(models);
-  }
-
-  virtual double doEvaluate(const Mtx& model)
-  {
-    Mtx result = doEvaluateEach(model.asColumn());
-    return result.at(0);
-  }
+  virtual double doEvaluate(const Mtx& model);
 };
 
 static const char vcid_matlabfunction_h[] = "$Header$";
