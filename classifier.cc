@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Aug  1 19:47:58 2002
+// written: Tue Sep 28 12:22:19 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,8 +24,8 @@
 #include "util/error.h"
 #include "util/strings.h"
 
-#include <libmatlb.h>
 #include <limits>
+#include <matrix.h>
 
 #include "util/trace.h"
 #include "util/debug.h"
