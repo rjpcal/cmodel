@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:09:05 2002
+// written: Fri Feb 15 14:15:40 2002
 // $Id$
 //
 //
@@ -472,6 +472,9 @@ DOTRACE("annealHelper");
                                           temp,
                                           nvararg,
                                           pvararg);
+
+  mxSetField(astate_mx, 0, "bestModel",
+             mxDuplicateArray(mxGetField(output, 0, "newModel")));
 
   mxSetFieldByNumber(output, 0,
                      mxAddField(output, "new_astate"),
