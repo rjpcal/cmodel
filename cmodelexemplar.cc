@@ -23,7 +23,7 @@
 
 #include <cmath>
 
-double minkDist(const ConstSlice& wts,
+double minkDist(const Slice& wts,
                 MtxConstIter x1,
                 MtxConstIter x2,
                 double r, double r_inv)
@@ -127,9 +127,9 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
   return n;
 }
 
-void CModelExemplar::doDiffEvidence(const ConstSlice& attWeights,
-												const ConstSlice& storedExemplar1,
-												const ConstSlice& storedExemplar2,
+void CModelExemplar::doDiffEvidence(const Slice& attWeights,
+												const Slice& storedExemplar1,
+												const Slice& storedExemplar2,
 												double minkPower,
 												double minkPowerInv)
 {
@@ -179,12 +179,12 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams.leftmostNC(DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
   attWeights.apply(abs);
 
-  Slice otherParams = modelParams.rightmostNC(modelParams.nelems()-
-															 (DIM_OBJ_PARAMS+2));
+  Slice otherParams = modelParams.rightmost(modelParams.nelems()-
+														  (DIM_OBJ_PARAMS+2));
 
   loadModelParams(otherParams);
 
@@ -196,12 +196,11 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const double minkPower = 2.0;
   const double minkPowerInv = 1.0/minkPower;
 
-  const Mtx& stored1(getStoredExemplars(CAT1));
-  const Mtx& stored2(getStoredExemplars(CAT2));
+  const Mtx& stored1 = getStoredExemplars(CAT1);
+  const Mtx& stored2 = getStoredExemplars(CAT2);
 
   if (minkPower == 2.0) {
-	 MtxConstIter attWts =
-		static_cast<ConstSlice&>(attWeights).begin();
+	 MtxConstIter attWts = attWeights.begin();
 
 	 minivec<MtxConstIter> exemplars;
 
@@ -210,12 +209,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 }
 
 	 for (int x = 0; x < itsNumStoredExemplars; ++x) {
-		MtxConstIter storedExemplar1 = stored1.rowIter(x);
-		MtxConstIter storedExemplar2 = stored2.rowIter(x);
 
-		MinkDist2Binder binder1(attWts, storedExemplar1);
-
-		MinkDist2Binder binder2(attWts, storedExemplar2);
+		MinkDist2Binder binder1(attWts, stored1.rowIter(x));
+		MinkDist2Binder binder2(attWts, stored2.rowIter(x));
 
 		for (int y = 0; y < numAllExemplars(); ++y) {
 

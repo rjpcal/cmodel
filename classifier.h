@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Tue Mar 13 12:55:28 2001
+// written: Thu Mar 15 16:11:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,6 @@
 #define MLF_V2 1
 #endif
 
-class ConstSlice;
 class Slice;
 class Mtx;
 
@@ -61,7 +60,7 @@ protected:
   double& diffEvidence(int i) { return itsDiffEvidence[i]; }
   int numAllExemplars() const { return itsNumAllExemplars; }
 
-  ConstSlice exemplar(int i) const;
+  Slice exemplar(int i) const;
   int exemplarCategory(int i) const;
 
   static const int DIM_OBJ_PARAMS = 4;

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Mar 13 12:55:35 2001
+// written: Thu Mar 15 16:11:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -156,7 +156,7 @@ int Classifier::exemplarCategory(int i) const {
   return int(itsObjParams.at(i));
 }
 
-ConstSlice Classifier::exemplar(int i) const {
+Slice Classifier::exemplar(int i) const {
   // Skip the first column which contains category info
   return itsObjParams.row(i).rightmost(DIM_OBJ_PARAMS);
 }

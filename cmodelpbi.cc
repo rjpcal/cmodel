@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Wed Mar 14 17:22:57 2001
+// written: Thu Mar 15 16:11:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -30,7 +30,7 @@ void CModelPbi::computeDiffEv(Slice& modelParams)
 DOTRACE("CModelPbi::computeDiffEv");
 
   MtxConstIter attWeights =
-	 static_cast<const ConstSlice&>(modelParams.leftmost(DIM_OBJ_PARAMS)).begin();
+	 static_cast<const Slice&>(modelParams.leftmost(DIM_OBJ_PARAMS)).begin();
 
   for (int i = 0; i < numAllExemplars(); ++i)
 	 diffEvidence(i) = -1.0 * innerProduct(attWeights, exemplar(i).begin());

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Wed Mar 14 15:40:18 2001
+// written: Thu Mar 15 16:11:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -46,9 +46,9 @@ private:
 
   const int itsNumStoredExemplars;
 
-  void doDiffEvidence(const ConstSlice& attWeights,
-							 const ConstSlice& storedExemplar1,
-							 const ConstSlice& storedExemplar2,
+  void doDiffEvidence(const Slice& attWeights,
+							 const Slice& storedExemplar1,
+							 const Slice& storedExemplar2,
 							 double minkPower,
 							 double minkPowerInv);
 
