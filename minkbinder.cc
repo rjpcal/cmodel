@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:45 2001
-// written: Mon Feb  4 18:12:31 2002
+// written: Thu Feb  7 16:05:20 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,6 +17,11 @@
 
 //#define USE_ASM
 
+namespace
+{
+  double square(double x) { return x * x; }
+}
+
 double MinkowskiBinder::minkDist2(MtxConstIter x1) const
 {
 #ifndef USE_ASM
@@ -27,7 +32,7 @@ double MinkowskiBinder::minkDist2(MtxConstIter x1) const
 
   for (; wt.hasMore(); ++wt, ++x1, ++x2)
     {
-      wt_sum += (*wt) * ((*x1) - (*x2)) * ((*x1) - (*x2));
+      wt_sum += (*wt) * square((*x1) - (*x2));
     }
   return sqrt(wt_sum);
 
