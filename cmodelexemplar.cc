@@ -93,8 +93,8 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   Classifier(objParams,
 				 observedIncidence),
   itsNumTrainingExemplars(countCategory(objParams,0)),
-  itsTraining1(itsNumTrainingExemplars),
-  itsTraining2(itsNumTrainingExemplars),
+  itsTraining1(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
+  itsTraining2(itsNumTrainingExemplars, DIM_OBJ_PARAMS),
   itsNumStoredExemplars(numStoredExemplars)
 {
   int num2 = countCategory(objParams, 1);
@@ -109,11 +109,13 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   for (int i = 0; i < objParams.mrows(); ++i)
 	 {
 		if (int(objParams.at(i,0)) == 0)
-		  itsTraining1[c1++].rebind(
-						objParams.row(i).rightmost(DIM_OBJ_PARAMS));
+		  {
+			 itsTraining1.row(c1++) = objParams.row(i).rightmost(DIM_OBJ_PARAMS);
+		  }
 		else if (int(objParams.at(i,0)) == 1)
-		  itsTraining2[c2++].rebind(
-						objParams.row(i).rightmost(DIM_OBJ_PARAMS));
+		  {
+			 itsTraining2.row(c2++) = objParams.row(i).rightmost(DIM_OBJ_PARAMS);
+		  }
 	 }
 }
 

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Mon Mar 12 17:06:24 2001
+// written: Tue Mar 13 12:00:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,7 +22,7 @@
 
 
 CModelWpsm::CModelWpsm(const Mtx& objParams,
-							const Mtx& observedIncidence) :
+							  const Mtx& observedIncidence) :
   CModelExemplar(objParams, observedIncidence, 1)
 {
 DOTRACE("CModelWpsm::CModelWpsm");
@@ -31,19 +31,23 @@ DOTRACE("CModelWpsm::CModelWpsm");
 	 {
 		itsPrototype1[i] = 0.0;
 
-		{for (int k = 0; k < training1().size(); ++k)
-		  itsPrototype1[i] += training1()[k][i];
+		int mrows1 = training1().mrows();
+
+		{for (int k = 0; k < mrows1; ++k)
+		  itsPrototype1[i] += training1().at(k,i);
 		}
 
-		itsPrototype1[i] /= training1().size();
+		itsPrototype1[i] /= mrows1;
 
 		itsPrototype2[i] = 0.0;
 
-		{for (int k = 0; k < training2().size(); ++k)
-		  itsPrototype2[i] += training2()[k][i];
+		int mrows2 = training2().mrows();
+
+		{for (int k = 0; k < mrows2; ++k)
+		  itsPrototype2[i] += training2().at(k,i);
 		}
 
-		itsPrototype2[i] /= training2().size();
+		itsPrototype2[i] /= mrows2;
 	 }
 }
 

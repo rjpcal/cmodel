@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Mon Mar 12 17:08:50 2001
+// written: Tue Mar 13 12:04:13 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,16 +35,16 @@ protected:
   // Count the category training exemplars
   static int countCategory(const Mtx& params, int category);
 
-  const fixed_block<ConstSlice>& training1() const { return itsTraining1; }
-  const fixed_block<ConstSlice>& training2() const { return itsTraining2; }
+  const Mtx& training1() const { return itsTraining1; }
+  const Mtx& training2() const { return itsTraining2; }
 
   int numTrainingExemplars() const { return itsNumTrainingExemplars; }
 
 private:
   const int itsNumTrainingExemplars;
 
-  fixed_block<ConstSlice> itsTraining1;
-  fixed_block<ConstSlice> itsTraining2;
+  Mtx itsTraining1;
+  Mtx itsTraining2;
 
   const int itsNumStoredExemplars;
 
