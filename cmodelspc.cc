@@ -51,7 +51,7 @@ DOTRACE("CmodelSPC::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      mtx category_ = extraArgs.get_field("category").as_mtx();
+      mtx category_ = extraArgs.get_mtx_field("category");
 
       int category = int(category_.at(0));
 

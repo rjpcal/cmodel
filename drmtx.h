@@ -41,7 +41,7 @@ private:
 
   void updateArray() const
   {
-    mlfAssign(&itsArray, itsMtx.make_mxarray());
+    mlfAssign(&itsArray, make_mxarray(itsMtx));
     itsArrayIsValid = true;
   }
 

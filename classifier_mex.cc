@@ -25,6 +25,7 @@
 #include "cmodel/cmodelspc.h"
 #include "cmodel/cmodelwpsm.h"
 
+#include "mtx/matlabinterface.h"
 #include "mtx/mtx.h"
 
 #include "mx/mexpkg.h"
@@ -212,12 +213,12 @@ void classifier(int nlhs, mxArray* plhs[],
 {
 DOTRACE("<classifier_mex.cc>::classifier");
 
-  const mtx      modelParams   (prhs[0], mtx::COPY);
+  const mtx      modelParams   (make_mtx(prhs[0], mtx::COPY));
   const fstring  modelName     (mx::as_string(prhs[1]));
   const fstring  actionRequest (mx::as_string(prhs[2]));
   const mxArray* extraArgs_mx  (prhs[3]);
 
-  const mtx      objParams     (mx::get_field(extraArgs_mx, "objParams"));
+  const mtx      objParams     (make_mtx(mx::get_field(extraArgs_mx, "objParams")));
 
   shared_ptr<Classifier> model =
     makeClassifier(modelName, objParams, extraArgs_mx);

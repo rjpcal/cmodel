@@ -12,6 +12,7 @@
 #ifndef DOSIMPLEX_CC_DEFINED
 #define DOSIMPLEX_CC_DEFINED
 
+#include "mtx/matlabinterface.h"
 #include "mtx/mtx.h"
 
 #include "mx/mexpkg.h"
@@ -66,7 +67,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
   int nvararg = nrhs - NDECLARED;
   const mxArray** pvararg = prhs + NDECLARED;
 
-  const mtx x(x_in, mtx::BORROW);
+  const mtx x(make_mtx(x_in, mtx::BORROW));
   const int numModelParams = x.nelems();
 
   // Setup the objective function
@@ -77,7 +78,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
 
   // Create the optimizer...
   SimplexOptimizer opt(objective,
-                       mtx(x_in),
+                       make_mtx(x_in),
                        mx::as_string(printtype_mx),
                        numModelParams,
                        extractMaxIters(maxfun_mx, numModelParams),
@@ -91,7 +92,7 @@ void doSimplex(int nlhs, mxArray* plhs[],
 
   // Now return results back to the matlab caller
 
-  plhs[0] = opt.bestParams().make_mxarray();
+  plhs[0] = make_mxarray(opt.bestParams());
 
   plhs[1] = mxCreateScalarDouble(opt.bestFval());
   plhs[2] = mxCreateScalarDouble(exitFlag);

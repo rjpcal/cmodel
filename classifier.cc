@@ -277,7 +277,7 @@ namespace
 {
   mtx getTestObjects(const mx_wrapper& extraArgs)
   {
-    mtx result = extraArgs.get_field("testObjects").as_mtx();
+    mtx result = extraArgs.get_mtx_field("testObjects");
 
     if (result.ncols() != Classifier::DIM_OBJ_PARAMS)
       {
@@ -335,7 +335,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llc");
 
-      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
+      const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -356,7 +356,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-llf");
 
-      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
+      const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
       checkModelParams(allModelParams, numModelParams());
 
@@ -373,7 +373,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-dev");
 
-      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
+      const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -413,7 +413,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-simplex");
 
-      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
+      const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -425,8 +425,8 @@ DOTRACE("Classifier::handleRequest");
                            allModelParams.as_column(),
                            "notify",
                            allModelParams.nelems(),
-                           extraArgs.get_field("maxfun").as_int(),
-                           extraArgs.get_field("maxiter").as_int()
+                           extraArgs.get_int_field("maxfun"),
+                           extraArgs.get_int_field("maxiter")
                            );
 
       int exitFlag = opt.optimize();
@@ -447,7 +447,7 @@ DOTRACE("Classifier::handleRequest");
     {
       DOTRACE("Classifier::handleRequest-anneal");
 
-      const mtx observedIncidence = extraArgs.get_field("observedIncidence").as_mtx();
+      const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
       const mtx testObjects = getTestObjects(extraArgs);
 
