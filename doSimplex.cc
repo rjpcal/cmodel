@@ -9,6 +9,7 @@
 #include "doSimplex.h"
 
 #include "mtx.h"
+#include "strings.h"
 
 #include <fstream.h>
 #include "libmatlbm.h"
@@ -602,7 +603,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * printtype,
                             mxArray * tolx_mx,
                             mxArray * tolf_mx,
-                            mxArray * maxfun,
+                            mxArray * maxfun_mx,
                             mxArray * maxiter,
                             mxArray * debugFlags_mx,
                             mxArray * varargin) {
@@ -673,7 +674,7 @@ DOTRACE("MdoSimplex");
     mclCopyArray(&printtype);
     mclCopyArray(&tolx_mx);
     mclCopyArray(&tolf_mx);
-    mclCopyArray(&maxfun);
+    mclCopyArray(&maxfun_mx);
     mclCopyArray(&maxiter);
     mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
@@ -690,33 +691,39 @@ DOTRACE("MdoSimplex");
     mxArray* const numModelParams_mx =
 		mclInitialize(mxCreateScalarDouble(numModelParams));
 
+	 int maxfun = 0;
 
-    // 
-    // % In case the defaults were gathered from calling: optimset('simplex'):
-    // if ischar(maxfun)
-    if (mlfTobool(mclVe(mlfIschar(mclVa(maxfun, "maxfun"))))) {
+    // In case the defaults were gathered from calling: optimset('simplex'):
+    if (mxIsChar(maxfun_mx)) {
 
-        // if isequal(lower(maxfun),'200*numberofvariables')
-        if (mlfTobool(
-              mclVe(
-                mlfIsequal(
-                  mclVe(mlfLower(mclVa(maxfun, "maxfun"))),
-                  _mxarray2_, NULL)))) {
+        // if isequal(lower(maxfun_mx),'200*numberofvariables')
+//          if (mlfTobool(
+//                mclVe(
+//                  mlfIsequal(
+//                    mclVe(mlfLower(mclVa(maxfun_mx, "maxfun"))),
+//                    _mxarray2_, NULL)))) {
+		if (Mtx::extractString(maxfun_mx) == "200*numberofvariables") {
 
-            // maxfun = 200*numModelParams;
-            mlfAssign(&maxfun, mxCreateScalarDouble(200*numModelParams));
+            // maxfun_mx = 200*numModelParams;
+		  maxfun = 200*numModelParams;
+//              mlfAssign(&maxfun_mx, mxCreateScalarDouble(200*numModelParams));
 
-        // else
-        } else {
+		} else {
 
-            // error('Option ''MaxFunEvals'' must be an integer value if not the default.')
-            mlfError(_mxarray5_);
+		  mexErrMsgTxt("Option ''MaxFunEvals'' must be an integer value "
+							"if not the default.");
+
+//              // error('
+//              mlfError(_mxarray5_);
 
         // end
         }
 
     // end
     }
+	 else {
+		maxfun = int(mxGetScalar(maxfun_mx));
+	 }
 
     // if ischar(maxiter)
     if (mlfTobool(mclVe(mlfIschar(mclVa(maxiter, "maxiter"))))) {
@@ -1026,21 +1033,18 @@ DOTRACE("MdoSimplex");
 		DOTRACE("Main algorithm");
 
 		{DOTRACE("Main loop condition"); // 0.5%
-		mxArray * a_ = mclInitialize(
-											  mclLt(
-													  mxCreateScalarDouble(func_evals),
-													  mclVa(maxfun, "maxfun")));
+//  		mxArray * a_ = mclInitialize(
+//  											  mclLt(
+//  													  mxCreateScalarDouble(func_evals),
+//  													  mclVa(maxfun_mx, "maxfun")));
 
-		if (mlfTobool(a_)
-			 && mlfTobool(
-							  mclAnd(
-										a_,
-										mclLt(
-												mclVv(itercount, "itercount"),
-												mclVa(maxiter, "maxiter"))))) {
-		  mxDestroyArray(a_);
+		bool okEvals = (func_evals < maxfun);
+
+		if (okEvals
+			 && mxGetScalar(itercount) < mxGetScalar(maxiter)) {
+//  		  mxDestroyArray(a_);
 		} else {
-		  mxDestroyArray(a_);
+//  		  mxDestroyArray(a_);
 		  break;
 		}
 		}
@@ -1543,7 +1547,7 @@ DOTRACE("MdoSimplex");
     mlfAssign(fval, mlfMin(NULL, mclVv(funcVals, "funcVals"), NULL, NULL));
 
     // if func_evals >= maxfun 
-    if (mclGeBool(mxCreateScalarDouble(func_evals), mclVa(maxfun, "maxfun"))) {
+    if (mclGeBool(mxCreateScalarDouble(func_evals), mclVa(maxfun_mx, "maxfun"))) {
 
         // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
@@ -1676,7 +1680,7 @@ DOTRACE("MdoSimplex");
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(maxiter);
-    mxDestroyArray(maxfun);
+    mxDestroyArray(maxfun_mx);
     mxDestroyArray(tolf_mx);
     mxDestroyArray(tolx_mx);
     mxDestroyArray(printtype);
