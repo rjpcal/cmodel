@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri May 11 16:30:10 2001
+// written: Tue Oct 30 11:36:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,7 +27,8 @@
 #include "util/trace.h"
 #include "util/debug.h"
 
-class LLEvaluator : public MultivarFunction {
+class LLEvaluator : public MultivarFunction
+{
   Classifier& itsC;
   const Mtx& itsObjs;
   const Mtx& itsInc;
@@ -35,13 +36,13 @@ class LLEvaluator : public MultivarFunction {
 protected:
   virtual double doEvaluate(const Mtx& x)
   {
-	 Slice params(x.column(0));
-	 return -itsC.currentLogL(params, itsObjs, itsInc);
+    Slice params(x.column(0));
+    return -itsC.currentLogL(params, itsObjs, itsInc);
   }
 
 public:
   LLEvaluator(Classifier& c, const Mtx& objs, const Mtx& inc) :
-	 itsC(c), itsObjs(objs), itsInc(inc) {}
+    itsC(c), itsObjs(objs), itsInc(inc) {}
 };
 
 ///////////////////////////////////////////////////////////////////////
@@ -63,7 +64,7 @@ Classifier::~Classifier()
 {}
 
 Mtx Classifier::forwardProbit(const Mtx& diffEv,
-										double thresh, double sigmaNoise)
+                              double thresh, double sigmaNoise)
 {
 DOTRACE("Classifier::forwardProbit");
 
@@ -79,9 +80,9 @@ DOTRACE("Classifier::forwardProbit");
   // pp = 0.5 * erfc(alpha / sqrt(2))
 
   for (; ppiter.hasMore(); ++diffev, ++ppiter) {
-	 double alpha_val = thresh - *diffev;
+    double alpha_val = thresh - *diffev;
 
-	 *ppiter = 0.5*Num::erfc(alpha_val * divisor);
+    *ppiter = 0.5*Num::erfc(alpha_val * divisor);
   }
 
   return pp;
@@ -96,29 +97,30 @@ DOTRACE("Classifier::forwardProbit");
 //---------------------------------------------------------------------
 
 double Classifier::computeLogL(const Mtx& predictedProbability,
-										 const Mtx& observedIncidence)
+                               const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::computeLogL");
 
   if (observedIncidence != itsObservedIncidenceCache ||
-		itsCachedLogL_1_2 == 0.0)
-	 {
-		itsCachedLogL_1_2 = 0.0;
+      itsCachedLogL_1_2 == 0.0)
+    {
+      itsCachedLogL_1_2 = 0.0;
 
-		for(int k = 0; k < observedIncidence.mrows(); ++k) {
-		  double oi1 = observedIncidence.at(k,0);
-		  double oi2 = observedIncidence.at(k,1);
+      for(int k = 0; k < observedIncidence.mrows(); ++k)
+        {
+          double oi1 = observedIncidence.at(k,0);
+          double oi2 = observedIncidence.at(k,1);
 
-		  // term 1
-		  itsCachedLogL_1_2 += Num::gammaln(1.0 + oi1 + oi2);
+          // term 1
+          itsCachedLogL_1_2 += Num::gammaln(1.0 + oi1 + oi2);
 
-		  // term 2
-		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi1);
-		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi2);
-		}
+          // term 2
+          itsCachedLogL_1_2 -= Num::gammaln(1.0+oi1);
+          itsCachedLogL_1_2 -= Num::gammaln(1.0+oi2);
+        }
 
-		itsObservedIncidenceCache = observedIncidence;
-	 }
+      itsObservedIncidenceCache = observedIncidence;
+    }
 
   double logL_3 = 0.0;
 
@@ -130,19 +132,19 @@ DOTRACE("Classifier::computeLogL");
   MtxConstIter ppiter = predictedProbability.columnIter(0);
 
   for(; ppiter.hasMore(); ++ppiter, ++oi1iter, ++oi2iter) {
-	 double oi1 = *oi1iter;
-	 double oi2 = *oi2iter;
+    double oi1 = *oi1iter;
+    double oi2 = *oi2iter;
 
-	 // term3
-	 double pp_val = *ppiter;
+    // term3
+    double pp_val = *ppiter;
 
-	 if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
-	 else                logL_3 += oi1 * log(pp_val);
+    if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
+    else                logL_3 += oi1 * log(pp_val);
 
-	 pp_val = 1.0 - pp_val;
+    pp_val = 1.0 - pp_val;
 
-	 if (pp_val < 1e-50) logL_3 += oi2 * LOG_10_MINUS_50;
-	 else                logL_3 += oi2 * log(pp_val);
+    if (pp_val < 1e-50) logL_3 += oi2 * LOG_10_MINUS_50;
+    else                logL_3 += oi2 * log(pp_val);
   }
 
   return itsCachedLogL_1_2 + logL_3;
@@ -168,15 +170,15 @@ DOTRACE("Classifier::classifyObjects");
   const double thresh = modelParams[DIM_OBJ_PARAMS];
 
   const double sigmaNoise = (modelParams.nelems() > DIM_OBJ_PARAMS+1) ?
-	 computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]) : 1.0;
+    computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]) : 1.0;
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
   return forwardProbit(itsDiffEvidence, thresh, sigmaNoise);
 }
 
 double Classifier::currentLogL(Slice& modelParams,
-										 const Mtx& testObjects,
-										 const Mtx& observedIncidence)
+                               const Mtx& testObjects,
+                               const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::currentLogL");
 
@@ -199,14 +201,14 @@ DOTRACE("Classifier::fullLogL");
   MtxConstIter oi2iter = observedIncidence.columnIter(1);
 
   for (; opiter.hasMore(); ++opiter, ++oi1iter, ++oi2iter)
-	 *opiter = (*oi1iter / (*oi1iter + *oi2iter));
+    *opiter = (*oi1iter / (*oi1iter + *oi2iter));
 
   return computeLogL(observedProb, observedIncidence);
 }
 
 double Classifier::deviance(Slice& modelParams,
-									 const Mtx& testObjects,
-									 const Mtx& observedIncidence)
+                            const Mtx& testObjects,
+                            const Mtx& observedIncidence)
 {
 DOTRACE("Classifier::deviance");
 
@@ -216,20 +218,20 @@ DOTRACE("Classifier::deviance");
   return -2 * (llc - llf);
 }
 
-Classifier::RequestResult Classifier::handleRequest(fixed_string action,
-																	 const Mtx& allModelParams,
-																	 const MxWrapper& extraArgs)
+Classifier::RequestResult Classifier::handleRequest(fstring action,
+                                                    const Mtx& allModelParams,
+                                                    const MxWrapper& extraArgs)
 {
 DOTRACE("Classifier::handleRequest");
 
   int multiplier = 1;
   // check for minus sign
   if (action.c_str()[0] == '-')
-	 {
-		multiplier = -1;
-		fixed_string trimmed = action.c_str() + 1;
-		action = trimmed;
-	 }
+    {
+      multiplier = -1;
+      fstring trimmed = action.c_str() + 1;
+      action = trimmed;
+    }
 
 
   //---------------------------------------------------------------------
@@ -243,80 +245,80 @@ DOTRACE("Classifier::handleRequest");
   Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
 
   if ( action == "ll" || action == "llc" )
-	 {
-		Mtx result(allModelParams.ncols(), 1);
-		for (int i = 0; i < allModelParams.ncols(); ++i)
-		  {
-			 Slice modelParams(allModelParams.column(i));
-			 result.at(i) = multiplier *
-				currentLogL(modelParams, testObjects, observedIncidence);
-		  }
+    {
+      Mtx result(allModelParams.ncols(), 1);
+      for (int i = 0; i < allModelParams.ncols(); ++i)
+        {
+          Slice modelParams(allModelParams.column(i));
+          result.at(i) = multiplier *
+            currentLogL(modelParams, testObjects, observedIncidence);
+        }
 
-		return result;
-	 }
+      return result;
+    }
 
   if ( action == "llf" )
-	 {
-		Mtx result(allModelParams.ncols(), 1);
-		for (int i = 0; i < allModelParams.ncols(); ++i)
-		  {
-			 result.at(i) = multiplier * fullLogL(observedIncidence);
-		  }
+    {
+      Mtx result(allModelParams.ncols(), 1);
+      for (int i = 0; i < allModelParams.ncols(); ++i)
+        {
+          result.at(i) = multiplier * fullLogL(observedIncidence);
+        }
 
-		return result;
-	 }
+      return result;
+    }
 
   if ( action == "dev" )
-	 {
-		Mtx result(allModelParams.ncols(), 1);
-		for (int i = 0; i < allModelParams.ncols(); ++i)
-		  {
-			 Slice modelParams(allModelParams.column(i));
-			 result.at(i) = multiplier *
-				deviance(modelParams, testObjects, observedIncidence);
-		  }
+    {
+      Mtx result(allModelParams.ncols(), 1);
+      for (int i = 0; i < allModelParams.ncols(); ++i)
+        {
+          Slice modelParams(allModelParams.column(i));
+          result.at(i) = multiplier *
+            deviance(modelParams, testObjects, observedIncidence);
+        }
 
-		return result;
-	 }
+      return result;
+    }
 
   if ( action == "classify" )
-	 {
-		Mtx result(testObjects.mrows(), allModelParams.ncols());
+    {
+      Mtx result(testObjects.mrows(), allModelParams.ncols());
 
-		for (int i = 0; i < allModelParams.ncols(); ++i)
-		  {
-			 Slice modelParams(allModelParams.column(i));
-			 result.column(i) = this->classifyObjects(modelParams, testObjects);
-		  }
+      for (int i = 0; i < allModelParams.ncols(); ++i)
+        {
+          Slice modelParams(allModelParams.column(i));
+          result.column(i) = this->classifyObjects(modelParams, testObjects);
+        }
 
-		return result;
-	 }
+      return result;
+    }
 
   if ( action == "simplex" )
-	 {
-		LLEvaluator objective(*this, testObjects, observedIncidence);
+    {
+      LLEvaluator objective(*this, testObjects, observedIncidence);
 
-		SimplexOptimizer opt(objective,
-									allModelParams.asColumn(),
-									"notify",
-									allModelParams.nelems(),
-									extraArgs.getStructField("maxfun").getInt(),
-									extraArgs.getStructField("maxiter").getInt()
-									);
+      SimplexOptimizer opt(objective,
+                           allModelParams.asColumn(),
+                           "notify",
+                           allModelParams.nelems(),
+                           extraArgs.getStructField("maxfun").getInt(),
+                           extraArgs.getStructField("maxiter").getInt()
+                           );
 
-		int exitFlag = opt.optimize();
+      int exitFlag = opt.optimize();
 
-		MxWrapper result;
+      MxWrapper result;
 
-		result.setStructField("bestParams", opt.bestParams());
-		result.setStructField("bestFval", opt.bestFval());
-		result.setStructField("exitFlag", exitFlag);
-		result.setStructField("iterations", opt.iterCount());
-		result.setStructField("funcCount", opt.funcCount());
-		result.setStructField("algorithm", opt.algorithm());
+      result.setStructField("bestParams", opt.bestParams());
+      result.setStructField("bestFval", opt.bestFval());
+      result.setStructField("exitFlag", exitFlag);
+      result.setStructField("iterations", opt.iterCount());
+      result.setStructField("funcCount", opt.funcCount());
+      result.setStructField("algorithm", opt.algorithm());
 
-		return result;
-	 }
+      return result;
+    }
 
   return RequestResult();
 }
@@ -328,10 +330,10 @@ DOTRACE("Classifier::countCategory");
   int n = 0;
   MtxConstIter iter = itsObjCategories.columnIter(0);
   for (; iter.hasMore(); ++iter)
-	 {
-		if (*iter == category)
-		  ++n;
-	 }
+    {
+      if (*iter == category)
+        ++n;
+    }
   return n;
 }
 
@@ -344,10 +346,10 @@ DOTRACE("Classifier::objectsOfCategory");
 
   int r = 0;
   for (int i = 0; i < itsObjects.mrows(); ++i)
-	 {
-		if (exemplarCategory(i) == category)
-		  result.row(r++) = exemplar(i);
-	 }
+    {
+      if (exemplarCategory(i) == category)
+        result.row(r++) = exemplar(i);
+    }
 
   return result;
 }

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Jul  9 14:00:40 2001
+// written: Tue Oct 30 11:38:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -65,7 +65,7 @@ CModelExemplar::~CModelExemplar()
 {}
 
 Classifier::RequestResult
-CModelExemplar::handleRequest(fixed_string action,
+CModelExemplar::handleRequest(fstring action,
                               const Mtx& allModelParams,
                               const MxWrapper& extraArgs)
 {
@@ -151,7 +151,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   }
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
-    DOTRACE("minkowski loop");
+  DOTRACE("minkowski loop");
 
     bool compute1 = newObjects || newAttWts ||
       (itsStored1Cache.row(x) != stored1.row(x));
@@ -160,7 +160,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
       (itsStored2Cache.row(x) != stored2.row(x));
 
     if (compute1) {
-      DOTRACE("compute1");
+    DOTRACE("compute1");
 
       const MtxIter distrust1 = itsEvidence1Cache.rowIter(x);
 
@@ -192,7 +192,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
     }
 
     if (compute2) {
-      DOTRACE("compute2");
+    DOTRACE("compute2");
       itsStored2Cache.row(x) = stored2.row(x);
 
       const MtxIter distrust2 = itsEvidence2Cache.rowIter(x);

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Mon Jul  9 13:50:35 2001
+// written: Tue Oct 30 11:35:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,7 +18,7 @@
 #include "mtx.h"
 #include "multivarfunction.h"
 
-class fixed_string;
+class fstring;
 
 class SimplexOptimizer {
 public:
@@ -26,7 +26,7 @@ public:
 
   SimplexOptimizer(MultivarFunction& objective,
                    const Mtx& x_in,
-                   const fixed_string& printtype,
+                   const fstring& printtype,
                    const int nparams,
                    const int maxfun = 0, // default is 200*nparams
                    const int maxiter = 0, // default is 200*nparams

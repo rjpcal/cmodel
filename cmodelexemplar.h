@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Thu Apr 26 18:40:03 2001
+// written: Tue Oct 30 11:37:58 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,17 +27,17 @@ public:
   static const int MAX_STORED = -1;
 
   CModelExemplar(const Mtx& objParams,
-					  int numStoredExemplars,
-					  TransferFunction transferFunc);
+                 int numStoredExemplars,
+                 TransferFunction transferFunc);
 
   virtual ~CModelExemplar();
 
   // Handles the request via chain-of-responsibility. Subclasses must
   // be sure to call the superclass version before attempting to
   // process the request.
-  virtual RequestResult handleRequest(fixed_string action,
-												  const Mtx& modelParams,
-												  const MxWrapper& extraArgs);
+  virtual RequestResult handleRequest(fstring action,
+                                      const Mtx& modelParams,
+                                      const MxWrapper& extraArgs);
 
 protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
@@ -68,7 +68,7 @@ private:
   Mtx itsAttWtsCache;
 
   virtual void computeDiffEv(const Mtx& objects,
-									  Slice& modelParams, Mtx& diffEvOut);
+                             Slice& modelParams, Mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 

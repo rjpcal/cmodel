@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Mon Apr 30 12:01:26 2001
+// written: Tue Oct 30 11:37:24 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,9 +16,10 @@
 #include "mtx.h"
 #include "mxwrapper.h"
 
-class fixed_string;
+class fstring;
 
-class Classifier {
+class Classifier
+{
 public:
   Classifier(const Mtx& objParams);
   virtual ~Classifier();
@@ -27,34 +28,34 @@ public:
   Mtx classifyObjects(Slice& modelParams, const Mtx& testObjects);
 
   double currentLogL(Slice& modelParams,
-							const Mtx& testObjects,
-							const Mtx& observedIncidence);
+                     const Mtx& testObjects,
+                     const Mtx& observedIncidence);
 
   double fullLogL(const Mtx& observedIncidence);
 
   double deviance(Slice& modelParams,
-						const Mtx& testObjects,
-						const Mtx& observedIncidence);
+                  const Mtx& testObjects,
+                  const Mtx& observedIncidence);
 
   struct RequestResult {
-	 RequestResult() : requestHandled(false), result(Mtx(0,0)) {}
+    RequestResult() : requestHandled(false), result(Mtx(0,0)) {}
 
-	 RequestResult(Mtx res) :
-		requestHandled(true), result(res) {}
+    RequestResult(Mtx res) :
+      requestHandled(true), result(res) {}
 
-	 RequestResult(MxWrapper res) :
-		requestHandled(true), result(res) {}
+    RequestResult(MxWrapper res) :
+      requestHandled(true), result(res) {}
 
-	 const bool requestHandled;
-	 MxWrapper result;
+    const bool requestHandled;
+    MxWrapper result;
   };
 
   // Handles the request via chain-of-responsibility. Subclasses must
   // be sure to call the superclass version before attempting to
   // process the request.
-  virtual RequestResult handleRequest(fixed_string action,
-												  const Mtx& modelParams,
-												  const MxWrapper& extraArgs);
+  virtual RequestResult handleRequest(fstring action,
+                                      const Mtx& modelParams,
+                                      const MxWrapper& extraArgs);
 
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }
@@ -65,7 +66,7 @@ protected:
 
   // Must be overridden by subclasses
   virtual void computeDiffEv(const Mtx& objects,
-									  Slice& modelParams, Mtx& diffEvOut) = 0;
+                             Slice& modelParams, Mtx& diffEvOut) = 0;
 
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
@@ -80,10 +81,10 @@ private:
   double itsCachedLogL_1_2;
 
   static Mtx forwardProbit(const Mtx& diffEv,
-									double thresh, double sigmaNoise);
+                           double thresh, double sigmaNoise);
 
   double computeLogL(const Mtx& predictedProbability,
-							const Mtx& observedIncidence);
+                     const Mtx& observedIncidence);
 
   // Count the number of objects with the given category
   int countCategory(int category) const;
