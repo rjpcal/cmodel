@@ -747,8 +747,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   double fxe = 0.0;
   double fxr = 0.0;
 
-  mxArray* j_mx = mclGetUninitializedArray();
-
   fixed_string how;
 
   Mtx xr(0,0);
@@ -808,28 +806,15 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		}
   }
 
-  // % sort so theSimplex(1,:) has the lowest function value 
-  // [funcVals,j_mx] = sort(funcVals);
   {
-//  	 Mtx fvals_copy(funcVals_dr.asMtx());
-
-//    	 mxDestroyArray((mlfSort(&j_mx, funcVals_dr.asArray(), NULL)));
-
-//  	 Mtx index = fvals_copy.row(0).getSortOrder();
-//    	 fvals_copy.row(0).reorder(index);
-//  	 Mtx diff = fvals_copy - funcVals_dr.asMtx();
-//  	 diff.print();
-  }
-  {
+	 // sort so theSimplex(1,:) has the lowest function value 
+	 // [funcVals,index] = sort(funcVals);
 	 Mtx index = funcVals_dr.asMtx().row(0).getSortOrder();
 	 funcVals_dr.ncMtx().row(0).reorder(index);
+	 // theSimplex = theSimplex(:,index);
   	 theSimplex_dr.ncMtx().reorderColumns(index);
   }
 
-  // theSimplex = theSimplex(:,j_mx);
-//    theSimplex_dr.assignArray(mclArrayRef2(theSimplex_dr.asArray(),
-//    													  mlfCreateColonIndex(),
-//    													  j_mx));
 
   how = "initial";
 
@@ -1041,18 +1026,13 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		  }
       }
 
-	 {DOTRACE("sort funcVals");
-	 // [funcVals,j_mx] = sort(funcVals);
-
-	 // Throw away the actual sorted result; just keep the indices
-	 mxDestroyArray(mlfSort(&j_mx, funcVals_dr.asArray(), NULL));
-	 }
-
 	 {DOTRACE("reorder simplex");
-	 Mtx jref(j_mx, Mtx::BORROW);
-	 const int smallest = int(jref.at(0)) - 1;
-	 const int largest = int(jref.at(numModelParams)) - 1;
-	 const int largest2 = int(jref.at(numModelParams-1)) - 1;
+	 // [dummy,index] = sort(funcVals);
+	 Mtx index = funcVals_dr.asMtx().row(0).getSortOrder();
+
+	 const int smallest = int(index.at(0));
+	 const int largest = int(index.at(numModelParams));
+	 const int largest2 = int(index.at(numModelParams-1));
 
 	 // These swaps are smart enough to check if the column numbers
 	 // are the same before doing the swap
@@ -1142,8 +1122,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
   mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
   mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
-
-  mxDestroyArray(j_mx);
 
   return xx.makeMxArray();
 }
