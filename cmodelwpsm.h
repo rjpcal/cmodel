@@ -2,10 +2,10 @@
 //
 // cmodelwpsm.h
 //
-// Copyright (c) 1998-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:37 2001
-// written: Thu Feb  7 13:50:56 2002
+// written: Thu Feb 14 13:20:30 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
