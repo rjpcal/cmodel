@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:49:11 2002
+// written: Mon Feb 18 16:51:17 2002
 // $Id$
 //
 //
@@ -365,7 +365,6 @@ struct AnnealOpts
     valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
     deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
-    bestCost(numruns, 1),
     modelHist(numModelParams, int(tempRepeats.sum())),
     mhat(numModelParams, numruns),
     energy(int(tempRepeats.sum()), numruns),
@@ -386,7 +385,6 @@ struct AnnealOpts
   const Mtx valueScalingRange;
   const Mtx bounds;
   const Mtx deltas;
-  Mtx bestCost;
   Mtx modelHist;
   Mtx mhat;
   Mtx energy;
@@ -406,6 +404,7 @@ private:
   int itsRunNum;
   Mtx itsDeltas;
   Mtx itsNumFunEvals;
+  Mtx itsBestCosts;
 
   const fstring itsFunFunName;
   const int itsNvararg;
@@ -421,6 +420,7 @@ public:
     itsRunNum(0),
     itsDeltas(itsOpts.deltas),
     itsNumFunEvals(itsOpts.numRuns, 1),
+    itsBestCosts(itsOpts.numRuns, 1),
 
     itsFunFunName(funcName),
     itsNvararg(nvararg),
@@ -442,7 +442,7 @@ public:
 
     mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
-    mxSetField(output, 0, "bestCost", itsOpts.bestCost.makeMxArray());
+    mxSetField(output, 0, "bestCost", itsBestCosts.makeMxArray());
     mxSetField(output, 0, "mhat", itsOpts.mhat.makeMxArray());
     mxSetField(output, 0, "model", itsOpts.modelHist.makeMxArray());
     mxSetField(output, 0, "energy", itsOpts.energy.makeMxArray());
@@ -529,10 +529,10 @@ public:
     int best_pos = 0;
     const double best_energy = currentEnergy.min(&best_pos);
 
-    itsOpts.bestCost.at(itsRunNum) = best_energy;
+    itsBestCosts.at(itsRunNum) = best_energy;
     itsOpts.mhat.column(itsRunNum) = itsOpts.modelHist.column(best_pos);
 
-    displayParams(itsOpts.mhat.column(itsRunNum), itsOpts.bestCost.at(itsRunNum));
+    displayParams(itsOpts.mhat.column(itsRunNum), itsBestCosts.at(itsRunNum));
   }
 
   void runSimplex()
@@ -558,7 +558,7 @@ public:
 
     Mtx mstar = opt.bestParams();
 
-    if (Ostar < itsOpts.bestCost.at(itsRunNum))
+    if (Ostar < itsBestCosts.at(itsRunNum))
       {
         displayParams(mstar, Ostar);
 
@@ -577,7 +577,7 @@ public:
         if (inBounds)
           {
             itsOpts.mhat.column(itsRunNum) = mstar;
-            itsOpts.bestCost.at(itsRunNum) = Ostar;
+            itsBestCosts.at(itsRunNum) = Ostar;
             if (itsOpts.talking)
               mexPrintf("\nSimplex method lowered cost "
                         "and remained within constraints.\n\n");
