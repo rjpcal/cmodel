@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Jul 31 15:06:16 2002
+// written: Wed Jul 31 16:16:39 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -38,6 +38,7 @@ class LLEvaluator : public MultivarFunction
 protected:
   virtual double doEvaluate(const Mtx& x)
   {
+    DOTRACE("LLEvaluator::doEvaluate");
     Slice params(x.column(0));
     return -itsC.currentLogL(params, itsObjs, itsInc);
   }
@@ -61,10 +62,14 @@ Classifier::Classifier(const Mtx& objParams) :
   itsDiffEvidence(itsNumAllExemplars,1),
   itsObservedIncidenceCache(0,0),
   itsCachedLogL_1_2(0.0)
-{}
+{
+DOTRACE("Classifier::Classifier");
+}
 
 Classifier::~Classifier()
-{}
+{
+DOTRACE("Classifier::~Classifier");
+}
 
 Mtx Classifier::forwardProbit(const Mtx& diffEv,
                               double thresh, double sigmaNoise)
@@ -257,6 +262,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "ll" || action == "llc" )
     {
+      DOTRACE("Classifier::handleRequest-llc");
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -270,6 +277,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "llf" )
     {
+      DOTRACE("Classifier::handleRequest-llf");
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -281,6 +290,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "dev" )
     {
+      DOTRACE("Classifier::handleRequest-dev");
+
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
@@ -294,6 +305,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "classify" )
     {
+      DOTRACE("Classifier::handleRequest-classify");
+
       Mtx result(testObjects.mrows(), allModelParams.ncols());
 
       for (int i = 0; i < allModelParams.ncols(); ++i)
@@ -307,6 +320,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "simplex" )
     {
+      DOTRACE("Classifier::handleRequest-simplex");
+
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
       SimplexOptimizer opt(objective,
@@ -333,6 +348,8 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "anneal" )
     {
+      DOTRACE("Classifier::handleRequest-anneal");
+
       LLEvaluator objective(*this, testObjects, observedIncidence);
 
       MxWrapper annealArgs(extraArgs.getStructField("annealOpts"));
@@ -389,11 +406,13 @@ DOTRACE("Classifier::objectsOfCategory");
 
 int Classifier::exemplarCategory(int i) const
 {
+DOTRACE("Classifier::exemplarCategory");
   return int(itsObjCategories.at(i));
 }
 
 Slice Classifier::exemplar(int i) const
 {
+DOTRACE("Classifier::exemplar");
   return itsObjects.row(i);
 }
 
