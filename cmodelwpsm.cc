@@ -31,21 +31,8 @@ DOTRACE("CModelWpsm::CModelWpsm");
 
   for (int i = 0; i < DIM_OBJ_PARAMS; ++i)
 	 {
-		int mrows1 = training1().mrows();
-
-		{for (int k = 0; k < mrows1; ++k)
-		  itsPrototype1.at(0,i) += training1().at(k,i);
-		}
-
-		itsPrototype1.at(0,i) /= mrows1;
-
-		int mrows2 = training2().mrows();
-
-		{for (int k = 0; k < mrows2; ++k)
-		  itsPrototype2.at(0,i) += training2().at(k,i);
-		}
-
-		itsPrototype2.at(0,i) /= mrows2;
+		itsPrototype1.at(0,i) = training1().column(i).mean();
+		itsPrototype2.at(0,i) = training2().column(i).mean();
 	 }
 }
 
