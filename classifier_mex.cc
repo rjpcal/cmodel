@@ -260,7 +260,7 @@ DOTRACE("Mclassifier");
 
 	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-	 return res.result.makeMxArray();
+	 return res.result.release();
   }
   catch (ErrorWithMsg& err) {
 	 mexErrMsgTxt(err.msg_cstr());

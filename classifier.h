@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Tue Apr 10 14:36:51 2001
+// written: Wed Apr 18 16:11:57 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,6 +14,7 @@
 #define CLASSIFIER_H_DEFINED
 
 #include "mtx.h"
+#include "mxwrapper.h"
 
 class fixed_string;
 
@@ -32,13 +33,16 @@ public:
   double deviance(Slice& modelParams);
 
   struct RequestResult {
-	 RequestResult() : requestHandled(false), result(0,0) {}
+	 RequestResult() : requestHandled(false), result() {}
 
 	 RequestResult(Mtx res) :
 		requestHandled(true), result(res) {}
 
+	 RequestResult(MxWrapper res) :
+		requestHandled(true), result(res) {}
+
 	 const bool requestHandled;
-	 const Mtx result;
+	 MxWrapper result;
   };
 
   // Handles the request via chain-of-responsibility. Subclasses must
