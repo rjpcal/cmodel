@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 14:41:28 2002
+// written: Mon Feb 18 14:53:19 2002
 // $Id$
 //
 //
@@ -371,6 +371,29 @@ namespace
 
 class AnnealingRun
 {
+private:
+  mxArray* const itsAstate_mx;
+  const int itsRunNum;
+  const bool itsTalking;
+  int itsNvisits;
+  double itsCriticalTemp;
+  const int itsNumTemps;
+  Mtx itsTempRepeats;
+  Mtx itsNumFunEvals;
+  Mtx itsEnergy;
+  Mtx itsMinUsedParams;
+  Mtx itsMaxUsedParams;
+  Mtx itsDeltas;
+  const Mtx itsValueScalingRange;
+  const Mtx itsBounds;
+  const bool itsCanUseMatrix;
+  fstring itsFunFunName;
+  const bool itsDoNewton;
+  Mtx itsMhat;
+  Mtx itsStartValues;
+  int itsNvararg;
+  mxArray** itsPvararg;
+
 public:
   AnnealingRun(mxArray* old_astate_mx,
                const fstring& funcName,
@@ -396,6 +419,9 @@ public:
                     != 0.0),
     itsFunFunName(funcName),
     itsDoNewton(mxGetScalar(Mx::getField(itsAstate_mx, "newton")) != 0.0),
+
+    itsMhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER),
+    itsStartValues(Mx::getField(itsAstate_mx, "startValues"), Mtx::REFER),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
   {}
@@ -428,12 +454,10 @@ public:
     models -= 0.5;
     models *= 2;
 
-    Mtx startValues(Mx::getField(itsAstate_mx, "startValues"), Mtx::COPY);
-
     for (int r = 0; r < models.mrows(); ++r)
       {
         models.row(r) *= itsDeltas.at(r);
-        models.row(r) += startValues.at(r);
+        models.row(r) += itsStartValues.at(r);
       }
 
     return models;
@@ -530,21 +554,18 @@ public:
     const double best_energy = currentEnergy.min(&best_pos);
 
     Mtx bestCost(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
-    Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
 
     const Mtx modelHist(Mx::getField(itsAstate_mx, "model"), Mtx::BORROW);
 
     bestCost.at(itsRunNum) = best_energy;
-    mhat.column(itsRunNum) = modelHist.column(best_pos);
+    itsMhat.column(itsRunNum) = modelHist.column(best_pos);
 
-    displayParams(mhat.column(itsRunNum), bestCost.at(itsRunNum));
+    displayParams(itsMhat.column(itsRunNum), bestCost.at(itsRunNum));
   }
 
   void runSimplex()
   {
-    Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
-
-    int numModelParams = mhat.mrows();
+    int numModelParams = itsMhat.mrows();
 
     mxArray* funfun_mx = 0;
     mlfAssign(&funfun_mx, mxCreateString(itsFunFunName.c_str()));
@@ -552,7 +573,7 @@ public:
     MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
 
     SimplexOptimizer opt(objective,
-                         Mtx(mhat.column(itsRunNum)),
+                         Mtx(itsMhat.column(itsRunNum)),
                          fstring("notify"),
                          numModelParams,
                          10000000, // maxFunEvals
@@ -587,7 +608,7 @@ public:
 
         if (inBounds)
           {
-            mhat.column(itsRunNum) = mstar;
+            itsMhat.column(itsRunNum) = mstar;
             bestCosts.at(itsRunNum) = Ostar;
             if (itsTalking)
               mexPrintf("\nSimplex method lowered cost "
@@ -604,27 +625,6 @@ public:
 
     mxDestroyArray(funfun_mx);
   }
-
-private:
-  mxArray* const itsAstate_mx;
-  const int itsRunNum;
-  const bool itsTalking;
-  int itsNvisits;
-  double itsCriticalTemp;
-  const int itsNumTemps;
-  Mtx itsTempRepeats;
-  Mtx itsNumFunEvals;
-  Mtx itsEnergy;
-  Mtx itsMinUsedParams;
-  Mtx itsMaxUsedParams;
-  Mtx itsDeltas;
-  const Mtx itsValueScalingRange;
-  const Mtx itsBounds;
-  const bool itsCanUseMatrix;
-  fstring itsFunFunName;
-  const bool itsDoNewton;
-  int itsNvararg;
-  mxArray** itsPvararg;
 };
 
 VisitResult AnnealingRun::visitParameters(mxArray* bestModel_mx,
@@ -740,6 +740,8 @@ DOTRACE("AnnealingRun::go");
   updateBests();
 
   if (itsDoNewton) runSimplex();
+
+  itsStartValues.column(0) = itsMhat.column(itsRunNum);
 
   return itsAstate_mx;
 }
