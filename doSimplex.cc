@@ -731,7 +731,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
   double fxcc = 0.0;
   double fxc = 0.0;
-  mxArray* xc_mx = mclGetUninitializedArray();
+//    mxArray* xc_mx = mclGetUninitializedArray();
   mxArray* fxe_mx = mclGetUninitializedArray();
   mxArray* xe_mx = mclGetUninitializedArray();
   mxArray* fxr_mx = mclGetUninitializedArray();
@@ -747,6 +747,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   mxArray* header_mx = mclGetUninitializedArray();
   mxArray* ans_mx = mclGetUninitializedArray();
 
+  DualRepMtx xc_dr;
   DualRepMtx xcc_dr;
   DualRepMtx xbar_dr;
 
@@ -1112,24 +1113,28 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  // % Perform an outside contraction
 				  // xc_mx = (1 + psi_mx*rho_mx)*xbar -
 				  //            psi_mx*rho_mx*theSimplex(:,end);
-				  mlfAssign(
-								&xc_mx,
-								mclMinus(
-                      mclMtimes(
-                        mclPlus(
-                          _mxarray11_,
-                          mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx"))),
-                        xbar_dr.asArray()),
-                      mclMtimes(
-                        mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx")),
-                        mclVe(
-										theSimplex_dr.asMtx().columns(numModelParams,1)
-										.makeMxArray()
-										)
-								)));
+				  xc_dr.assignMtx(xbar_dr.asMtx()*(1.0 + mxGetScalar(psi_mx)*
+															  mxGetScalar(rho_mx))
+										- (theSimplex_dr.asMtx().columns(numModelParams,1)
+											* (mxGetScalar(psi_mx) * mxGetScalar(rho_mx))));
+//  				  mlfAssign(
+//  								&xc_mx,
+//  								mclMinus(
+//                        mclMtimes(
+//                          mclPlus(
+//                            _mxarray11_,
+//                            mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx"))),
+//                          xbar_dr.asArray()),
+//                        mclMtimes(
+//                          mclMtimes(mclVv(psi_mx, "psi_mx"), mclVv(rho_mx, "rho_mx")),
+//                          mclVe(
+//  										theSimplex_dr.asMtx().columns(numModelParams,1)
+//  										.makeMxArray()
+//  										)
+//  								)));
 
 
-				  fxc = fevaluator.evaluate(xc_mx);
+				  fxc = fevaluator.evaluate(xc_dr.asArray());
 
 				  ++func_evals;
 
@@ -1137,7 +1142,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				  if (fxc <= mxGetScalar(fxr_mx)) {
 
 					 // theSimplex(:,end) = xc_mx; 
-					 theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xc_mx);
+					 theSimplex_dr.ncMtx().column(numModelParams) = xc_dr.asMtx();
 
 					 // funcVals(:,end) = fxc;
 					 funcVals_dr.ncMtx().at(0,numModelParams) = fxc;
@@ -1322,7 +1327,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     // output.algorithm = 'Nelder-Mead simplex direct search';
     mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
-    // 
     // fval = min(funcVals);
     mlfAssign(fval, mlfMin(NULL, funcVals_dr.asArray(), NULL, NULL));
 
@@ -1400,7 +1404,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(fxr_mx);
     mxDestroyArray(xe_mx);
     mxDestroyArray(fxe_mx);
-    mxDestroyArray(xc_mx);
+//      mxDestroyArray(xc_mx);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(funfcn_mx);
