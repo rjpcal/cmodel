@@ -14,6 +14,7 @@
 
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
+#include "mx/mxwrapper.h"
 
 #include "optim/annealingoptimizer.h"
 #include "optim/matlabfunction.h"
@@ -30,7 +31,7 @@ DOTRACE("annealHelper");
   int nvararg = nrhs - NDECLARED;
   const mxArray** pvararg = prhs + NDECLARED;
 
-  AnnealOpts opts(prhs[0]);
+  AnnealOpts opts((MxWrapper(prhs[0])));
 
   MatlabFunction objective(Mx::getString(prhs[1]), // funcName
                            nvararg,
