@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Apr 16 11:49:07 2001
+// written: Wed Apr 18 14:41:13 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,26 +27,33 @@
 #include "cmodelwpsm.h"
 
 #include "error.h"
+#include "mexbuf.h"
 #include "mtx.h"
 #include "rutil.h"
 #include "strings.h"
 #include "util/pointers.h"
 
-#include "trace.h"
-
-#include <fstream.h>
+#include <iostream.h>
 #include "libmatlb.h"
+
+#include "trace.h"
 
 namespace {
   shared_ptr<CModelCssm>* recentModel = 0;
   Mtx* recentObjParams = 0;
   Mtx* recentIncidence = 0;
   int recentNumStored = -1;
+
+  MexBuf* mexBuf = 0;
 }
 
 void InitializeModule_classifier()
 {
 DOTRACE("InitializeModule_classifier");
+  mexBuf = new MexBuf;
+  cout.rdbuf(mexBuf);
+  cerr.rdbuf(mexBuf);
+
 #ifdef LOCAL_DEBUG
   mexPrintf("loading 'classifier' mex file\n");
 #endif
@@ -65,6 +72,8 @@ DOTRACE("TerminateModule_classifier");
   delete recentIncidence;
   delete recentObjParams;
   delete recentModel;
+
+  delete mexBuf;
 }
 
 static mexFunctionTableEntry classifierFunctionTable[1] = {
@@ -195,8 +204,7 @@ DOTRACE("Mclassifier");
 		  if (debugFlag)
 			 {
 				if (mxGetScalar(debugFlag) == -1) {
-				  ofstream ofs("profdata.out");
-				  Util::Prof::printAllProfData(ofs);
+				  Util::Prof::printAllProfData(cerr);
 				  return mxCreateScalarDouble(-1.0);
 				}
 

@@ -9,12 +9,13 @@
 #include "annealVisitParameters.h"
 
 #include "error.h"
+#include "mexbuf.h"
 #include "mtx.h"
 #include "rutil.h"
 #include "strings.h"
 
+#include <iostream.h>
 #include "libmatlbm.h"
-#include <fstream.h>
 
 #include "trace.h"
 
@@ -250,8 +251,7 @@ DOTRACE("MannealVisitParameters");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
 	 if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1) {
-		ofstream ofs("profdata.out");
-		Util::Prof::printAllProfData(ofs);
+		Util::Prof::printAllProfData(cerr);
 		return mxCreateScalarDouble(-1.0);
 	 }
 
