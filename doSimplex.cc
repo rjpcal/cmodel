@@ -27,6 +27,68 @@ namespace {
   }
 }
 
+class DualRepMtx {
+private:
+  mutable Mtx itsMtx;
+  mutable bool itsMtxIsValid;
+
+  mutable mxArray* itsArray;
+  mutable bool itsArrayIsValid;
+
+  void updateMtx() const
+  {
+	 itsMtx = Mtx(itsArray);
+	 itsMtxIsValid = true;
+  }
+
+  void updateArray() const
+  {
+	 mlfAssign(&itsArray, itsMtx.makeMxArray());
+	 itsArrayIsValid = true;
+  }
+
+public:
+  DualRepMtx() :
+	 itsMtx(0,0),
+	 itsMtxIsValid(true),
+	 itsArray(mclGetUninitializedArray()),
+	 itsArrayIsValid(false)
+  {}
+
+  DualRepMtx(const Mtx& other) :
+	 itsMtx(other),
+	 itsMtxIsValid(true),
+	 itsArray(mclGetUninitializedArray()),
+	 itsArrayIsValid(false)
+  {}
+
+  void assignArray(mxArray* rhs)
+  {
+	 mlfAssign(&itsArray, rhs);
+	 itsArrayIsValid = true;
+	 itsMtxIsValid = false;
+  }
+
+  void assignMtx(const Mtx& rhs)
+  {
+	 itsMtx = rhs;
+	 itsMtxIsValid = true;
+	 itsArrayIsValid = true;
+  }
+
+  const mxArray* asArray() const
+  {
+	 if (!itsArrayIsValid) updateArray();
+	 return itsArray;
+  }
+
+  const Mtx& asMtx() const
+  {
+	 if (!itsMtxIsValid) updateMtx();
+	 return itsMtx;
+  }
+};
+
 class FuncEvaluator {
   mxArray* itsFunfcn;
   mxArray* itsVarargin_ref;
@@ -1183,7 +1245,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                               mclVv(theSimplex_mx, "theSimplex_mx"),
                               _mxarray24_,
                               _mxarray24_))))));
-
 
                   mlfAssign(&fxcc_mx, fevaluator.evaluate(xcc_mx));
 
