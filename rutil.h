@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb 19 16:20:06 2001
-// written: Tue Feb 20 14:21:59 2001
+// written: Tue Feb 20 17:50:06 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,9 @@
 #ifndef RUTIL_H_DEFINED
 #define RUTIL_H_DEFINED
 
-#define validateInput(x) (x) = mclVa((x), #x)
+#define validateInput(x) (x) = mlfAssign(&(x), mclVa((x), #x))
 
-#define validateVariable(x) (x) = mclVv((x), #x)
+#define validateVariable(x) (x) = mlfAssign(&(x), mclVv((x), #x))
 
 class Rat {
 public:
