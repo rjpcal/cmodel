@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Mar  8 09:57:47 2001
+// written: Thu Mar  8 10:25:22 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,27 +18,8 @@
 #endif
 
 #include "classifier.h"
-#include "forwardProbit1.h"
 
 #include "libmatlb.h"
-
-_mexLocalFunctionTable dummy_local_function_table
-= { 0, (mexFunctionTableEntry *)NULL };
-
-static mexFunctionTableEntry function_table[2] = {
-  { "classifier", mlxClassifier, 4, 1, &_local_function_table_classifier },
-  { "forwardProbit", NULL /*mlxForwardProbit*/, 3, 1,
-	 &_local_function_table_forwardProbit },
-};
-
-static const char * path_list_[1] = { "/matlab_r.12/toolbox/matlab/specfun" };
-
-static _mexInitTermTableEntry init_term_table[1] = {
-  { InitializeModule_classifier, TerminateModule_classifier },
-};
-
-static _mex_information _mex_info
-  = { 1, 2, function_table, 0, NULL, 1, path_list_, 1, init_term_table };
 
 ///////////////////////////////////////////////////////////////////////
 //
@@ -50,10 +31,22 @@ static _mex_information _mex_info
 //
 ///////////////////////////////////////////////////////////////////////
 
-#ifdef __cplusplus
 extern "C"
-#endif
-mex_information mexLibrary(void) {
+mex_information mexLibrary() {
+
+  static mexFunctionTableEntry function_table[1] = {
+	 { "classifier", mlxClassifier, 4, 1, &_local_function_table_classifier }
+  };
+
+  static const char * path_list_[1] = { "/matlab_r.12/toolbox/matlab/specfun" };
+
+  static _mexInitTermTableEntry init_term_table[1] = {
+	 { InitializeModule_classifier, TerminateModule_classifier },
+  };
+
+  static _mex_information _mex_info
+	 = { 1, 1, function_table, 0, NULL, 1, path_list_, 1, init_term_table };
+
   return &_mex_info;
 }
 
