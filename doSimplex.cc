@@ -652,24 +652,57 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     mxDestroyArray(mprhs[8]);
 }
 
-static void doSimplexImpl(Mtx& best_x,
-								  double& best_fval,
-								  int& exitFlag,
-								  mxArray * * output,
-								  int nargout_,
-								  FuncEvaluator& objective,
-								  const Mtx& x_in,
-								  const int prnt,
-								  const double tolx,
-								  const double tolf,
-								  const int numModelParams,
-								  const int maxfun,
-								  const int maxiter)
+class SimplexOptimizer {
+private:
+  int itsIterCount;
+  int itsFuncCount;
+
+public:
+  SimplexOptimizer() :
+	 itsIterCount(0),
+	 itsFuncCount(0)
+  {}
+
+  void optimize(Mtx& best_x,
+					 double& best_fval,
+					 int& exitFlag,
+//  					 mxArray * * output,
+					 int nargout_,
+					 FuncEvaluator& objective,
+					 const Mtx& x_in,
+					 const int prnt,
+					 const double tolx,
+					 const double tolf,
+					 const int numModelParams,
+					 const int maxfun,
+					 const int maxiter);
+
+  virtual int iterCount()
+  { return itsIterCount; }
+
+  virtual int funcCount()
+  { return itsFuncCount; }
+
+  virtual const char* algorithm()
+  { return "Nelder-Mead simplex direct search"; }
+};
+
+void SimplexOptimizer::optimize(Mtx& best_x,
+										  double& best_fval,
+										  int& exitFlag,
+//  										  mxArray * * output,
+										  int nargout_,
+										  FuncEvaluator& objective,
+										  const Mtx& x_in,
+										  const int prnt,
+										  const double tolx,
+										  const double tolf,
+										  const int numModelParams,
+										  const int maxfun,
+										  const int maxiter)
 {
 
 // HOME
-
-  Mtx xx(x_in);
 
   const double RHO = 1.0;
   const double CHI = 2.0;
@@ -677,7 +710,7 @@ static void doSimplexImpl(Mtx& best_x,
   const double SIGMA = 0.5;
 
   // Set up a simplex near the initial guess.
-  Mtx initialParams(xx.asColumn());
+  Mtx initialParams(x_in.asColumn());
 
   Mtx theSimplex(numModelParams,numModelParams+1);
 
@@ -696,7 +729,6 @@ static void doSimplexImpl(Mtx& best_x,
 	 // Even smaller delta for zero elements of x
 	 const double zero_term_delta = 0.00025;
 
-	 // zero-based index
 	 for (int j = 0; j < numModelParams; ++j)
 		{
 		  theSimplex.column(j+1) = initialParams;
@@ -711,14 +743,12 @@ static void doSimplexImpl(Mtx& best_x,
   }
 
   {
-	 // sort so theSimplex(1,:) has the lowest function value 
-	 // [funcVals,index] = sort(funcVals);
+	 // sort so theSimplex.column(0) has the lowest function value 
 	 Mtx index = funcVals.row(0).getSortOrder();
+
 	 funcVals.row(0).reorder(index);
-	 // theSimplex = theSimplex(:,index);
   	 theSimplex.reorderColumns(index);
   }
-
 
   fixed_string how = "initial";
 
@@ -752,20 +782,13 @@ static void doSimplexImpl(Mtx& best_x,
   //---------------------------------------------------------------------
 
 
-  // while objective.evalCount() < maxfun & itercount_mx < maxiter
-  for (;;) { // Main algorithm
-	 DOTRACE("Main algorithm");
+  for (;;) { DOTRACE("Main algorithm");
 
-	 {DOTRACE("check feval and iter counts");
 	 if ((objective.evalCount() >= maxfun) || (itercount >= maxiter))
 		break; // out of main loop
-	 }
 
-	 {DOTRACE("check if done");
-	 if (withinTolf(funcVals, tolf) &&
-		  withinTolx(theSimplex, tolx))
+	 if (withinTolf(funcVals, tolf) && withinTolx(theSimplex, tolx))
 		break; // out of main loop
-	 }
 
 	 how = "";
 
@@ -781,141 +804,99 @@ static void doSimplexImpl(Mtx& best_x,
 		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
 
 
-	 // xr = (1 + RHO)*xbar - RHO*theSimplex(:,end);
-	 Mtx xr = (xbar*(1.0+RHO) - 
-				  theSimplex.columns(numModelParams,1) * RHO);
+	 // Calculate the reflection point
+	 Mtx xr = (xbar*(1.0+RHO) - theSimplex.columns(numModelParams,1) * RHO);
 
 	 double fxr = objective.evaluate(xr);
 
+
 	 if (fxr < funcVals.at(0,0))
 		{
-		  DOTRACE("if fxr < funcVals(:,1)");
+		  DOTRACE("fxr < funcVals(:,1)");
 
-		  // % Calculate the expansion point
+		  // Calculate the expansion point
 		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*theSimplex(:,end);
 		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
 						(theSimplex.columns(numModelParams,1) * (RHO*CHI)));
 
 		  double fxe = objective.evaluate(xe);
 
-		  // if fxe < fxr
-		  if (fxe < fxr) {
+		  if (fxe < fxr)
+			 {
+				theSimplex.column(numModelParams) = xe;
+				funcVals.at(0,numModelParams) = fxe;
+				how = "expand";
+			 }
+		  else
+			 {
+				theSimplex.column(numModelParams) = xr;
+				funcVals.at(0,numModelParams) = fxr;
+				how = "reflect";
+			 }
+      }
+	 else
+		{
+		  DOTRACE("fxr >= funcVals(:,1)");
 
-			 // theSimplex(:,end) = xe;
-			 theSimplex.column(numModelParams) = xe;
+		  if (fxr < funcVals.at(0,numModelParams-1))
+			 {
+				theSimplex.column(numModelParams) = xr;
+				funcVals.at(0,numModelParams) = fxr;
+				how = "reflect";
+			 }
+		  else
+			 {
+				// Perform contraction
 
-			 // funcVals(:,end) = fxe;
-			 funcVals.at(0,numModelParams) = fxe;
+				if (fxr < funcVals.at(0,numModelParams))
+				  {
+					 // Perform an outside contraction
+					 Mtx xc = (xbar*(1.0 + PSI*RHO) -
+								  (theSimplex.columns(numModelParams,1) *(PSI*RHO)));
 
-			 how = "expand";
+					 double fxc = objective.evaluate(xc);
 
-          // else
-		  } else {
-
-			 // theSimplex(:,end) = xr; 
-			 theSimplex.column(numModelParams) = xr;
-
-			 // funcVals(:,end) = fxr;
-			 funcVals.at(0,numModelParams) = fxr;
-
-			 how = "reflect";
-
-          // end
-		  }
-
-		  // else % funcVals(:,1) <= fxr
-      } else {
-		  DOTRACE("else funcVals(:,1) <= fxr");
-
-		  // if fxr < funcVals(:,numModelParams)
-		  if (fxr < funcVals.at(0,numModelParams-1)) {
-
-			 // theSimplex(:,end) = xr; 
-			 theSimplex.column(numModelParams) = xr;
-
-			 // funcVals(:,end) = fxr;
-			 funcVals.at(0,numModelParams) = fxr;
-
-			 how = "reflect";
-
-          // else % fxr >= funcVals(:,numModelParams) 
-		  } else {
-
-			 // % Perform contraction
-			 // if fxr < funcVals(:,end)
-			 if (fxr < funcVals.at(0,numModelParams)) {
-
-				// % Perform an outside contraction
-				// xc = (1 + PSI*RHO)*xbar -
-				//            PSI*RHO*theSimplex(:,end);
-				Mtx xc = (xbar*(1.0 + PSI*RHO) -
-							 (theSimplex.columns(numModelParams,1) *(PSI*RHO)));
-
-
-				double fxc = objective.evaluate(xc);
-
-				// if fxc <= fxr
-				if (fxc <= fxr) {
-
-				  // theSimplex(:,end) = xc; 
-				  theSimplex.column(numModelParams) = xc;
-
-				  // funcVals(:,end) = fxc;
-				  funcVals.at(0,numModelParams) = fxc;
-
-				  how = "contract outside";
-
-				} else {
-
-				  how = "shrink";
-
-				}
-
-			 } else {
-
-				// % Perform an inside contraction
-				// xcc = (1-PSI)*xbar + PSI*theSimplex(:,end);
-				Mtx xcc = (xbar*(1.0-PSI) +
-							  (theSimplex.columns(numModelParams,1)* PSI));
-
-				double fxcc = objective.evaluate(xcc);
-
-				// if fxcc < funcVals(:,end)
-				if (fxcc < funcVals.at(0,numModelParams)) {
-
-				  // theSimplex(:,end) = xcc;
-				  theSimplex.column(numModelParams) = xcc;
-
-				  // funcVals(:,end) = fxcc;
-				  funcVals.at(0,numModelParams) = fxcc;
-
-				  how = "contract inside";
-
-				}
+					 if (fxc <= fxr)
+						{
+						  theSimplex.column(numModelParams) = xc;
+						  funcVals.at(0,numModelParams) = fxc;
+						  how = "contract outside";
+						}
+					 else
+						{
+						  how = "shrink";
+						}
+				  }
 				else
 				  {
-					 how = "shrink";
-				  }
+					 // Perform an inside contraction
+					 Mtx xcc = (xbar*(1.0-PSI) +
+									(theSimplex.columns(numModelParams,1)* PSI));
 
-			 }
+					 double fxcc = objective.evaluate(xcc);
+
+					 if (fxcc < funcVals.at(0,numModelParams))
+						{
+						  theSimplex.column(numModelParams) = xcc;
+						  funcVals.at(0,numModelParams) = fxcc;
+						  how = "contract inside";
+						}
+					 else
+						{
+						  how = "shrink";
+						}
+				  }
 
 			 if (how == "shrink")
 				{
-				  // zero based index
 				  for (int j = 1; j < numModelParams+1; ++j)
 					 {
-						// theSimplex(:,j)=theSimplex(:,1)+SIGMA*(theSimplex(:,j) - theSimplex(:,1));
 						theSimplex.column(j) =
 						  theSimplex.columns(0,1) +
-						  (theSimplex.columns(j,1) -
-							theSimplex.columns(0,1)) * SIGMA;
+						  (theSimplex.columns(j,1) - theSimplex.columns(0,1)) * SIGMA;
 
-						// funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
 						funcVals.at(0,j) =
-						  objective.evaluate(theSimplex
-													.columns(j,1)
-													.makeMxArray()
-													);
+						  objective.evaluate(theSimplex.columns(j,1));
 					 }
 				}
 		  }
@@ -960,16 +941,18 @@ static void doSimplexImpl(Mtx& best_x,
 		}
   }
 
-  xx = theSimplex.column(0);
+  best_x = theSimplex.column(0);
 
   // end Main algorithm
 
-  mlfIndexAssign(output, ".iterations", mxCreateScalarDouble(itercount));
+//    mlfIndexAssign(output, ".iterations", mxCreateScalarDouble(itercount));
+  itsIterCount = itercount;
 
-  mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(objective.evalCount()));
+//    mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(objective.evalCount()));
+  itsFuncCount = objective.evalCount();
 
   // output.algorithm = 'Nelder-Mead simplex direct search';
-  mlfIndexAssign(output, ".algorithm", _mxarray63_);
+//    mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
   best_fval = funcVals.row(0).min();
 
@@ -1014,9 +997,7 @@ static void doSimplexImpl(Mtx& best_x,
 		exitFlag = 1;
   }
 
-  mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
-
-  best_x = xx;
+//    mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
 }
 
 
@@ -1085,19 +1066,30 @@ DOTRACE("MdoSimplex");
   Mtx best_x(0,0);
   double best_fval = 0.0;
   int exitFlag = 0;
-  doSimplexImpl(best_x, best_fval, exitFlag, output, nargout_,
-					 objective,
-					 Mtx(x_in),
-					 extractPrinttype(printtype_mx),
-					 mxGetScalar(tolx_mx),
-					 mxGetScalar(tolf_mx),
-					 numModelParams,
-					 extractMaxIters(maxfun_mx, numModelParams),
-					 extractMaxIters(maxiter_mx, numModelParams)
-					 );
+
+  SimplexOptimizer opt;
+
+  opt.optimize(best_x, best_fval, exitFlag, nargout_,
+					objective,
+					Mtx(x_in),
+					extractPrinttype(printtype_mx),
+					mxGetScalar(tolx_mx),
+					mxGetScalar(tolf_mx),
+					numModelParams,
+					extractMaxIters(maxfun_mx, numModelParams),
+					extractMaxIters(maxiter_mx, numModelParams)
+					);
 
   *fval = mxCreateScalarDouble(best_fval);
   *exitflag_mx = mxCreateScalarDouble(exitFlag);
+
+  mlfIndexAssign(output, ".iterations",
+					  mxCreateScalarDouble(opt.iterCount()));
+
+  mlfIndexAssign(output, ".funcCount",
+					  mxCreateScalarDouble(opt.funcCount()));
+
+  mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
