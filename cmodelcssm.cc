@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Tue Mar 13 17:58:58 2001
+// written: Wed Mar 28 11:25:55 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,9 +18,10 @@
 #include "error.h"
 #include "num.h"
 #include "mtx.h"
-#include "trace.h"
 
 #include <cmath>
+
+#include "trace.h"
 
 CModelCssm::CModelCssm(const Mtx& objParams,
 							  const Mtx& observedIncidence,
@@ -29,7 +30,9 @@ CModelCssm::CModelCssm(const Mtx& objParams,
   CModelExemplar(objParams, observedIncidence,
 					  numStoredExemplars, transferFunc),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS)
+  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
+  itsCachedRawWts1(numStoredExemplars, numTrainingExemplars()),
+  itsCachedRawWts2(numStoredExemplars, numTrainingExemplars())
 {
 DOTRACE("CModelCssm::CModelCssm");
 }
@@ -54,20 +57,23 @@ DOTRACE("CModelCssm::loadModelParams");
   // Rescale the stored exemplar weights so that they sum to 1.
   //
 
-  scaledWeights1.apply(abs);
-  scaledWeights2.apply(abs);
+  bool do1 = (scaledWeights1 != itsCachedRawWts1);
+  bool do2 = (scaledWeights2 != itsCachedRawWts2);
+
+  if (do1) itsCachedRawWts1 = scaledWeights1; itsCachedRawWts1.makeUnique();
+  if (do2) itsCachedRawWts2 = scaledWeights2; itsCachedRawWts2.makeUnique();
+
+  if (do1) scaledWeights1.apply(abs);
+  if (do2) scaledWeights2.apply(abs);
 
   for (int r = 0; r < scaledWeights1.mrows(); ++r)
 	 {
-  		Slice row1 = scaledWeights1.row(r);
-  		row1 /= row1.sum();
-
-  		Slice row2 = scaledWeights2.row(r);
-  		row2 /= row2.sum();
+		if (do1) { Slice row1 = scaledWeights1.row(r); row1 /= row1.sum(); }
+		if (do2) { Slice row2 = scaledWeights2.row(r); row2 /= row2.sum(); }
 	 }
 
-  itsStored1.assign_MMmul(scaledWeights1, training1());
-  itsStored2.assign_MMmul(scaledWeights2, training2());
+  if (do1) itsStored1.assign_MMmul(scaledWeights1, training1());
+  if (do2) itsStored2.assign_MMmul(scaledWeights2, training2());
 }
 
 const Mtx& CModelCssm::getStoredExemplars(Category cat)
