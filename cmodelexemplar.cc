@@ -179,12 +179,12 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams.leftmostNC(DIM_OBJ_PARAMS);
 
   attWeights.apply(abs);
 
-  Slice otherParams = modelParams.rightmost(modelParams.nelems()-
-														  (DIM_OBJ_PARAMS+2));
+  Slice otherParams = modelParams.rightmostNC(modelParams.nelems()-
+															 (DIM_OBJ_PARAMS+2));
 
   loadModelParams(otherParams);
 
