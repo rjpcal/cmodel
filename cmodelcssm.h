@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:24:41 2001
-// written: Wed Mar 14 15:20:59 2001
+// written: Wed Mar 14 16:34:55 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,6 +21,8 @@ private:
   Mtx itsStored2;
 
   Mtx itsScaledWeights;
+//    Mtx itsScaledWeights1;
+//    Mtx itsScaledWeights2;
 
 public:
   CModelCssm(const Mtx& objParams,
