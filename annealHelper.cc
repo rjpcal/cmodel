@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 19:49:09 2002
+// written: Tue Feb 19 09:26:11 2002
 // $Id$
 //
 //
@@ -308,8 +308,8 @@ private:
     return result;
   }
 
-public:
-  Mtx evaluateEach(const Mtx& models) const
+protected:
+  virtual Mtx doEvaluateEach(const Mtx& models)
   {
     if (itsCanUseMatrix)
       return evaluateParallel(models);
@@ -427,15 +427,12 @@ private:
   Mtx itsEnergy;
   Mtx itsStartValues;
 
-  Objective itsObjective;
+  MultivarFunction& itsObjective;
 
 public:
-  AnnealingOptimizer(const fstring& funcName,
-                     AnnealOpts& astate,
-                     int nvararg,
-                     mxArray** pvararg)
+  AnnealingOptimizer(MultivarFunction& objective, AnnealOpts& opts)
     :
-    itsOpts(astate),
+    itsOpts(opts),
     itsRunNum(0),
     itsDeltas(itsOpts.deltas),
     itsNumFunEvals(itsOpts.numRuns, 1),
@@ -445,14 +442,14 @@ public:
     itsEnergy(int(itsOpts.coolingSchedule.sum()), itsOpts.numRuns),
     itsStartValues(itsOpts.centers),
 
-    itsObjective(funcName, nvararg, pvararg, itsOpts.canUseMatrix)
+    itsObjective(objective)
   {
     itsEnergy.setAll(std::numeric_limits<double>::max());
   }
 
   void doOneRun();
 
-  void doAllRuns()
+  void optimize()
   {
     for (int i = 0; i < itsOpts.numRuns; ++i)
       doOneRun();
@@ -819,14 +816,16 @@ DOTRACE("mlxAnnealHelper");
 
   try
     {
-      AnnealOpts astate(prhs[0]);
+      AnnealOpts opts(prhs[0]);
 
-      AnnealingOptimizer ar(MxWrapper::extractString(prhs[1]), // funcName
-                            astate,
-                            nvararg,
-                            pvararg);
+      Objective objective(MxWrapper::extractString(prhs[1]), // funcName
+                          nvararg,
+                          pvararg,
+                          opts.canUseMatrix);
 
-      ar.doAllRuns();
+      AnnealingOptimizer ar(objective, opts);
+
+      ar.optimize();
 
       plhs[0] = ar.getOutput();
     }
