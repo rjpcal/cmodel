@@ -72,10 +72,6 @@ DOTRACE("Mclassifier");
 	 fixed_string actionRequest = Local::getString(actionRequest_mx);
 
 
-#ifdef LOCAL_DEBUG
-	 mexPrintf("model name: '%s'\n", modelName.c_str());
-#endif
-
 #ifdef LOCAL_PROF
 	 if (mxGetScalar(numStoredExemplars_mx) == -1) {
 		ofstream ofs("profdata.out");
@@ -292,7 +288,11 @@ extern "C"
 mex_information mexLibrary() {
 
   static mexFunctionTableEntry function_table[1] = {
+#ifndef LOCAL_DEBUG
 	 { "classifier", mlxClassifier, 5, 1, &_local_function_table_classifier }
+#else
+	 { "dclassifier", mlxClassifier, 5, 1, &_local_function_table_classifier }	 
+#endif
   };
 
   static const char * path_list_[1] = { "/matlab_r.12/toolbox/matlab/specfun" };
