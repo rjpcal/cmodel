@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 11:57:23 2002
+// written: Thu Feb 14 13:41:04 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -53,6 +53,8 @@ namespace
 
 void InitializeModule_annealVisitParameters()
 {
+  mexPrintf("loading 'annealVisitParameters mex file\n");
+
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
   cout = mexBuf;
@@ -71,10 +73,15 @@ void InitializeModule_annealVisitParameters()
 
 void TerminateModule_annealVisitParameters()
 {
+  mexPrintf("unloading 'annealVisitParameters' mex file\n");
+
   Util::Prof::printAtExit(false);
 
-  cout.rdbuf(coutOrigBuf);
-  cerr.rdbuf(cerrOrigBuf);
+  // For some reason we get crashses if we try to reset these to their
+  // original streambuf*'s; setting them to 0 effectively just shuts the
+  // streams down
+  cout.rdbuf(0);
+  cerr.rdbuf(0);
 
   delete mexBuf;
 
