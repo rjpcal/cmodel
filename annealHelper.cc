@@ -12,11 +12,11 @@
 #ifndef ANNEALHELPER_CC_DEFINED
 #define ANNEALHELPER_CC_DEFINED
 
-#include "cmodel/annealingoptimizer.h"
-#include "cmodel/matlabfunction.h"
-
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
+
+#include "optim/annealingoptimizer.h"
+#include "optim/matlabfunction.h"
 
 #include "util/trace.h"
 

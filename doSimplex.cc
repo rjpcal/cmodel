@@ -12,14 +12,14 @@
 #ifndef DOSIMPLEX_CC_DEFINED
 #define DOSIMPLEX_CC_DEFINED
 
-#include "cmodel/matlabfunction.h"
-#include "cmodel/simplexoptimizer.h"
-
 #include "mtx/mtx.h"
 
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
 #include "mx/mxwrapper.h"
+
+#include "optim/matlabfunction.h"
+#include "optim/simplexoptimizer.h"
 
 #include "util/error.h"
 

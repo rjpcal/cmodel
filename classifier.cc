@@ -14,11 +14,11 @@
 
 #include "cmodel/classifier.h"
 
-#include "cmodel/annealingoptimizer.h"
-#include "cmodel/multivarfunction.h"
-#include "cmodel/simplexoptimizer.h"
-
 #include "mtx/num.h"
+
+#include "optim/annealingoptimizer.h"
+#include "optim/multivarfunction.h"
+#include "optim/simplexoptimizer.h"
 
 #include "util/error.h"
 #include "util/strings.h"
