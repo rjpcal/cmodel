@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Feb 19 17:55:08 2002
+// written: Tue Feb 19 18:16:28 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -128,7 +128,7 @@ DOTRACE("makePDF");
 
   const double toobig = 708.3964185322641;
 
-  Mtx pdf = costs; pdf /= temp;
+  Mtx pdf = (costs / temp);
 
   const double mpdf = pdf.max();
 
@@ -259,10 +259,8 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
 
   // Update deltas
-  for (int i = 0; i < itsDeltas.nelems(); ++i)
-    {
-      itsDeltas.at(i) = 0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
-    }
+  itsDeltas = maxUsedParams - minUsedParams;
+  itsDeltas *= 0.75;
 
   // Update bests FIXME ought to use a smarter algorithm to keep track of the
   // best cost
@@ -420,8 +418,7 @@ DOTRACE("AnnealingOptimizer::createStartingModel");
   const Mtx startingCosts = itsObjective.evaluateEach(startingModels);
 
   *criticalTemp =
-    log10(startingCosts.sum() / startingCosts.nelems())
-    - itsOpts.tempScales.at(itsRunNum);
+    log10(startingCosts.mean()) - itsOpts.tempScales.at(itsRunNum);
 
   Mtx::const_iterator startingCost = startingCosts.find_min();
   const int startingPos = startingCost - startingCosts.begin();
