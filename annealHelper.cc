@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:25:22 2002
+// written: Fri Feb 15 14:32:35 2002
 // $Id$
 //
 //
@@ -336,15 +336,28 @@ DOTRACE("sampleFromPdf");
 //
 //---------------------------------------------------------------------
 
-mxArray* annealVisitParameters(mxArray* bestModel_mx,
-                               const Mtx& valueScalingRange,
-                               const Mtx& deltas,
-                               const Mtx& bounds,
-                               const bool canUseMatrix,
-                               const fstring& func_name,
-                               const double temp,
-                               int nvararg,
-                               mxArray** pvararg)
+namespace
+{
+  struct VisitResult
+  {
+    VisitResult(int n, mxArray* b, double c) :
+      nevals(n), newModel(b), cost(c) {}
+
+    int const nevals;
+    mxArray* const newModel;
+    double const cost;
+  };
+}
+
+VisitResult annealVisitParameters(mxArray* bestModel_mx,
+                                  const Mtx& valueScalingRange,
+                                  const Mtx& deltas,
+                                  const Mtx& bounds,
+                                  const bool canUseMatrix,
+                                  const fstring& func_name,
+                                  const double temp,
+                                  int nvararg,
+                                  mxArray** pvararg)
 {
 
   mclCopyArray(&bestModel_mx);
@@ -392,14 +405,7 @@ mxArray* annealVisitParameters(mxArray* bestModel_mx,
                    "there were no non-zero deltas");
     }
 
-  const char* fieldNames[] = { "nevals", "newModel", "cost" };
-  mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
-
-  mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
-  mxSetField(output, 0, "newModel", bestModel_mx);
-  mxSetField(output, 0, "cost", mxCreateScalarDouble(costs.at(s)));
-
-  return output;
+  return VisitResult(nevals, bestModel_mx, costs.at(s));
 }
 
 //---------------------------------------------------------------------
@@ -464,25 +470,30 @@ DOTRACE("annealHelper");
 
   mxArray* bestModel_mx = mxGetField(astate_mx, 0, "bestModel");
 
-  mxArray* output = annealVisitParameters(bestModel_mx,
-                                          valueScalingRange,
-                                          deltas,
-                                          bounds,
-                                          canUseMatrix,
-                                          func_name,
-                                          temp,
-                                          nvararg,
-                                          pvararg);
+  VisitResult vresult = annealVisitParameters(bestModel_mx,
+                                             valueScalingRange,
+                                             deltas,
+                                             bounds,
+                                             canUseMatrix,
+                                             func_name,
+                                             temp,
+                                             nvararg,
+                                             pvararg);
 
-  mxSetField(astate_mx, 0, "bestModel",
-             mxDuplicateArray(mxGetField(output, 0, "newModel")));
+  mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
-  numFunEvals.at(k_onebased-1) =
-    numFunEvals.at(k_onebased-1) + mxGetScalar(mxGetField(output, 0, "nevals"));
+  numFunEvals.at(k_onebased-1) = numFunEvals.at(k_onebased-1) + vresult.nevals;
 
-  mxSetFieldByNumber(output, 0,
-                     mxAddField(output, "new_astate"),
-                     astate_mx);
+  //
+  // Build the output struct
+  //
+
+  const char* fieldNames[] = { "cost", "new_astate" };
+  mxArray* output = mxCreateStructMatrix(1,1,2,fieldNames);
+
+  mxSetField(output, 0, "cost", mxCreateScalarDouble(vresult.cost));
+
+  mxSetField(output, 0, "new_astate", astate_mx);
 
   return output;
 }
