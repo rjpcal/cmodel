@@ -51,17 +51,6 @@ CModelCssm::CModelCssm(const Rat& objParams,
 
 CModelCssm::~CModelCssm() {}
 
-// Count the category training exemplars
-int CModelCssm::countCategory(const Rat& params, int category) {
-  int n = 0;
-  for (int i = 0; i < params.mrows(); ++i)
-	 {
-		if (int(params.at(i,0)) == category)
-		  ++n;
-	 }
-  return n;
-}
-
 void CModelCssm::scaleWeights(double* weights, int numRawWeights)
 {
 DOTRACE("CModelCssm::scaleWeights");
