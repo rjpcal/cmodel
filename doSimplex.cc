@@ -646,8 +646,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 // HOME
 
     mxArray * x = mclGetUninitializedArray();
-    mxArray * convmsg1 = mclGetUninitializedArray();
-    mxArray * msg = mclGetUninitializedArray();
     mxArray * fxcc = mclGetUninitializedArray();
     mxArray * xcc = mclGetUninitializedArray();
     mxArray * fxc = mclGetUninitializedArray();
@@ -658,7 +656,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxArray * xr = mclGetUninitializedArray();
     mxArray * xbar = mclGetUninitializedArray();
     mxArray * formatsave = mclGetUninitializedArray();
-    mxArray * itercount = mclGetUninitializedArray();
+    mxArray * itercount_mx = mclGetUninitializedArray();
     mxArray * how = mclGetUninitializedArray();
     mxArray * f = mclGetUninitializedArray();
     mxArray * y = mclGetUninitializedArray();
@@ -669,7 +667,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxArray * theSimplex = mclGetUninitializedArray();
     mxArray * initialParams = mclGetUninitializedArray();
     mxArray * two2np1 = mclGetUninitializedArray();
-    mxArray * onesn = mclGetUninitializedArray();
     mxArray * sigma = mclGetUninitializedArray();
     mxArray * psi = mclGetUninitializedArray();
     mxArray * chi = mclGetUninitializedArray();
@@ -704,11 +701,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mlfAssign(&chi, _mxarray24_);
     mlfAssign(&psi, _mxarray30_);
     mlfAssign(&sigma, _mxarray30_);
-
-    // onesn = ones(1,numModelParams);
-    mlfAssign(
-      &onesn,
-      mlfOnes(_mxarray11_, numModelParams_mx, NULL));
 
     // two2np1 = 2:numModelParams+1;
     mlfAssign(
@@ -846,8 +838,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     // how = 'initial';
     mlfAssign(&how, _mxarray34_);
 
-    // itercount = 1;
-    mlfAssign(&itercount, _mxarray11_);
+    // itercount_mx = 1;
+    mlfAssign(&itercount_mx, _mxarray11_);
 
 	 int func_evals = numModelParams+1;
 
@@ -859,14 +851,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
         // disp(header)
         mlfDisp(mclVv(header, "header"));
 
-        // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
+        // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals(1)), how]) 
         mlfDisp(
           mlfHorzcat(
             mclVe(
               mlfSprintf(
                 NULL,
                 _mxarray38_,
-                mclVv(itercount, "itercount"),
+                mclVv(itercount_mx, "itercount_mx"),
                 mxCreateScalarDouble(func_evals),
                 mclVe(mclIntArrayRef1(mclVsv(funcVals, "funcVals"), 1)),
                 NULL)),
@@ -919,13 +911,13 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 //---------------------------------------------------------------------
 
 
-    // while func_evals < maxfun & itercount < maxiter
+    // while func_evals < maxfun & itercount_mx < maxiter
     for (;;) { // Main algorithm
 		DOTRACE("Main algorithm");
 
 		{DOTRACE("Main loop condition"); // 0.5%
 
-		if ((func_evals < maxfun) && mxGetScalar(itercount) < maxiter)
+		if ((func_evals < maxfun) && mxGetScalar(itercount_mx) < maxiter)
 		  {
 		  }
 		else
@@ -1348,20 +1340,20 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		simref.swapColumns(largest2, numModelParams-1);
 		}
 
-      // itercount = itercount + 1;
+      // itercount_mx = itercount_mx + 1;
       mlfAssign(
-        &itercount, mclPlus(mclVv(itercount, "itercount"), _mxarray11_));
+        &itercount_mx, mclPlus(mclVv(itercount_mx, "itercount_mx"), _mxarray11_));
 
       if (prnt == 3) {
 
-          // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
+          // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals(1)), how]) 
           mlfDisp(
             mlfHorzcat(
               mclVe(
                 mlfSprintf(
                   NULL,
                   _mxarray38_,
-                  mclVv(itercount, "itercount"),
+                  mclVv(itercount_mx, "itercount_mx"),
                   mxCreateScalarDouble(func_evals),
                   mclVe(mclIntArrayRef1(mclVsv(funcVals, "funcVals"), 1)),
                   NULL)),
@@ -1415,8 +1407,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
     } // end Main algorithm
 
-    // output.iterations = itercount;
-    mlfIndexAssign(output, ".iterations", mclVsv(itercount, "itercount"));
+    // output.iterations = itercount_mx;
+    mlfIndexAssign(output, ".iterations", mclVsv(itercount_mx, "itercount_mx"));
 
     // output.funcCount = func_evals;
     mlfIndexAssign(output, ".funcCount", mxCreateScalarDouble(func_evals));
@@ -1432,52 +1424,26 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     if (func_evals >= maxfun) {
 
         if (prnt > 0) {
-
-            // disp(' ')
-            mlfDisp(_mxarray36_);
-
-            // disp('Exiting: Maximum number of function evaluations has been exceeded')
-            mlfDisp(_mxarray65_);
-
-            // disp('         - increase MaxFunEvals option.')
-            mlfDisp(_mxarray67_);
-
-            // msg = sprintf('         Current function value: %f \n', fval);
-            mlfAssign(
-              &msg, mlfSprintf(NULL, _mxarray69_, mclVv(*fval, "fval"), NULL));
-
-            // disp(msg)
-            mlfDisp(mclVv(msg, "msg"));
-
-        // end
+			 mexPrintf("\nExiting: Maximum number of function evaluations "
+						  "has been exceeded\n");
+			 mexPrintf("         - increase MaxFunEvals option.\n");
+			 mexPrintf("         Current function value: %f \n\n",
+						  mxGetScalar(*fval));
         }
 
         // exitflag = 0;
         mlfAssign(exitflag, _mxarray18_);
 
-    // elseif itercount >= maxiter 
+    // elseif itercount_mx >= maxiter 
     }
-	 else if (mxGetScalar(itercount) >= maxiter) {
+	 else if (mxGetScalar(itercount_mx) >= maxiter) {
 
         if (prnt > 0) {
-
-            // disp(' ')
-            mlfDisp(_mxarray36_);
-
-            // disp('Exiting: Maximum number of iterations has been exceeded')
-            mlfDisp(_mxarray71_);
-
-            // disp('         - increase MaxIter option.')
-            mlfDisp(_mxarray73_);
-
-            // msg = sprintf('         Current function value: %f \n', fval);
-            mlfAssign(
-              &msg, mlfSprintf(NULL, _mxarray69_, mclVv(*fval, "fval"), NULL));
-
-            // disp(msg)
-            mlfDisp(mclVv(msg, "msg"));
-
-        // end
+			 mexPrintf("\nExiting: Maximum number of iterations "
+						  "has been exceeded\n");
+			 mexPrintf("         - increase MaxIter option.\n");
+			 mexPrintf("         Current function value: %f \n\n",
+						  mxGetScalar(*fval));
         }
 
         // exitflag = 0; 
@@ -1488,26 +1454,14 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
         if (prnt > 1) {
 
-            // convmsg1 = sprintf([ ...
-            mlfAssign(
-              &convmsg1,
-              mlfSprintf(
-                NULL,
-                _mxarray75_,
-                mxCreateScalarDouble(tolx),
-					 mxCreateScalarDouble(tolf),
-                NULL));
+			 const char* format = 
+				"\nOptimization terminated successfully:\n"
+				" the current x satisfies the termination criteria using "
+				"OPTIONS.TolX of %e \n"
+				" and F(X) satisfies the convergence criteria using "
+				"OPTIONS.TolFun of %e \n";
 
-
-            // '\nOptimization terminated successfully:\n',...
-            // ' the current x satisfies the termination criteria using OPTIONS.TolX of %e \n',...
-            // ' and F(X) satisfies the convergence criteria using OPTIONS.TolFun of %e \n'
-            // ],tolx, tolf);
-            // disp(convmsg1)
-            mlfDisp(mclVv(convmsg1, "convmsg1"));
-
-
-        // end
+			 mexPrintf(format, tolx, tolf);
         }
 
 
@@ -1531,7 +1485,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(chi);
     mxDestroyArray(psi);
     mxDestroyArray(sigma);
-    mxDestroyArray(onesn);
     mxDestroyArray(two2np1);
     mxDestroyArray(initialParams);
     mxDestroyArray(theSimplex);
@@ -1542,7 +1495,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(y);
     mxDestroyArray(f);
     mxDestroyArray(how);
-    mxDestroyArray(itercount);
+    mxDestroyArray(itercount_mx);
     mxDestroyArray(formatsave);
     mxDestroyArray(xbar);
     mxDestroyArray(xr);
@@ -1553,8 +1506,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(fxc);
     mxDestroyArray(xcc);
     mxDestroyArray(fxcc);
-    mxDestroyArray(msg);
-    mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
     mxDestroyArray(debugFlags_mx);
     mxDestroyArray(funfcn_mx);
