@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Fri Mar  9 14:37:43 2001
+// written: Fri Mar  9 15:01:27 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,7 +16,6 @@
 #include "classifier.h"
 
 #include "error.h"
-#include "cmodelcssm.h"
 #include "num.h"
 #include "rutil.h"
 #include "strings.h"
@@ -110,23 +109,6 @@ DOTRACE("Classifier::computeLogL");
   }
 
   return ll;
-}
-
-shared_ptr<Classifier> Classifier::make(const fixed_string& whichType,
-													 const Rat& objParams,
-													 const Rat& observedIncidence,
-													 int numStoredExemplars)
-{
-DOTRACE("Classifier::make");
-  if (whichType == "cssm")
-	 return shared_ptr<Classifier>(
-		new CModelCssm(objParams, observedIncidence,numStoredExemplars));
-  else
-	 {
-		ErrorWithMsg err("unknown classifier type: ");
-		err.appendMsg(whichType.c_str());
-		throw err;
-	 }
 }
 
 double Classifier::currentLogL(Rat& modelParams)

@@ -20,6 +20,9 @@
 #include "classifier.h"
 #include "classifier_mex.h"
 
+#include "cmodelcssm.h"
+#include "cmodelgcm.h"
+
 #include "error.h"
 #include "rutil.h"
 #include "strings.h"
@@ -27,6 +30,7 @@
 
 #include "util/pointers.h"
 
+#include <fstream.h>
 #include "libmatlb.h"
 
 void InitializeModule_classifier() {
@@ -55,13 +59,38 @@ namespace Local {
   }
 }
 
+shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
+												  const Rat& objParams,
+												  const Rat& observedIncidence,
+												  mxArray* optArgs_mx)
+{
+DOTRACE("makeClassifier");
+  if (whichType == "cssm")
+	 {
+		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
+		return shared_ptr<Classifier>(
+		  new CModelCssm(objParams, observedIncidence, numStoredExemplars));
+	 }
+  else if (whichType == "gcm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelGcm(objParams, observedIncidence));
+	 }
+  else
+	 {
+		ErrorWithMsg err("unknown classifier type: ");
+		err.appendMsg(whichType.c_str());
+		throw err;
+	 }
+}
+
 static mxArray* Mclassifier(int /* nargout_ */,
 									 mxArray* modelParams_mx,
 									 mxArray* modelName_mx,
 									 mxArray* actionRequest_mx,
 									 mxArray* objParams_mx,
 									 mxArray* observedIncidence_mx,
-									 mxArray* numStoredExemplars_mx)
+									 mxArray* optArgs_mx)
 {
 DOTRACE("Mclassifier");
 
@@ -73,13 +102,13 @@ DOTRACE("Mclassifier");
 
 
 #ifdef LOCAL_PROF
-	 if (mxGetScalar(numStoredExemplars_mx) == -1) {
+	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -1) {
 		ofstream ofs("profdata.out");
 		Util::Prof::printAllProfData(ofs);
 		return mxCreateScalarDouble(-1.0);
 	 }
 
-	 if (mxGetScalar(numStoredExemplars_mx) == -2) {
+	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -2) {
 		Util::Prof::resetAllProfData();
 		return mxCreateScalarDouble(-2.0);
 	 }
@@ -103,17 +132,15 @@ DOTRACE("Mclassifier");
 	 validateInput(observedIncidence_mx);
 	 const Rat observedIncidence(observedIncidence_mx);
 
-	 int numStoredExemplars = int(mxGetScalar(numStoredExemplars_mx));
-
 	 Rat allModelParams(modelParams_mx);
 
 	 mxArray* result_mx = mxCreateDoubleMatrix(allModelParams.ncols(), 1, mxREAL);
 	 Rat result(result_mx);
 
-	 shared_ptr<Classifier> model = Classifier::make(modelName,
-																	 objParams,
-																	 observedIncidence,
-																	 numStoredExemplars);
+	 shared_ptr<Classifier> model = makeClassifier(modelName,
+																  objParams,
+																  observedIncidence,
+																  optArgs_mx);
 
 	 int multiplier = 1;
 	 // check for minus sign
@@ -200,7 +227,7 @@ mxArray* mlfClassifier(mxArray* modelParams_mx,
 							  mxArray* actionRequest_mx,
 							  mxArray* objParams_mx,
 							  mxArray* observedIncidence_mx,
-							  mxArray* numStoredExemplars_mx)
+							  mxArray* optArgs_mx)
 {
 DOTRACE("mlfClassifier");
 
@@ -208,17 +235,17 @@ DOTRACE("mlfClassifier");
 
   mlfEnterNewContext(0, CLASSIFIER_NARGIN,
 							modelParams_mx, modelName_mx, actionRequest_mx,
-							objParams_mx, observedIncidence_mx, numStoredExemplars_mx);
+							objParams_mx, observedIncidence_mx, optArgs_mx);
 
   mxArray* result = Mclassifier(nargout,
 										  modelParams_mx, modelName_mx, actionRequest_mx,
 										  objParams_mx,
-										  observedIncidence_mx, numStoredExemplars_mx);
+										  observedIncidence_mx, optArgs_mx);
 
   mlfRestorePreviousContext(0, CLASSIFIER_NARGIN,
 									 modelParams_mx, modelName_mx, actionRequest_mx, 
 									 objParams_mx, observedIncidence_mx,
-									 numStoredExemplars_mx);
+									 optArgs_mx);
 
   return mlfReturnValue(result);
 }

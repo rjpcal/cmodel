@@ -47,7 +47,7 @@ public:
 
   // The result of this function is only valid until the next call to
   // the function
-  virtual const double* findStoredExemplar(Category cat, int n);
+  virtual Slice findStoredExemplar(Category cat, int n);
 };
 
 static const char vcid_cmodelcssm_h[] = "$Header$";

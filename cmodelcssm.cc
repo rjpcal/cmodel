@@ -97,7 +97,7 @@ DOTRACE("CModelCssm::loadModelParams");
   itsScaledWeights = rawWeights;
 }
 
-const double* CModelCssm::findStoredExemplar(Category cat, int n)
+Slice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
@@ -107,7 +107,7 @@ const double* CModelCssm::findStoredExemplar(Category cat, int n)
 							  &itsCat1[0], numAllExemplars(), DIM_OBJ_PARAMS,
 							  &itsStored1[0]);
 
-		return &itsStored1[0];
+		return Slice(&itsStored1[0], 1);
 	 }
 
   else if (CAT2 == cat)
@@ -118,13 +118,13 @@ const double* CModelCssm::findStoredExemplar(Category cat, int n)
 							  &itsCat2[0], numAllExemplars(), DIM_OBJ_PARAMS,
 							  &itsStored2[0]);
 
-		return &itsStored2[0];
+		return Slice(&itsStored2[0], 1);
 	 }
 
   else
 	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
 
-  return 0; // can't happen, but placate the compiler
+  return Slice(0,0); // can't happen, but placate the compiler
 }
 
 static const char vcid_cmodelcssm_cc[] = "$Header$";

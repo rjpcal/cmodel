@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 14:49:15 2001
+// written: Fri Mar  9 17:12:58 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,6 +15,7 @@
 
 #include "cmodelexemplar.h"
 
+#include "error.h"
 #include "rutil.h"
 #include "trace.h"
 
@@ -22,7 +23,7 @@
 
 double minkDist(const double* w, int nelems,
                 const double* x1, int stride1,
-                const double* x2, int stride2,
+                Slice x2,
                 double r, double r_inv)
 {
   double wt_sum = 0.0;
@@ -30,7 +31,9 @@ double minkDist(const double* w, int nelems,
 	 {
 		wt_sum +=
 		  w[k] *
-		  pow( abs( x1[k*stride1] - x2[k*stride2]), r);
+		  pow( abs( x1[k*stride1] - *x2), r);
+
+		x2.bump();
 	 }
   return pow(wt_sum, r_inv);
 }
@@ -44,21 +47,20 @@ double minkDist(const double* w, int nelems,
 class MinkDist2Binder {
 public:
   MinkDist2Binder(const double* attWeights, int nelems,
-						int stride1,
-						const double* x2) :
+						const Slice& x2) :
 	 itsAttWeights(attWeights),
 	 itsNelems(nelems),
-	 itsStride1(stride1),
 	 itsX2(x2)
   {}
 
   // Specialized Minkowski distance for r==2
-  double minkDist2(const double* x1) const
+  double minkDist2(Slice x1) const
   {
 	 double wt_sum = 0.0;
-	 const double* x2 = itsX2;
+	 Slice x2 = itsX2;
 	 const double* w = itsAttWeights;
-	 for (int k = 0; k < itsNelems; ++k, x1 += itsStride1, ++x2, ++w)
+
+	 for (int k = 0; k < itsNelems; ++k, x1.bump(), x2.bump(), ++w)
 		{
 		  wt_sum +=
 			 (*w) * 
@@ -70,8 +72,7 @@ public:
 private:
   const double* const itsAttWeights;
   int itsNelems;
-  int itsStride1;
-  const double* const itsX2;
+  Slice const itsX2;
 };
 
 
@@ -107,12 +108,14 @@ int CModelExemplar::countCategory(const Rat& params, int category) {
 }
 
 void CModelExemplar::doDiffEvidence(const double* attWeights,
-												const double* storedExemplar1,
-												const double* storedExemplar2,
+												const Slice& storedExemplar1,
+												const Slice& storedExemplar2,
 												double minkPower,
 												double minkPowerInv)
 {
 DOTRACE("CModelExemplar::doDiffEvidence");
+
+  throw ErrorWithMsg("doDiffEvidence not implemented");
 
   for (int y = 0; y < numAllExemplars(); ++y) {
 
@@ -120,7 +123,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 	 double sim1 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
 					itsObjParams.data()+y+numAllExemplars(), numAllExemplars(),
-					storedExemplar1, 1,
+					storedExemplar1,
 					minkPower, minkPowerInv);
 
 	 diffEvidence(y) += exp(-sim1);
@@ -129,7 +132,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 	 double sim2 =
 		minkDist(attWeights, DIM_OBJ_PARAMS,
 					itsObjParams.data()+y+numAllExemplars(), numAllExemplars(),
-					storedExemplar2, 1,
+					storedExemplar2,
 					minkPower, minkPowerInv);
 
 	 diffEvidence(y) -= exp(-sim2);
@@ -138,17 +141,15 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 
 
 void CModelExemplar::doDiffEvidence2(const double* attWeights,
-												 const double* storedExemplar1,
-												 const double* storedExemplar2)
+												 const Slice& storedExemplar1,
+												 const Slice& storedExemplar2)
 {
 DOTRACE("CModelExemplar::doDiffEvidence2");
 
   MinkDist2Binder binder1(attWeights, DIM_OBJ_PARAMS,
-								  numAllExemplars(),
 								  storedExemplar1);
 
   MinkDist2Binder binder2(attWeights, DIM_OBJ_PARAMS,
-								  numAllExemplars(),
 								  storedExemplar2);
 
   // This finds the first testExemplar data point (skipping the
@@ -158,10 +159,10 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
   for (int y = 0; y < numAllExemplars(); ++y, ++testExemplar) {
 
 	 // compute similarity of ex-y to stored-1-x
-	 const double sim1 = binder1.minkDist2(testExemplar);
+	 const double sim1 = binder1.minkDist2(Slice(testExemplar, numAllExemplars()));
 
 	 // compute similarity of ex-y to stored-2-x
-	 const double sim2 = binder2.minkDist2(testExemplar);
+	 const double sim2 = binder2.minkDist2(Slice(testExemplar, numAllExemplars()));
 
 	 diffEvidence(y) += exp(-sim1) - exp(-sim2);
   }
@@ -202,13 +203,10 @@ DOTRACE("CModelExemplar::computeDiffEv");
   const double minkPower = 2.0;
   const double minkPowerInv = 1.0/minkPower;
 
-  const double* stored1;
-  const double* stored2;
-
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-	 stored1 = findStoredExemplar(CAT1, x);
-	 stored2 = findStoredExemplar(CAT2, x);
+	 Slice stored1(findStoredExemplar(CAT1, x));
+	 Slice stored2(findStoredExemplar(CAT2, x));
 
 	 if (minkPower == 2.0) {
 		doDiffEvidence2(attWeights, stored1, stored2);

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar  9 14:49:39 2001
+// written: Fri Mar  9 16:50:26 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,6 +14,8 @@
 #define CMODELEXEMPLAR_H_DEFINED
 
 #include "classifier.h"
+
+class Slice;
 
 class CModelExemplar : public Classifier {
 public:
@@ -36,14 +38,14 @@ private:
   const int itsNumStoredExemplars;
 
   void doDiffEvidence(const double* attWeights,
-							 const double* storedExemplar1,
-							 const double* storedExemplar2,
+							 const Slice& storedExemplar1,
+							 const Slice& storedExemplar2,
 							 double minkPower,
 							 double minkPowerInv);
 
   void doDiffEvidence2(const double* attWeights,
-							  const double* storedExemplar1,
-							  const double* storedExemplar2);
+							  const Slice& storedExemplar1,
+							  const Slice& storedExemplar2);
 
   virtual void computeDiffEv(Rat& modelParams);
   virtual double sigmaScalingFactor() const;
@@ -52,7 +54,7 @@ private:
 
   // The result of this function is only valid until the next call to
   // the function
-  virtual const double* findStoredExemplar(Category cat, int n) = 0;
+  virtual Slice findStoredExemplar(Category cat, int n) = 0;
 };
 
 static const char vcid_cmodelexemplar_h[] = "$Header$";

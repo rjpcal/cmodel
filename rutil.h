@@ -19,6 +19,19 @@
 
 #include "libmatlb.h"
 
+class Slice {
+  const double* data;
+  int const stride;
+public:
+  Slice(const double* d, int s) : data(d), stride(s) {}
+
+  double operator[](int i) const { return *(data + stride*i); }
+
+  double operator*() const { return *data; }
+
+  void bump() { data += stride; }
+};
+
 class Rat {
 private:
   enum StorageType { BORROWED, OWNED };
