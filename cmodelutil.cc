@@ -37,7 +37,7 @@ DOTRACE("CModelUtil::clampRows");
     }
 }
 
-Mtx CModelUtil::getStoredExemplars(const Slice& otherParams, int nstored,
+Mtx CModelUtil::getStoredExemplars(const slice& otherParams, int nstored,
                                    const Mtx& hilo0, const Mtx& hilo1)
 {
 DOTRACE("CModelUtil::getStoredExemplars");

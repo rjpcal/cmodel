@@ -70,11 +70,11 @@ private:
   Mtx itsAttWtsCache;
 
   virtual void computeDiffEv(const Mtx& objects,
-                             Slice& modelParams, Mtx& diffEvOut);
+                             slice& modelParams, Mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 
-  virtual void loadModelParams(Slice& modelParams);
+  virtual void loadModelParams(slice& modelParams);
 
   virtual const Mtx& getStoredExemplars(Category cat) = 0;
 };

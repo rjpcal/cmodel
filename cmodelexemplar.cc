@@ -77,7 +77,7 @@ DOTRACE("CModelExemplar::handleRequest");
 
       int category = int(category_.at(0));
 
-      Slice otherParams =
+      slice otherParams =
         allModelParams
         .column(0)
         (range(DIM_OBJ_PARAMS+2, allModelParams.ncols()));
@@ -99,7 +99,7 @@ DOTRACE("CModelExemplar::handleRequest");
 
 
 void CModelExemplar::computeDiffEv(const Mtx& objects,
-                                   Slice& modelParams, Mtx& diffEvOut)
+                                   slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelExemplar::computeDiffEv");
 
@@ -118,7 +118,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams(range(0, DIM_OBJ_PARAMS));
+  slice attWeights = modelParams(range(0, DIM_OBJ_PARAMS));
 
   attWeights.apply(std::abs);
 
@@ -126,7 +126,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   itsAttWtsCache.column(0) = attWeights;
 
-  Slice otherParams =
+  slice otherParams =
     modelParams(range(DIM_OBJ_PARAMS+2, modelParams.nelems()));
 
   loadModelParams(otherParams);
@@ -245,7 +245,7 @@ double CModelExemplar::computeSigmaNoise(double rawSigma) const
   return rawSigma * sqrt(itsNumStoredExemplars*2.0);
 }
 
-void CModelExemplar::loadModelParams(Slice& modelParams) {}
+void CModelExemplar::loadModelParams(slice& modelParams) {}
 
 static const char vcid_cmodelexemplar_cc[] = "$Header$";
 #endif // !CMODELEXEMPLAR_CC_DEFINED

@@ -33,15 +33,15 @@ public:
   Mtx modelParamsBounds() const;
 
   /// Returns the classification probability for each of 'testObjects'
-  Mtx classifyObjects(Slice& modelParams, const Mtx& testObjects);
+  Mtx classifyObjects(slice& modelParams, const Mtx& testObjects);
 
-  double currentLogL(Slice& modelParams,
+  double currentLogL(slice& modelParams,
                      const Mtx& testObjects,
                      const Mtx& observedIncidence);
 
   double fullLogL(const Mtx& observedIncidence);
 
-  double deviance(Slice& modelParams,
+  double deviance(slice& modelParams,
                   const Mtx& testObjects,
                   const Mtx& observedIncidence);
 
@@ -76,7 +76,7 @@ protected:
 
   /// Must be overridden by subclasses
   virtual void computeDiffEv(const Mtx& objects,
-                             Slice& modelParams, Mtx& diffEvOut) = 0;
+                             slice& modelParams, Mtx& diffEvOut) = 0;
 
   virtual double computeSigmaNoise(double rawSigma) const = 0;
 
@@ -111,7 +111,7 @@ private:
   // Count the number of objects with the given category
   int countCategory(int category) const;
 
-  Slice exemplar(int i) const;
+  slice exemplar(int i) const;
   int exemplarCategory(int i) const;
 };
 

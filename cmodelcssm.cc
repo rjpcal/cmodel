@@ -46,7 +46,7 @@ DOTRACE("CModelCssm::numModelParams");
     + 2 * numStoredExemplars() * numTrainingExemplars();
 }
 
-void CModelCssm::loadModelParams(Slice& modelParams)
+void CModelCssm::loadModelParams(slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
 
@@ -74,8 +74,8 @@ DOTRACE("CModelCssm::loadModelParams");
 
   for (int r = 0; r < scaledWeights1.mrows(); ++r)
     {
-      if (do1) { Slice row1 = scaledWeights1.row(r); row1 /= row1.sum(); }
-      if (do2) { Slice row2 = scaledWeights2.row(r); row2 /= row2.sum(); }
+      if (do1) { slice row1 = scaledWeights1.row(r); row1 /= row1.sum(); }
+      if (do2) { slice row2 = scaledWeights2.row(r); row2 /= row2.sum(); }
     }
 
   if (do1) itsStored1.assign_MMmul(scaledWeights1, training1());

@@ -55,7 +55,7 @@ DOTRACE("CmodelSPC::handleRequest");
 
       int category = int(category_.at(0));
 
-      Slice modelParams = allModelParams.column(0);
+      slice modelParams = allModelParams.column(0);
 
       Mtx storedExemplars =
         CModelUtil::getStoredExemplars(modelParams,
@@ -78,7 +78,7 @@ DOTRACE("CmodelSPC::handleRequest");
 }
 
 void CModelSPC::computeDiffEv(const Mtx& objects,
-                              Slice& modelParams, Mtx& diffEvOut)
+                              slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelSPC::computeDiffEv");
 
@@ -91,7 +91,7 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   attWeights.apply(std::abs);
 
-  const Slice otherParams =
+  const slice otherParams =
     modelParams(range(Classifier::DIM_OBJ_PARAMS+2,
                       modelParams.nelems()));
 

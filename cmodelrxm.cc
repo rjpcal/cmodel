@@ -46,7 +46,7 @@ DOTRACE("CModelRxm::numModelParams");
     + (numStoredExemplars() * 2 * DIM_OBJ_PARAMS);
 }
 
-void CModelRxm::loadModelParams(Slice& modelParams)
+void CModelRxm::loadModelParams(slice& modelParams)
 {
 DOTRACE("CModelRxm::loadModelParams");
 

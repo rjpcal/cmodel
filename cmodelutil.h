@@ -13,13 +13,13 @@
 #define CMODELUTIL_H_DEFINED
 
 class Mtx;
-class Slice;
+class slice;
 
 namespace CModelUtil
 {
   void clampRows(Mtx& src, int firstrow, int nrows, const Mtx& hilo);
 
-  Mtx getStoredExemplars(const Slice& otherParams, int nstored,
+  Mtx getStoredExemplars(const slice& otherParams, int nstored,
                          const Mtx& hilo0, const Mtx& hilo1);
 
   Mtx getHiLo(const Mtx& src);

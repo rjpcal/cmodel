@@ -43,7 +43,7 @@ CModelCueValidity::CModelCueValidity(const Mtx& objParams,
 CModelCueValidity::~CModelCueValidity() {}
 
 void CModelCueValidity::computeDiffEv(const Mtx& objects,
-                                      Slice& modelParams, Mtx& diffEvOut)
+                                      slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelCueValidity::computeDiffEv");
 

@@ -25,12 +25,12 @@ CModelPbi::CModelPbi(const Mtx& objParams) :
 CModelPbi::~CModelPbi() {}
 
 void CModelPbi::computeDiffEv(const Mtx& objects,
-                              Slice& modelParams, Mtx& diffEvOut)
+                              slice& modelParams, Mtx& diffEvOut)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
   mtx_const_iter attWeights =
-    static_cast<const Slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();
+    static_cast<const slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();
 
   int i = 0;
   mtx_iter diffEv = diffEvOut.columnIter(0);

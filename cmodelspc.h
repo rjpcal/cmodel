@@ -32,7 +32,7 @@ protected:
 
 private:
   virtual void computeDiffEv(const Mtx& objects,
-                             Slice& modelParams, Mtx& diffEvOut);
+                             slice& modelParams, Mtx& diffEvOut);
 
   virtual double computeSigmaNoise(double rawSigma) const;
 

@@ -39,7 +39,7 @@ protected:
   virtual double doEvaluate(const Mtx& x)
   {
     DOTRACE("LLEvaluator::doEvaluate");
-    Slice params(x.column(0));
+    slice params(x.column(0));
     return -itsC.currentLogL(params, itsObjs, itsInc);
   }
 
@@ -204,7 +204,7 @@ DOTRACE("Classifier::computeLogL");
 }
 
 // Returns the classification probability for each of 'objects'
-Mtx Classifier::classifyObjects(Slice& modelParams, const Mtx& testObjects)
+Mtx Classifier::classifyObjects(slice& modelParams, const Mtx& testObjects)
 {
 DOTRACE("Classifier::classifyObjects");
 
@@ -229,7 +229,7 @@ DOTRACE("Classifier::classifyObjects");
   return forwardProbit(itsDiffEvidence, thresh, sigmaNoise);
 }
 
-double Classifier::currentLogL(Slice& modelParams,
+double Classifier::currentLogL(slice& modelParams,
                                const Mtx& testObjects,
                                const Mtx& observedIncidence)
 {
@@ -259,7 +259,7 @@ DOTRACE("Classifier::fullLogL");
   return computeLogL(observedProb, observedIncidence);
 }
 
-double Classifier::deviance(Slice& modelParams,
+double Classifier::deviance(slice& modelParams,
                             const Mtx& testObjects,
                             const Mtx& observedIncidence)
 {
@@ -341,7 +341,7 @@ DOTRACE("Classifier::handleRequest");
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
-          Slice modelParams(allModelParams.column(i));
+          slice modelParams(allModelParams.column(i));
           result.at(i) = multiplier *
             currentLogL(modelParams, testObjects, observedIncidence);
         }
@@ -379,7 +379,7 @@ DOTRACE("Classifier::handleRequest");
       Mtx result(allModelParams.ncols(), 1);
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
-          Slice modelParams(allModelParams.column(i));
+          slice modelParams(allModelParams.column(i));
           result.at(i) = multiplier *
             deviance(modelParams, testObjects, observedIncidence);
         }
@@ -399,7 +399,7 @@ DOTRACE("Classifier::handleRequest");
 
       for (int i = 0; i < allModelParams.ncols(); ++i)
         {
-          Slice modelParams(allModelParams.column(i));
+          slice modelParams(allModelParams.column(i));
           result.column(i) = this->classifyObjects(modelParams, testObjects);
         }
 
@@ -512,7 +512,7 @@ DOTRACE("Classifier::exemplarCategory");
   return int(itsObjCategories.at(i));
 }
 
-Slice Classifier::exemplar(int i) const
+slice Classifier::exemplar(int i) const
 {
 DOTRACE("Classifier::exemplar");
   return itsObjects.row(i);

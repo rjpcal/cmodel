@@ -25,7 +25,7 @@ public:
 
   virtual int numModelParams() const;
 
-  virtual void loadModelParams(Slice& modelParams);
+  virtual void loadModelParams(slice& modelParams);
 
   virtual const Mtx& getStoredExemplars(Category cat);
 
