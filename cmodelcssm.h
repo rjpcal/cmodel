@@ -2,7 +2,8 @@
 //
 // cmodelcssm.h
 //
-// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
+// Copyright (c) 2001-2005
+// Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Thu Mar  8 16:24:41 2001
 // $Id$

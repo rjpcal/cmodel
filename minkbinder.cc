@@ -2,7 +2,8 @@
 //
 // minkbinder.cc
 //
-// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
+// Copyright (c) 2001-2005
+// Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Mon Jul  9 13:59:45 2001
 // $Id$

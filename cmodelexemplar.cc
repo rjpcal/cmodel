@@ -2,7 +2,8 @@
 //
 // cmodelexemplar.cc
 //
-// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
+// Copyright (c) 2001-2005
+// Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Fri Mar  9 14:32:31 2001
 // $Id$

@@ -2,7 +2,8 @@
 //
 // eucbinder.h
 //
-// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
+// Copyright (c) 2002-2005
+// Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Thu Feb  7 16:18:49 2002
 // $Id$

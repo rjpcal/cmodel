@@ -2,7 +2,8 @@
 //
 // cmodelspc.h
 //
-// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
+// Copyright (c) 2001-2005
+// Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Mon Feb  4 13:59:00 2002
 // $Id$
