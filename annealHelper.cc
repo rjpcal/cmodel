@@ -221,14 +221,14 @@ void mlxAnnealVisitParameters(int nlhs,
  */
 
 static mxArray * MannealVisitParameters(int nargout_,
-                                        mxArray * bestModel,
-                                        mxArray * valueScalingRange,
-                                        mxArray * deltas,
-                                        mxArray * bounds,
-                                        mxArray * canUseMatrix,
-                                        mxArray * FUN,
-                                        mxArray * temp,
-                                        mxArray * varargin)
+                                        mxArray * bestModel_mx,
+                                        mxArray * valueScalingRange_mx,
+                                        mxArray * deltas_mx,
+                                        mxArray * bounds_mx,
+                                        mxArray * canUseMatrix_mx,
+                                        mxArray * FUN_mx,
+                                        mxArray * temp_mx,
+                                        mxArray * varargin_mx)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -238,29 +238,29 @@ static mxArray * MannealVisitParameters(int nargout_,
   mxArray * modelmatrix = mclGetUninitializedArray();
   mxArray * x = mclGetUninitializedArray();
 
-  validateInput(bestModel);
-  mclCopyArray(&bestModel);
+  validateInput(bestModel_mx);
+  mclCopyArray(&bestModel_mx);
 
-  validateInput(valueScalingRange);
-  mclCopyArray(&valueScalingRange);
+  validateInput(valueScalingRange_mx);
+  mclCopyArray(&valueScalingRange_mx);
 
-  validateInput(deltas);
-  mclCopyArray(&deltas);
+  validateInput(deltas_mx);
+  mclCopyArray(&deltas_mx);
 
-  validateInput(bounds);
-  mclCopyArray(&bounds);
+  validateInput(bounds_mx);
+  mclCopyArray(&bounds_mx);
 
-  validateInput(canUseMatrix);
-  mclCopyArray(&canUseMatrix);
+  validateInput(canUseMatrix_mx);
+  mclCopyArray(&canUseMatrix_mx);
 
-  validateInput(FUN);
-  mclCopyArray(&FUN);
+  validateInput(FUN_mx);
+  mclCopyArray(&FUN_mx);
 
-  validateInput(temp);
-  mclCopyArray(&temp);
+  validateInput(temp_mx);
+  mclCopyArray(&temp_mx);
 
-  validateInput(varargin);
-  mclCopyArray(&varargin);
+  validateInput(varargin_mx);
+  mclCopyArray(&varargin_mx);
 
   int nevals = 0;
 
@@ -272,7 +272,7 @@ static mxArray * MannealVisitParameters(int nargout_,
 							mlfFind(
 									  NULL,
 									  NULL,
-									  mclNe(mlfCtranspose(deltas), _mxarray20_)),
+									  mclNe(mlfCtranspose(deltas_mx), _mxarray20_)),
 							NULL,
 							NULL);
 			mclForNext(&viter__, &x);
@@ -282,17 +282,17 @@ static mxArray * MannealVisitParameters(int nargout_,
 		// deltas, bounds);
 		mlfAssign(&modelmatrix,
 					 makeTestModels(x,
-										 bestModel,
-										 valueScalingRange,
-										 deltas,
-										 bounds));
+										 bestModel_mx,
+										 valueScalingRange_mx,
+										 deltas_mx,
+										 bounds_mx));
 
 		// costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
 		mlfAssign(&costs,
-					 doFuncEvals(canUseMatrix,
+					 doFuncEvals(canUseMatrix_mx,
 									 modelmatrix,
-									 FUN,
-									 mlfIndexRef(varargin,
+									 FUN_mx,
+									 mlfIndexRef(varargin_mx,
 													 "{?}",
 													 mlfCreateColonIndex())
 									 ));
@@ -303,10 +303,10 @@ static mxArray * MannealVisitParameters(int nargout_,
 
 		// Sample from probability distribution
 		// s = sampleFromPdf(temp, costs);
-		mlfAssign(&s, sampleFromPdf(temp, costs));
+		mlfAssign(&s, sampleFromPdf(temp_mx, costs));
 
 		// bestModel(x, 1) = modelmatrix(x, s);
-		mclArrayAssign2(&bestModel,
+		mclArrayAssign2(&bestModel_mx,
 							 mclArrayRef2(modelmatrix,
 											  x,
 											  s),
@@ -325,7 +325,7 @@ static mxArray * MannealVisitParameters(int nargout_,
   mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
 
   // S.newModel = bestModel;
-  mxSetField(output, 0, "newModel", bestModel);
+  mxSetField(output, 0, "newModel", bestModel_mx);
 
   // S.cost = costs(s);
   mxSetField(output, 0, "cost",
@@ -335,13 +335,13 @@ static mxArray * MannealVisitParameters(int nargout_,
   mxDestroyArray(modelmatrix);
   mxDestroyArray(costs);
   mxDestroyArray(s);
-  mxDestroyArray(varargin);
-  mxDestroyArray(temp);
-  mxDestroyArray(FUN);
-  mxDestroyArray(canUseMatrix);
-  mxDestroyArray(bounds);
-  mxDestroyArray(deltas);
-  mxDestroyArray(valueScalingRange);
+  mxDestroyArray(varargin_mx);
+  mxDestroyArray(temp_mx);
+  mxDestroyArray(FUN_mx);
+  mxDestroyArray(canUseMatrix_mx);
+  mxDestroyArray(bounds_mx);
+  mxDestroyArray(deltas_mx);
+  mxDestroyArray(valueScalingRange_mx);
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
@@ -360,10 +360,10 @@ static mxArray * MannealVisitParameters(int nargout_,
  * function models = makeTestModels(x, bestModel, valueScalingRange, deltas, bounds)
  */
 static mxArray * makeTestModels(mxArray * x,
-										  mxArray * bestModel,
-										  mxArray * valueScalingRange,
-										  mxArray * deltas,
-										  mxArray * bounds)
+										  mxArray * bestModel_mx,
+										  mxArray * valueScalingRange_mx,
+										  mxArray * deltas_mx,
+										  mxArray * bounds_mx)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -375,10 +375,10 @@ static mxArray * makeTestModels(mxArray * x,
   mlfAssign(
 				&xv,
 				mclPlus(
-						  mclArrayRef1(bestModel, x),
+						  mclArrayRef1(bestModel_mx, x),
 						  mclMtimes(
-										valueScalingRange,
-										mclArrayRef1(deltas, x))));
+										valueScalingRange_mx,
+										mclArrayRef1(deltas_mx, x))));
 
   // xv = xv(find( (xv<=bounds(x,2)) & (xv>=bounds(x,1)) ));
   mlfAssign(
@@ -392,17 +392,17 @@ static mxArray * makeTestModels(mxArray * x,
 													 mclLe(
 															 xv,
 															 mclArrayRef2(
-																			  bounds, x, _mxarray22_)),
+																			  bounds_mx, x, _mxarray22_)),
 													 mclGe(
 															 xv,
 															 mclArrayRef2(
-																			  bounds, x, _mxarray21_))))));
+																			  bounds_mx, x, _mxarray21_))))));
 
   // models = bestModel*ones(1, length(xv));
   mlfAssign(
 				&models,
 				mclMtimes(
-							 bestModel,
+							 bestModel_mx,
 							 mlfOnes(
 										_mxarray21_, mlfScalar(mclLengthInt(xv)), NULL)));
 
@@ -428,10 +428,10 @@ static mxArray * makeTestModels(mxArray * x,
  * function costs = doFuncEvals(canUseMatrix, models, func, varargin)
  */
 
-static mxArray * doFuncEvals(mxArray * canUseMatrix,
+static mxArray * doFuncEvals(mxArray * canUseMatrix_mx,
 									  mxArray * models,
 									  mxArray * func,
-									  mxArray * varargin)
+									  mxArray * varargin_mx)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -439,19 +439,19 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
   mxArray * costs = mclGetUninitializedArray();
   mxArray * e = mclGetUninitializedArray();
   mxArray * NM = mclGetUninitializedArray();
-  mclCopyArray(&canUseMatrix);
+  mclCopyArray(&canUseMatrix_mx);
   mclCopyArray(&models);
   mclCopyArray(&func);
-  mclCopyArray(&varargin);
+  mclCopyArray(&varargin_mx);
 
-  if (mlfTobool(canUseMatrix))
+  if (mlfTobool(canUseMatrix_mx))
 	 {
 		// costs = feval(func, models, varargin{:});
 		mlfAssign(&costs,
 					 mlfFeval(mclValueVarargout(),
 								 func,
 								 models,
-								 mlfIndexRef(varargin, "{?}", mlfCreateColonIndex()),
+								 mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
 								 NULL));
 	 }
   else
@@ -484,7 +484,7 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
 																		 mlfCreateColonIndex(),
 																		 mlfScalar(v_)),
 														mlfIndexRef(
-																		varargin,
+																		varargin_mx,
 																		"{?}",
 																		mlfCreateColonIndex()),
 														NULL),
@@ -503,10 +503,10 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
 
   mxDestroyArray(NM);
   mxDestroyArray(e);
-  mxDestroyArray(varargin);
+  mxDestroyArray(varargin_mx);
   mxDestroyArray(func);
   mxDestroyArray(models);
-  mxDestroyArray(canUseMatrix);
+  mxDestroyArray(canUseMatrix_mx);
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
   return costs;
@@ -523,7 +523,7 @@ static mxArray * doFuncEvals(mxArray * canUseMatrix,
 /*
  * function s = sampleFromPdf(temp, costs)
  */
-static mxArray * sampleFromPdf(mxArray * temp, mxArray * costs)
+static mxArray * sampleFromPdf(mxArray * temp_mx, mxArray * costs)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -531,11 +531,11 @@ static mxArray * sampleFromPdf(mxArray * temp, mxArray * costs)
   mxArray * s = mclGetUninitializedArray();
   mxArray * cutoff = mclGetUninitializedArray();
   mxArray * dist = mclGetUninitializedArray();
-  mclCopyArray(&temp);
+  mclCopyArray(&temp_mx);
   mclCopyArray(&costs);
 
   // dist = makePDF(temp, costs);
-  mlfAssign(&dist, makePDF(temp, costs));
+  mlfAssign(&dist, makePDF(temp_mx, costs));
 
   // cutoff = rand;
   mlfAssign(&cutoff, mlfNRand(1, NULL));
@@ -553,7 +553,7 @@ static mxArray * sampleFromPdf(mxArray * temp, mxArray * costs)
   mxDestroyArray(dist);
   mxDestroyArray(cutoff);
   mxDestroyArray(costs);
-  mxDestroyArray(temp);
+  mxDestroyArray(temp_mx);
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
@@ -571,7 +571,7 @@ static mxArray * sampleFromPdf(mxArray * temp, mxArray * costs)
 /*
  * function pdf = makePDF(temp, costs)
  */
-static mxArray * makePDF(mxArray * temp, mxArray * costs)
+static mxArray * makePDF(mxArray * temp_mx, mxArray * costs)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -581,7 +581,7 @@ static mxArray * makePDF(mxArray * temp, mxArray * costs)
   mxArray * w = mclGetUninitializedArray();
   mxArray * good = mclGetUninitializedArray();
   mxArray * bad = mclGetUninitializedArray();
-  mclCopyArray(&temp);
+  mclCopyArray(&temp_mx);
   mclCopyArray(&costs);
 
   // Forms exponential probability distribution given a temperature and vector of
@@ -593,7 +593,7 @@ static mxArray * makePDF(mxArray * temp, mxArray * costs)
   // if isempty(bad)
   if (mlfTobool(mlfIsempty(bad)))
 	 {
-		mlfAssign(&pdf, eprob(temp, costs));
+		mlfAssign(&pdf, eprob(temp_mx, costs));
 	 }
   else
 	 {
@@ -603,7 +603,7 @@ static mxArray * makePDF(mxArray * temp, mxArray * costs)
 		// w = costs(good);
 		mlfAssign(&w, mclArrayRef1(costs, good));
 
-		mlfAssign(&pdf, eprob(temp, w));
+		mlfAssign(&pdf, eprob(temp_mx, w));
 
 		// pdf(good) = pdf;
 		mclArrayAssign1(&pdf, pdf, good);
@@ -622,7 +622,7 @@ static mxArray * makePDF(mxArray * temp, mxArray * costs)
   mxDestroyArray(w);
   mxDestroyArray(ans);
   mxDestroyArray(costs);
-  mxDestroyArray(temp);
+  mxDestroyArray(temp_mx);
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
@@ -640,7 +640,7 @@ static mxArray * makePDF(mxArray * temp, mxArray * costs)
 /*
  * function pdf = eprob(temp, costs)
  */
-static mxArray * eprob(mxArray * temp, mxArray * costs)
+static mxArray * eprob(mxArray * temp_mx, mxArray * costs)
 {
   mexLocalFunctionTable save_local_function_table_ =
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
@@ -649,7 +649,7 @@ static mxArray * eprob(mxArray * temp, mxArray * costs)
   mxArray * scale = mclGetUninitializedArray();
   mxArray * mpdf = mclGetUninitializedArray();
   mxArray * toobig = mclGetUninitializedArray();
-  mclCopyArray(&temp);
+  mclCopyArray(&temp_mx);
   mclCopyArray(&costs);
 
   // Scales cost vector and calculates exponential probability distribution.  The
@@ -660,7 +660,7 @@ static mxArray * eprob(mxArray * temp, mxArray * costs)
   mlfAssign(&toobig, _mxarray26_);
 
   // pdf = costs/temp;
-  mlfAssign(&pdf, mclMrdivide(costs, temp));
+  mlfAssign(&pdf, mclMrdivide(costs, temp_mx));
 
   // mpdf = max(pdf);
   mlfAssign(&mpdf, mlfMax(NULL, pdf, NULL, NULL));
@@ -698,7 +698,7 @@ static mxArray * eprob(mxArray * temp, mxArray * costs)
   mxDestroyArray(mpdf);
   mxDestroyArray(scale);
   mxDestroyArray(costs);
-  mxDestroyArray(temp);
+  mxDestroyArray(temp_mx);
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
