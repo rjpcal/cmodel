@@ -972,109 +972,72 @@ DOTRACE("MdoSimplex");
 		  // max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
         {
 			 DOTRACE("check if done");
-#if 0
-            mxArray * max_mx = mclInitialize(
-															mlfMax(
-																	 NULL,
-																	 mclVe(
-																			 mlfMax(
-																					  NULL,
-																					  mclVe(
-																							  mlfAbs(
-																										mclMinus(
-																													mclVe(
-																															mclArrayRef2(theSimplex,
-																																			 mlfCreateColonIndex(),
-																																			 two2np1)),
-																													mclVe(
-																															mclArrayRef2(theSimplex,
-																																			 mlfCreateColonIndex(),
-																																			 onesn))))),
-																					  NULL,
-																					  NULL)),
-																	 NULL,
-																	 NULL));
-#endif
-				
 
 				Mtx theSimplex_ref(theSimplex, Mtx::BORROW);
-				double max_diff_ = 0.0;
+				double max_xdiff = 0.0;
 				for (int col = 1; col < theSimplex_ref.ncols(); ++col)
 				  {
 					 for (int row = 0; row < theSimplex_ref.mrows(); ++row)
 						{
 						  double current = fabs(theSimplex_ref.at(row,col) - theSimplex_ref.at(row,0));
-						  if (current > max_diff_) max_diff_ = current;
+						  if (current > max_xdiff) max_xdiff = current;
 						}
 				  }
 
 				double tolx = mxGetScalar(tolx_mx);
-//  				double max_diff = mxGetScalar(max_mx);
 
-//  				mexPrintf("max_diff_ %f, diff_diff %f\n", max_diff_, (max_diff-max_diff_));
+				bool within_tolx = (max_xdiff <= tolx);
 
-				bool within_tolx = (max_diff_ <= tolx);
 
-#if 0
-            mxArray * a_ = mclInitialize(
-                             mclLe(
-                               mclVe(
-                                 mlfMax(
-                                   NULL,
-                                   mclVe(
-                                     mlfMax(
-                                       NULL,
-                                       mclVe(
-                                         mlfAbs(
-                                           mclMinus(
-                                             mclVe(
-                                               mclArrayRef2(theSimplex,
-																				mlfCreateColonIndex(),
-																				two2np1)),
-                                             mclVe(
-                                               mclArrayRef2(theSimplex,
-																				mlfCreateColonIndex(),
-																				onesn))))),
-                                       NULL,
-                                       NULL)),
-                                   NULL,
-                                   NULL)),
-                               tolx_mx));
-#endif
+				mxArray* max_fdiff_mx = mclInitialize(
+															  mlfMax(
+																		NULL,
+																		mclVe(
+																				mlfAbs(
+																						 mclMinus(
+																									 mclVe(
+																											 mclIntArrayRef1(funcVals, 1)),
+																									 mclVe(
+																											 mclArrayRef1(funcVals, two2np1))))),
+																		NULL,
+																		NULL));
 
-//              if (mlfTobool(a_)
+				double max_fdiff_mat = mxGetScalar(max_fdiff_mx);
+				mxDestroyArray(max_fdiff_mx);
+
+				Mtx funcVals_ref(funcVals, Mtx::BORROW);
+				double max_fdiff = 0.0;
+				for (int elem = 1; elem < funcVals_ref.nelems(); ++elem)
+				  {
+					 double current = fabs(funcVals_ref.at(elem) - funcVals_ref.at(0));
+					 if (current > max_fdiff) max_fdiff = current;
+				  }
+
+				mexPrintf("max_fdiff %f, diff_diff %f\n", max_fdiff, (max_fdiff_mat - max_fdiff));
+
             if (within_tolx
                 && mlfTobool(
-//                         mclAnd(
-//  										a_,
-                       mclLe(
-                         mclVe(
-                           mlfMax(
-                             NULL,
-                             mclVe(
-                               mlfAbs(
-                                 mclMinus(
-                                   mclVe(
-                                     mclIntArrayRef1(funcVals, 1)),
-                                   mclVe(
-                                     mclArrayRef1(funcVals, two2np1))))),
-                             NULL,
-                             NULL)),
-                         mclVa(tolf_mx, "tolf"))))
-//  					 )
-
+									  mclLe(
+											  mclVe(
+													  mlfMax(
+																NULL,
+																mclVe(
+																		mlfAbs(
+																				 mclMinus(
+																							 mclVe(
+																									 mclIntArrayRef1(funcVals, 1)),
+																							 mclVe(
+																									 mclArrayRef1(funcVals, two2np1))))),
+																NULL,
+																NULL)),
+											  mclVa(tolf_mx, "tolf"))))
 				  {
-//                  mxDestroyArray(a_);
-//                  mxDestroyArray(max_mx);
-
-                // break
                 break;
-            } else {
-//                  mxDestroyArray(a_);
-//                  mxDestroyArray(max_mx);
-            }
-
-        // end
+				  }
+				else
+				  {
+					 // nothing
+				  }
         }
 
         // how = '';
