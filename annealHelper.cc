@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 15:22:47 2002
+// written: Mon Feb 18 15:41:13 2002
 // $Id$
 //
 //
@@ -365,11 +365,23 @@ namespace
 
 struct Astate
 {
-  Astate(mxArray* arr) :
-    tempRepeats(Mx::getField(arr, "x"), Mtx::COPY)
+  Astate(mxArray* arr, int numruns) :
+    numTemps(int(mxGetScalar(Mx::getField(arr, "numTemps")))),
+    tempRepeats(Mx::getField(arr, "x"), Mtx::COPY),
+    tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
+    numModelParams(int(mxGetScalar(Mx::getField(arr, "numModelParams")))),
+    numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
+    bestCost(numruns, 1),
+    modelHist(numModelParams, int(tempRepeats.sum()))
   {}
 
+  const int numTemps;
   const Mtx tempRepeats;
+  const Mtx tempScales;
+  const int numModelParams;
+  const int numStartingPoints;
+  Mtx bestCost;
+  Mtx modelHist;
 };
 
 //---------------------------------------------------------------------
@@ -387,8 +399,6 @@ private:
   const bool itsTalking;
   int itsNvisits;
   double itsCriticalTemp;
-  const int itsNumTemps;
-//   Mtx itsTempRepeats;
   Mtx itsNumFunEvals;
   Mtx itsEnergy;
   Mtx itsMinUsedParams;
@@ -418,8 +428,6 @@ public:
     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
-    itsNumTemps(int(mxGetScalar(Mx::getField(itsAstate_mx, "numTemps")))),
-//     itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
     itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
     itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
     itsMinUsedParams(0,0),
@@ -456,13 +464,8 @@ public:
 
   Mtx makeRandomModels()
   {
-    int numModelParams = int(mxGetScalar(Mx::getField(itsAstate_mx,
-                                                      "numModelParams")));
-
-    int numStartingPoints = int(mxGetScalar(Mx::getField(itsAstate_mx,
-                                                         "numStartingPoints")));
-
-    Mtx models = matlabRand(numModelParams, numStartingPoints);
+    Mtx models = matlabRand(itsAstate.numModelParams,
+                            itsAstate.numStartingPoints);
 
     models -= 0.5;
     models *= 2;
@@ -484,11 +487,9 @@ public:
 
     const Mtx startingCosts = doFuncEvals(startingModels);
 
-    const Mtx tempScales(Mx::getField(itsAstate_mx, "tempScales"), Mtx::BORROW);
-
     itsCriticalTemp =
       log10(startingCosts.sum() / startingCosts.nelems())
-      - tempScales.at(itsRunNum);
+      - itsAstate.tempScales.at(itsRunNum);
 
     int startingPos = 0;
     const double startingCost = startingCosts.min(&startingPos);
@@ -550,13 +551,6 @@ public:
       }
   }
 
-  void updateModelHistory(const Mtx& bestModel)
-  {
-    Mtx modelHist(Mx::getField(itsAstate_mx, "model"), Mtx::REFER);
-
-    modelHist.column(itsNvisits-1) = bestModel;
-  }
-
   void updateBests()
   {
     // FIXME ought to use a smarter algorithm to keep track of the best cost
@@ -566,14 +560,10 @@ public:
     int best_pos = 0;
     const double best_energy = currentEnergy.min(&best_pos);
 
-    Mtx bestCost(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
+    itsAstate.bestCost.at(itsRunNum) = best_energy;
+    itsMhat.column(itsRunNum) = itsAstate.modelHist.column(best_pos);
 
-    const Mtx modelHist(Mx::getField(itsAstate_mx, "model"), Mtx::BORROW);
-
-    bestCost.at(itsRunNum) = best_energy;
-    itsMhat.column(itsRunNum) = modelHist.column(best_pos);
-
-    displayParams(itsMhat.column(itsRunNum), bestCost.at(itsRunNum));
+    displayParams(itsMhat.column(itsRunNum), itsAstate.bestCost.at(itsRunNum));
   }
 
   void runSimplex()
@@ -599,11 +589,9 @@ public:
 
     double Ostar = opt.bestFval();
 
-    Mtx bestCosts(Mx::getField(itsAstate_mx, "bestCost"), Mtx::REFER);
-
     Mtx mstar = opt.bestParams();
 
-    if (Ostar < bestCosts.at(itsRunNum))
+    if (Ostar < itsAstate.bestCost.at(itsRunNum))
       {
         displayParams(mstar, Ostar);
 
@@ -622,7 +610,7 @@ public:
         if (inBounds)
           {
             itsMhat.column(itsRunNum) = mstar;
-            bestCosts.at(itsRunNum) = Ostar;
+            itsAstate.bestCost.at(itsRunNum) = Ostar;
             if (itsTalking)
               mexPrintf("\nSimplex method lowered cost "
                         "and remained within constraints.\n\n");
@@ -710,11 +698,12 @@ DOTRACE("AnnealingRun::go");
 
   createStartingModel();
 
-  for (int temps_i = 0; temps_i < itsNumTemps; ++temps_i)
+  for (int temps_i = 0; temps_i < itsAstate.numTemps; ++temps_i)
     {
       // so the temperatures range from 10^(crit_temp+1) ... 10^(crit_temp-1)
       const double temp =
-        pow(10.0, itsCriticalTemp + 1.0 - 2.0*double(temps_i)/(itsNumTemps-1));
+        pow(10.0, (itsCriticalTemp + 1.0
+                   - 2.0*double(temps_i)/(itsAstate.numTemps-1)));
 
       const int temp_repeat = int(itsAstate.tempRepeats.at(temps_i));
 
@@ -744,7 +733,7 @@ DOTRACE("AnnealingRun::go");
 
           updateUsedParams(bestModel);
 
-          updateModelHistory(bestModel);
+          itsAstate.modelHist.column(itsNvisits-1) = bestModel;
         }
     }
 
@@ -779,7 +768,7 @@ public:
     // So we own a copy of astate_mx
     astate_mx = mxDuplicateArray(astate_mx);
 
-    Astate astate(astate_mx);
+    Astate astate(astate_mx, numruns);
 
     for (int i = 0; i < numruns; ++i)
       {
@@ -790,7 +779,33 @@ public:
         astate_mx = ar.go();
       }
 
-    return astate_mx;
+    const char* fieldnames[] =
+      {
+        "bestCost",
+        "mhat",
+        "model",
+        "energy",
+        "numFunEvals"
+      };
+
+    mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
+
+    mxSetField(output, 0, "bestCost", astate.bestCost.makeMxArray());
+
+    mxSetField(output, 0, fieldnames[1],
+               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[1])));
+
+    mxSetField(output, 0, "model", astate.modelHist.makeMxArray());
+
+    mxSetField(output, 0, fieldnames[3],
+               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[3])));
+
+    mxSetField(output, 0, fieldnames[4],
+               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[4])));
+
+    mxDestroyArray(astate_mx);
+
+    return output;
   }
 };
 
