@@ -50,14 +50,19 @@ mxArray* MannealVisitParameters(int nargout_,
 										  mxArray* temp,
 										  mxArray* varargin);
 
-mxArray* makeTestModels(mxArray* x,
-								mxArray* bestModel,
-								mxArray* valueScalingRange,
-								mxArray* deltas,
-								mxArray* bounds);
+//  mxArray* makeTestModels(mxArray* x,
+//  								mxArray* bestModel,
+//  								mxArray* valueScalingRange,
+//  								mxArray* deltas,
+//  								mxArray* bounds);
+Mtx makeTestModels(int x_zerobased,
+						 const Mtx& bestModel,
+						 const Mtx& valueScalingRange,
+						 const Mtx& deltas,
+						 const Mtx& bounds);
 
 mxArray* doFuncEvals(mxArray* canUseMatrix,
-							mxArray* models,
+  							mxArray* models,
 							mxArray* func,
 							mxArray* varargin);
 
@@ -253,7 +258,7 @@ DOTRACE("MannealVisitParameters");
 	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* costs_mx = mclGetUninitializedArray();
-  mxArray* modelmatrix_mx = mclGetUninitializedArray();
+//    mxArray* modelmatrix_mx = mclGetUninitializedArray();
   mxArray* x_mx = mclGetUninitializedArray();
 
   validateInput(bestModel_mx);
@@ -303,12 +308,23 @@ DOTRACE("MannealVisitParameters");
 
 		// modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
 		// deltas, bounds);
-		mlfAssign(&modelmatrix_mx,
-					 makeTestModels(x_mx,
-										 bestModel_mx,
-										 valueScalingRange_mx,
-										 deltas_mx,
-										 bounds_mx));
+//  		mlfAssign(&modelmatrix_mx,
+//  					 makeTestModels(x_mx,
+//  										 bestModel_mx,
+//  										 valueScalingRange_mx,
+//  										 deltas_mx,
+//  										 bounds_mx));
+		const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
+		const Mtx deltas(deltas_mx, Mtx::BORROW);
+		const Mtx bounds(bounds_mx, Mtx::BORROW);
+		Mtx modelmatrix = makeTestModels(x_zerobased,
+													bestModel,
+													valueScalingRange,
+													deltas,
+													bounds);
+
+		mxArray* modelmatrix_mx = mclGetUninitializedArray();
+		mlfAssign(&modelmatrix_mx, modelmatrix.makeMxArray());
 
 		// costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
 		mlfAssign(&costs_mx,
@@ -319,6 +335,7 @@ DOTRACE("MannealVisitParameters");
 													 "{?}",
 													 mlfCreateColonIndex())
 									 ));
+		mxDestroyArray(modelmatrix_mx);
 
 		// S.nevals = S.nevals + length(costs);
 		nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
@@ -329,7 +346,7 @@ DOTRACE("MannealVisitParameters");
 		s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
 
 		// bestModel(x, 1) = modelmatrix(x, s);
-		Mtx modelmatrix(modelmatrix_mx, Mtx::REFER);
+//  		Mtx modelmatrix(modelmatrix_mx, Mtx::REFER);
 
 		bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
 	 }
@@ -351,7 +368,7 @@ DOTRACE("MannealVisitParameters");
 				 mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
 
   mxDestroyArray(x_mx);
-  mxDestroyArray(modelmatrix_mx);
+//    mxDestroyArray(modelmatrix_mx);
   mxDestroyArray(costs_mx);
   mxDestroyArray(varargin_mx);
   mxDestroyArray(temp_mx);
@@ -377,63 +394,57 @@ DOTRACE("MannealVisitParameters");
 /*
  * function models = makeTestModels(x, bestModel, valueScalingRange, deltas, bounds)
  */
-mxArray* makeTestModels(mxArray* x_mx,
-								mxArray* bestModel_mx,
-								mxArray* valueScalingRange_mx,
-								mxArray* deltas_mx,
-								mxArray* bounds_mx)
+Mtx makeTestModels(int x_zerobased,
+						 const Mtx& bestModel,
+						 const Mtx& valueScalingRange,
+						 const Mtx& deltas,
+						 const Mtx& bounds)
 {
 DOTRACE("makeTestModels");
 
-  mexLocalFunctionTable save_local_function_table_ =
-	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+//    const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
+//    const Mtx deltas(deltas_mx, Mtx::BORROW);
+//    const Mtx bestModel(bestModel_mx, Mtx::BORROW);
+//    const Mtx bounds(bounds_mx, Mtx::BORROW);
 
-  mxArray* models = mclGetUninitializedArray();
-  mxArray* xv = mclGetUninitializedArray();
+//    const int x_zerobased = int(mxGetPr(x_mx)[0]) - 1;
 
-  // xv = bestModel(x) + valueScalingRange*deltas(x);
-  mlfAssign(
-				&xv,
-				mclPlus(
-						  mclArrayRef1(bestModel_mx, x_mx),
-						  mclMtimes(
-										valueScalingRange_mx,
-										mclArrayRef1(deltas_mx, x_mx))));
+  const double current_x_val = bestModel.at(x_zerobased);
 
-  // xv = xv(find( (xv<=bounds(x,2)) & (xv>=bounds(x,1)) ));
-  mlfAssign(
-				&xv,
-				mclArrayRef1(
-								 xv,
-								 mlfFind(
-											NULL,
-											NULL,
-											mclAnd(
-													 mclLe(
-															 xv,
-															 mclArrayRef2(
-																			  bounds_mx, x_mx, _mxarray22_)),
-													 mclGe(
-															 xv,
-															 mclArrayRef2(
-																			  bounds_mx, x_mx, _mxarray21_))))));
+  const double delta_x = deltas.at(x_zerobased);
 
-  // models = bestModel*ones(1, length(xv));
-  mlfAssign(
-				&models,
-				mclMtimes(
-							 bestModel_mx,
-							 mlfOnes(
-										_mxarray21_, mlfScalar(mclLengthInt(xv)), NULL)));
+  const double lowerbound_x = bounds.at(x_zerobased,0);
+  const double upperbound_x = bounds.at(x_zerobased,1);
 
-  // models(x,:) = xv;
-  mclArrayAssign2(&models, xv, x_mx, mlfCreateColonIndex());
+  int num_testmodels = 0;
+  {for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
+	 {
+		double value = current_x_val + (*iter) * delta_x;
+		if ( (value > lowerbound_x) && (value < upperbound_x) )
+		  ++num_testmodels;
+	 }
+  }
 
-  mclValidateOutput(models, 1, 1, "models", "annealVisitParameters/makeTestModels");
+  Mtx newModels(bestModel.mrows(), num_testmodels);
 
-  mxDestroyArray(xv);
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
-  return models;
+  const Slice bestModelCol = bestModel.column(0);
+
+  for (int i = 0; i < num_testmodels; ++i)
+	 {
+		newModels.column(i) = bestModelCol;
+	 }
+
+  {
+	 int col = 0;
+	 for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
+	 {
+		double value = current_x_val + (*iter) * delta_x;
+		if ( (value > lowerbound_x) && (value < upperbound_x) )
+		  newModels.at(x_zerobased, col++) = value;
+	 }
+  }
+
+  return newModels.makeMxArray();
 }
 
 /*
@@ -449,20 +460,20 @@ DOTRACE("makeTestModels");
  */
 
 mxArray* doFuncEvals(mxArray* canUseMatrix_mx,
-							mxArray* models,
+							mxArray* models_mx,
 							mxArray* func,
 							mxArray* varargin_mx)
 {
 DOTRACE("doFuncEvals");
 
-  mexLocalFunctionTable save_local_function_table_ =
-	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+//    mexLocalFunctionTable save_local_function_table_ =
+//  	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* costs_mx = mclGetUninitializedArray();
   mxArray* e = mclGetUninitializedArray();
   mxArray* NM = mclGetUninitializedArray();
   mclCopyArray(&canUseMatrix_mx);
-  mclCopyArray(&models);
+  mclCopyArray(&models_mx);
   mclCopyArray(&func);
   mclCopyArray(&varargin_mx);
 
@@ -472,14 +483,14 @@ DOTRACE("doFuncEvals");
 		mlfAssign(&costs_mx,
 					 mlfFeval(mclValueVarargout(),
 								 func,
-								 models,
+								 models_mx,
 								 mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
 								 NULL));
 	 }
   else
 	 {
 		// NM = size(models, 2);
-		mlfAssign(&NM, mlfSize(mclValueVarargout(), models, _mxarray22_));
+		mlfAssign(&NM, mlfSize(mclValueVarargout(), models_mx, _mxarray22_));
 
 		// costs = zeros(NM, 1);
 		mlfAssign(&costs_mx, mlfZeros(NM, _mxarray21_, NULL));
@@ -502,7 +513,7 @@ DOTRACE("doFuncEvals");
 														mclValueVarargout(),
 														func,
 														mclArrayRef2(
-																		 models,
+																		 models_mx,
 																		 mlfCreateColonIndex(),
 																		 mlfScalar(v_)),
 														mlfIndexRef(
@@ -527,9 +538,9 @@ DOTRACE("doFuncEvals");
   mxDestroyArray(e);
   mxDestroyArray(varargin_mx);
   mxDestroyArray(func);
-  mxDestroyArray(models);
+  mxDestroyArray(models_mx);
   mxDestroyArray(canUseMatrix_mx);
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+//    mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
   return costs_mx;
 }
