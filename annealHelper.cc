@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 13:22:12 2002
+// written: Mon Feb 18 14:26:58 2002
 // $Id$
 //
 //
@@ -66,6 +66,16 @@ namespace
   {
     mxArray* arr = mlfNRand(1, NULL);
     double result = mxGetScalar(arr);
+    mxDestroyArray(arr);
+    return result;
+  }
+
+  Mtx matlabRand(int mrows, int ncols)
+  {
+    mxArray* arr = mlfRand(mxCreateScalarDouble(mrows),
+                           mxCreateScalarDouble(ncols), NULL);
+
+    Mtx result(arr, Mtx::COPY);
     mxDestroyArray(arr);
     return result;
   }
@@ -369,7 +379,6 @@ public:
     itsRunNum(int(mxGetScalar(Mx::getField(itsAstate_mx, "k")))-1),
     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
-//     itsCriticalTemp(mxGetScalar(Mx::getField(itsAstate_mx, "crit_temp"))),
     itsCriticalTemp(std::numeric_limits<double>::max()),
     itsNumTemps(int(mxGetScalar(Mx::getField(itsAstate_mx, "numTemps")))),
     itsTempRepeats(Mx::getField(itsAstate_mx, "x"), Mtx::BORROW),
@@ -403,12 +412,35 @@ public:
                              itsNvararg, itsPvararg);
   }
 
+  Mtx makeRandomModels()
+  {
+    int numModelParams = int(mxGetScalar(Mx::getField(itsAstate_mx,
+                                                      "numModelParams")));
+
+    int numStartingPoints = int(mxGetScalar(Mx::getField(itsAstate_mx,
+                                                         "numStartingPoints")));
+
+    Mtx models = matlabRand(numModelParams, numStartingPoints);
+
+    models -= 0.5;
+    models *= 2;
+
+    Mtx startValues(Mx::getField(itsAstate_mx, "startValues"), Mtx::COPY);
+
+    for (int r = 0; r < models.mrows(); ++r)
+      {
+        models.row(r) *= itsDeltas.at(r);
+        models.row(r) += startValues.at(r);
+      }
+
+    return models;
+  }
+
   void createStartingModel()
   {
     DOTRACE("createStartingModel");
 
-    const Mtx startingModels(Mx::getField(itsAstate_mx, "startingModels"),
-                             Mtx::BORROW);
+    const Mtx startingModels = makeRandomModels();
 
     const Mtx startingCosts = doFuncEvals(startingModels);
 
