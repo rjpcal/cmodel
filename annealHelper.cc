@@ -411,13 +411,33 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
 class AnnealingRun
 {
 public:
-  mxArray* go(mxArray* old_astate_mx,
-	      const Mtx& valueScalingRange,
-	      const Mtx& bounds,
-	      const bool canUseMatrix,
-	      const fstring& func_name,
-	      int nvararg,
-	      mxArray** pvararg);
+  AnnealingRun(mxArray* old_astate_mx_,
+               const Mtx& valueScalingRange_,
+               const Mtx& bounds_,
+               const bool canUseMatrix_,
+               const fstring& func_name_,
+               int nvararg_,
+               mxArray** pvararg_)
+    :
+    old_astate_mx(old_astate_mx_),
+    valueScalingRange(valueScalingRange_),
+    bounds(bounds_),
+    canUseMatrix(canUseMatrix_),
+    func_name(func_name_),
+    nvararg(nvararg_),
+    pvararg(pvararg_)
+  {}
+
+  mxArray* go();
+
+private:
+  mxArray* old_astate_mx;
+  Mtx valueScalingRange;
+  Mtx bounds;
+  const bool canUseMatrix;
+  fstring func_name;
+  int nvararg;
+  mxArray** pvararg;
 };
 
 //---------------------------------------------------------------------
@@ -426,13 +446,7 @@ public:
 //
 //---------------------------------------------------------------------
 
-mxArray* AnnealingRun::go(mxArray* old_astate_mx,
-			  const Mtx& valueScalingRange,
-			  const Mtx& bounds,
-			  const bool canUseMatrix,
-			  const fstring& func_name,
-			  int nvararg,
-			  mxArray** pvararg)
+mxArray* AnnealingRun::go()
 {
 DOTRACE("AnnealingRun::go");
 
@@ -583,9 +597,7 @@ DOTRACE("mlxAnnealVisitParameters");
 
   try
     {
-      AnnealingRun ar;
-
-      plhs[0] = ar.go
+      AnnealingRun ar
         (prhs[0], // astate
          Mtx(prhs[1], Mtx::BORROW), // valueScalingRange
          Mtx(prhs[2], Mtx::BORROW), // bounds
@@ -593,6 +605,8 @@ DOTRACE("mlxAnnealVisitParameters");
          MxWrapper::extractString(prhs[4]), // func_name
          nvararg,
          pvararg);
+
+      plhs[0] = ar.go();
     }
   catch (Util::Error& err)
     {
