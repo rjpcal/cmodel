@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 06:30:38 2001
+// written: Wed Apr 18 06:35:09 2001
 // $Id$
 //
 //
@@ -34,16 +34,6 @@
 
 #define LOCAL_PROF
 #include "trace.h"
-
-namespace {
-  template <class T>
-  inline void localswap(T& t1, T& t2)
-  {
-	 T t1_(t1);
-	 t1 = t2;
-	 t2 = t1_;
-  }
-}
 
 class FuncEvaluator {
   int itsEvalCount;
@@ -105,39 +95,6 @@ public:
 	 return evaluate(x.makeMxArray());
   }
 };
-
-// ? max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
-bool withinTolf(const Mtx& funcVals, const double tolf)
-{
-  MtxConstIter fvals = funcVals.rowIter(0);
-  const double f0 = *fvals;
-  ++fvals;
-
-  for (; fvals.hasMore(); ++fvals)
-	 {
-		if (fabs(*fvals - f0) > tolf)
-		  return false;
-	 }
-
-  return true;
-}
-
-// ? max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx
-bool withinTolx(const Mtx& simplex, const double tolx)
-{
-  const MtxConstIter col0_ = simplex.columnIter(0);
-
-  for (int col = 1; col < simplex.ncols(); ++col)
-	 {
-		MtxConstIter col0(col0_);
-		MtxConstIter coln = simplex.columnIter(col);
-
-		for (; col0.hasMore(); ++col0, ++coln)
-		  if ( fabs(*col0 - *coln) > tolx ) return false;
-	 }
-
-  return true;
-}
 
 int extractMaxIters(const mxArray* arr, int numModelParams)
 {
@@ -463,6 +420,37 @@ private:
 	 itsSimplex.swapColumns(largest2, itsNparams-1);
   }
 
+  bool withinTolf()
+  {
+	 MtxConstIter fvals = itsFvals.rowIter(0);
+	 const double f0 = *fvals;
+	 ++fvals;
+
+	 for (; fvals.hasMore(); ++fvals)
+		{
+		  if (fabs(*fvals - f0) > itsTolf)
+			 return false;
+		}
+
+	 return true;
+  }
+
+  bool withinTolx()
+  {
+	 const MtxConstIter col0_ = itsSimplex.columnIter(0);
+
+	 for (int col = 1; col < itsSimplex.ncols(); ++col)
+		{
+		  MtxConstIter col0(col0_);
+		  MtxConstIter coln = itsSimplex.columnIter(col);
+
+		  for (; col0.hasMore(); ++col0, ++coln)
+			 if ( fabs(*col0 - *coln) > itsTolx ) return false;
+		}
+
+	 return true;
+  }
+
   bool tooManyFevals()
   {
 	 if (funcCount() < itsMaxFevals)
@@ -633,8 +621,7 @@ int SimplexOptimizer::optimize()
   // the max function evaluations are exceeded. (Cannot use OR
   // instead of AND.)
 
-  while (!withinTolf(itsFvals, itsTolf) || !
-			!withinTolx(itsSimplex, itsTolx))
+  while (!withinTolf() || !withinTolx())
 	 {
 		if (tooManyIters()) return 0;
 		if (tooManyFevals()) return 0;
