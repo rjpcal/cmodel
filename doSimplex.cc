@@ -148,11 +148,9 @@ public:
 };
 
 // ? max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
-bool withinTolf(mxArray* funcVals_mx, const double tolf)
+bool withinTolf(const Mtx& funcVals, const double tolf)
 {
-  const Mtx funcVals_ref(funcVals_mx, Mtx::BORROW);
-
-  MtxConstIter fvals = funcVals_ref.rowIter(0);
+  MtxConstIter fvals = funcVals.rowIter(0);
   const double f0 = *fvals;
   ++fvals;
 
@@ -745,14 +743,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   mxArray* j_mx = mclGetUninitializedArray();
   mxArray* zero_term_delta_mx = mclGetUninitializedArray();
   mxArray* usual_delta_mx = mclGetUninitializedArray();
-  mxArray* funcVals_mx = mclGetUninitializedArray();
   mxArray* two2np1_mx = mclGetUninitializedArray();
   mxArray* header_mx = mclGetUninitializedArray();
   mxArray* ans_mx = mclGetUninitializedArray();
 
   DualRepMtx xcc_dr;
   DualRepMtx xbar_dr;
-  DualRepMtx theSimplex_dr;
 
   mclCopyArray(&funfcn_mx);
   Mtx xx(x_in);
@@ -801,34 +797,27 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 	 }
 
     // theSimplex = zeros(numModelParams,numModelParams+1);
-    theSimplex_dr.assignArray(
-      mlfZeros(
-        numModelParams_mx,
-		  mxCreateScalarDouble(numModelParams+1),
-        NULL));
+	 DualRepMtx theSimplex_dr(Mtx(numModelParams,numModelParams+1));
 
-    // funcVals_mx = zeros(1,numModelParams+1);
-    mlfAssign(
-      &funcVals_mx,
-      mlfZeros(
-        _mxarray11_,
-		  mxCreateScalarDouble(numModelParams+1),
-        NULL));
+    // funcVals = zeros(1,numModelParams+1);
+	 DualRepMtx funcVals_dr(Mtx(1,numModelParams+1));
 
     // theSimplex(:,1) = initialParams;    % Place input guess in the simplex! (credit L.Pfeffer at Stanford)
 	 theSimplex_dr.ncMtx().column(0) = initialParams_dr.asMtx().columns(0,1);
 
-    // funcVals_mx(:,1) = feval(funfcn,initialParams,varargin{:}); 
-    mclArrayAssign2(
-      &funcVals_mx,
-      mlfFeval(
-        mclValueVarargout(),
-        funfcn_mx,
-        initialParams_dr.asArray(),
-		  mlfIndexRef(mclVsa(varargin, "varargin"), "{?}", mlfCreateColonIndex()),
-        NULL),
-      mlfCreateColonIndex(),
-      _mxarray11_);
+    // funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
+	 {
+		mxArray* val =
+		  mlfFeval(
+					  mclValueVarargout(),
+					  funfcn_mx,
+					  initialParams_dr.asArray(),
+					  mlfIndexRef(mclVsa(varargin, "varargin"), "{?}", mlfCreateColonIndex()),
+					  NULL);
+
+		funcVals_dr.ncMtx().at(0,0) = mxGetScalar(val);
+		mxDestroyArray(val);
+	 }
 
     // 
     // % Following improvement suggested by L.Pfeffer at Stanford
@@ -885,8 +874,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 																	"{?}",
 																	mlfCreateColonIndex())),
 											NULL));
-				  // funcVals_mx(1,j_mx+1) = f;
-				  mclIntArrayAssign2(&funcVals_mx, mclVsv(f_mx, "f_mx"), 1, v_ + 1);
+				  // funcVals(1,j_mx+1) = f;
+				  funcVals_dr.ncMtx().at(0,v_) = mxGetScalar(f_mx);
 				  if (v_ == e_) {
 					 break;
 				  }
@@ -898,8 +887,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
     // 
     // % sort so theSimplex(1,:) has the lowest function value 
-    // [funcVals_mx,j_mx] = sort(funcVals_mx);
-    mlfAssign(&funcVals_mx, mlfSort(&j_mx, mclVv(funcVals_mx, "funcVals_mx"), NULL));
+    // [funcVals,j_mx] = sort(funcVals);
+    funcVals_dr.assignArray(mlfSort(&j_mx, funcVals_dr.asArray(), NULL));
 
     // theSimplex = theSimplex(:,j_mx);
     theSimplex_dr.assignArray(
@@ -924,7 +913,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
         // disp(header_mx)
         mlfDisp(mclVv(header_mx, "header_mx"));
 
-        // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals_mx(1)), how]) 
+        // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals(1)), how]) 
         mlfDisp(
           mlfHorzcat(
             mclVe(
@@ -933,7 +922,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                 _mxarray38_,
                 mxCreateScalarDouble(itercount),
                 mxCreateScalarDouble(func_evals),
-                mclVe(mclIntArrayRef1(mclVsv(funcVals_mx, "funcVals_mx"), 1)),
+                mclVe(mclIntArrayRef1(funcVals_dr.asArray(), 1)),
                 NULL)),
             mclVv(how_mx, "how_mx"),
             NULL));
@@ -961,8 +950,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
         // theSimplex
         mclPrintArray(theSimplex_dr.asArray(), "theSimplex");
 
-        // funcVals_mx
-        mclPrintArray(mclVsv(funcVals_mx, "funcVals_mx"), "funcVals_mx");
+        // funcVals
+        mclPrintArray(funcVals_dr.asArray(), "funcVals");
 
         // func_evals
         mclPrintArray(mxCreateScalarDouble(func_evals), "func_evals");
@@ -994,7 +983,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		}
 
 		{DOTRACE("check if done");
-		if (withinTolf(funcVals_mx, tolf) && withinTolx(theSimplex_dr.asMtx(), tolx))
+		if (withinTolf(funcVals_dr.asMtx(), tolf) &&
+			 withinTolx(theSimplex_dr.asMtx(), tolx))
 		  break; // out of main loop
 		}
 
@@ -1041,15 +1031,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		}
 
       // 
-      // if fxr_mx < funcVals_mx(:,1)
-      if (mclLtBool(
-            mclVv(fxr_mx, "fxr_mx"),
-            mclVe(
-              mclArrayRef2(
-                mclVsv(funcVals_mx, "funcVals_mx"),
-                mlfCreateColonIndex(),
-                _mxarray11_)))) {
-			 DOTRACE("if fxr_mx < funcVals_mx(:,1)");
+      // if fxr_mx < funcVals(:,1)
+      if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,0))
+		  {
+			 DOTRACE("if fxr_mx < funcVals(:,1)");
 
           // % Calculate the expansion point
           // xe_mx = (1 + rho_mx*chi_mx)*xbar - rho_mx*chi_mx*theSimplex(:,end);
@@ -1080,86 +1065,56 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 				// theSimplex(:,end) = xe_mx;
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xe_mx);
 
-              // funcVals_mx(:,end) = fxe_mx;
-              mclArrayAssign2(
-                &funcVals_mx,
-                mclVsv(fxe_mx, "fxe_mx"),
-                mlfCreateColonIndex(),
-                mlfEnd(
-                  mclVv(funcVals_mx, "funcVals_mx"), _mxarray24_, _mxarray24_));
+				// funcVals(:,end) = fxe_mx;
+				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxe_mx);
 
-              // how_mx = 'expand';
-              mlfAssign(&how_mx, _mxarray53_);
+				// how_mx = 'expand';
+				mlfAssign(&how_mx, _mxarray53_);
 
           // else
           } else {
 
-              // theSimplex(:,end) = xr_mx; 
+				// theSimplex(:,end) = xr_mx; 
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
 
-              // funcVals_mx(:,end) = fxr_mx;
-              mclArrayAssign2(
-                &funcVals_mx,
-                mclVsv(fxr_mx, "fxr_mx"),
-                mlfCreateColonIndex(),
-                mlfEnd(
-                  mclVv(funcVals_mx, "funcVals_mx"), _mxarray24_, _mxarray24_));
+				// funcVals(:,end) = fxr_mx;
+				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxr_mx);
 
-              // how_mx = 'reflect';
-              mlfAssign(&how_mx, _mxarray55_);
+				// how_mx = 'reflect';
+				mlfAssign(&how_mx, _mxarray55_);
 
           // end
           }
 
-      // else % funcVals_mx(:,1) <= fxr_mx
+      // else % funcVals(:,1) <= fxr_mx
       } else {
-			 DOTRACE("else funcVals_mx(:,1) <= fxr_mx");
+			 DOTRACE("else funcVals(:,1) <= fxr_mx");
 
-          // if fxr_mx < funcVals_mx(:,numModelParams)
-          if (mclLtBool(
-                mclVv(fxr_mx, "fxr_mx"),
-                mclVe(
-                  mclArrayRef2(
-                    mclVsv(funcVals_mx, "funcVals_mx"),
-                    mlfCreateColonIndex(),
-                    numModelParams_mx)))) {
+          // if fxr_mx < funcVals(:,numModelParams)
+          if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,numModelParams-1)) {
 
-              // theSimplex(:,end) = xr_mx; 
+				// theSimplex(:,end) = xr_mx; 
 				theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xr_mx);
 
-              // funcVals_mx(:,end) = fxr_mx;
-              mclArrayAssign2(
-                &funcVals_mx,
-                mclVsv(fxr_mx, "fxr_mx"),
-                mlfCreateColonIndex(),
-                mlfEnd(
-                  mclVv(funcVals_mx, "funcVals_mx"), _mxarray24_, _mxarray24_));
+				// funcVals(:,end) = fxr_mx;
+				funcVals_dr.ncMtx().at(0,numModelParams) = mxGetScalar(fxr_mx);
 
-              // how_mx = 'reflect';
-              mlfAssign(&how_mx, _mxarray55_);
+				// how_mx = 'reflect';
+				mlfAssign(&how_mx, _mxarray55_);
 
-          // else % fxr_mx >= funcVals_mx(:,numModelParams) 
+          // else % fxr_mx >= funcVals(:,numModelParams) 
           } else {
 
-              // % Perform contraction
-              // if fxr_mx < funcVals_mx(:,end)
-              if (mclLtBool(
-                    mclVv(fxr_mx, "fxr_mx"),
-                    mclVe(
-                      mclArrayRef2(
-                        mclVsv(funcVals_mx, "funcVals_mx"),
-                        mlfCreateColonIndex(),
-                        mlfEnd(
-                          mclVv(funcVals_mx, "funcVals_mx"),
-                          _mxarray24_,
-                          _mxarray24_))))) {
+				// % Perform contraction
+				// if fxr_mx < funcVals(:,end)
+				if (mxGetScalar(fxr_mx) < funcVals_dr.asMtx().at(0,numModelParams)) {
 
-                  // % Perform an outside contraction
-                  // xc_mx = (1 + psi_mx*rho_mx)*xbar -
-					   //            psi_mx*rho_mx*theSimplex(:,end);
-                  mlfAssign(
-                    &xc_mx,
-                    mclMinus(
+				  // % Perform an outside contraction
+				  // xc_mx = (1 + psi_mx*rho_mx)*xbar -
+				  //            psi_mx*rho_mx*theSimplex(:,end);
+				  mlfAssign(
+								&xc_mx,
+								mclMinus(
                       mclMtimes(
                         mclPlus(
                           _mxarray11_,
@@ -1174,94 +1129,63 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 								)));
 
 
-                  fxc = fevaluator.evaluate(xc_mx);
+				  fxc = fevaluator.evaluate(xc_mx);
 
-						++func_evals;
+				  ++func_evals;
 
-                  // 
-                  // if fxc <= fxr_mx
-                  if (fxc <= mxGetScalar(fxr_mx)) {
+				  // if fxc <= fxr_mx
+				  if (fxc <= mxGetScalar(fxr_mx)) {
 
-                      // theSimplex(:,end) = xc_mx; 
-						  theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xc_mx);
+					 // theSimplex(:,end) = xc_mx; 
+					 theSimplex_dr.ncMtx().column(numModelParams) = Mtx(xc_mx);
 
-                      // funcVals_mx(:,end) = fxc;
-                      mclArrayAssign2(
-                        &funcVals_mx,
-								mxCreateScalarDouble(fxc),
-                        mlfCreateColonIndex(),
-                        mlfEnd(
-                          mclVv(funcVals_mx, "funcVals_mx"),
-                          _mxarray24_,
-                          _mxarray24_));
+					 // funcVals(:,end) = fxc;
+					 funcVals_dr.ncMtx().at(0,numModelParams) = fxc;
 
-                      // how_mx = 'contract outside';
-                      mlfAssign(&how_mx, _mxarray57_);
+					 // how_mx = 'contract outside';
+					 mlfAssign(&how_mx, _mxarray57_);
 
-                  // else
-                  } else {
+				  } else {
 
-                      // % perform a shrink
-                      // how_mx = 'shrink'; 
-                      mlfAssign(&how_mx, _mxarray59_);
+					 // % perform a shrink
+					 // how_mx = 'shrink'; 
+					 mlfAssign(&how_mx, _mxarray59_);
 
-                  // end
-                  }
+				  }
 
-              // else
-              } else {
+				} else {
 
-                  // % Perform an inside contraction
-                  // xcc = (1-psi_mx)*xbar + psi_mx*theSimplex(:,end);
-					 xcc_dr.assignMtx(xbar_dr.asMtx()*(1.0-mxGetScalar(psi_mx))
-											+ 
-											(theSimplex_dr.asMtx().columns(numModelParams,1)
-											 * mxGetScalar(psi_mx)));
+				  // % Perform an inside contraction
+				  // xcc = (1-psi_mx)*xbar + psi_mx*theSimplex(:,end);
+				  xcc_dr.assignMtx(xbar_dr.asMtx()*(1.0-mxGetScalar(psi_mx))
+										 + 
+										 (theSimplex_dr.asMtx().columns(numModelParams,1)
+										  * mxGetScalar(psi_mx)));
 
-						fxcc = fevaluator.evaluate(xcc_dr.asArray());
+				  fxcc = fevaluator.evaluate(xcc_dr.asArray());
 
-						++func_evals;
+				  ++func_evals;
 
-                  // 
-                  // if fxcc < funcVals_mx(:,end)
-                  if (mclLtBool(
-                        mxCreateScalarDouble(fxcc),
-                        mclVe(
-                          mclArrayRef2(
-                            mclVsv(funcVals_mx, "funcVals_mx"),
-                            mlfCreateColonIndex(),
-                            mlfEnd(
-                              mclVv(funcVals_mx, "funcVals_mx"),
-                              _mxarray24_,
-                              _mxarray24_))))) {
+				  // if fxcc < funcVals(:,end)
+				  if (fxcc < funcVals_dr.asMtx().at(0,numModelParams)) {
 
-                      // theSimplex(:,end) = xcc;
-						  theSimplex_dr.ncMtx().column(numModelParams) = xcc_dr.asMtx();
+					 // theSimplex(:,end) = xcc;
+					 theSimplex_dr.ncMtx().column(numModelParams) = xcc_dr.asMtx();
 
-                      // funcVals_mx(:,end) = fxcc;
-                      mclArrayAssign2(
-                        &funcVals_mx,
-                        mxCreateScalarDouble(fxcc),
-                        mlfCreateColonIndex(),
-                        mlfEnd(
-                          mclVv(funcVals_mx, "funcVals_mx"),
-                          _mxarray24_,
-                          _mxarray24_));
+					 // funcVals(:,end) = fxcc;
+					 funcVals_dr.ncMtx().at(0,numModelParams) = fxcc;
 
-                      // how_mx = 'contract inside';
-                      mlfAssign(&how_mx, _mxarray61_);
+					 // how_mx = 'contract inside';
+					 mlfAssign(&how_mx, _mxarray61_);
 
-                  // else
-                  } else {
+				  } else {
 
-                      // % perform a shrink
-                      // how_mx = 'shrink';
-                      mlfAssign(&how_mx, _mxarray59_);
+					 // % perform a shrink
+					 // how_mx = 'shrink';
+					 mlfAssign(&how_mx, _mxarray59_);
 
-                  // end
-                  }
+				  }
 
-              // end
               }
 
               // if strcmp(how_mx,'shrink')
@@ -1282,16 +1206,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 							 (theSimplex_dr.asMtx().columns(j_zero_based,1) -
 							  theSimplex_dr.asMtx().columns(0,1)) * mxGetScalar(sigma_mx);
 
-                      // funcVals_mx(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
-                      mclArrayAssign2(
-                        &funcVals_mx,
-								fevaluator.evaluate_mx(
-															  theSimplex_dr.asMtx()
-															  .columns(j_zero_based,1)
-															  .makeMxArray()
-															  ),
-                        mlfCreateColonIndex(),
-                        mclVsv(j_mx, "j_mx"));
+						  // funcVals(:,j_mx) = feval(funfcn,theSimplex(:,j_mx),varargin{:});
+						  funcVals_dr.ncMtx().at(0,j_zero_based) =
+								fevaluator.evaluate(theSimplex_dr.asMtx()
+														  .columns(j_zero_based,1)
+														  .makeMxArray()
+														  );
 
                   }
                   mclDestroyForLoopIterator(viter__);
@@ -1304,11 +1224,11 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
       }
 
-		{DOTRACE("sort funcVals_mx");
-      // [funcVals_mx,j_mx] = sort(funcVals_mx);
+		{DOTRACE("sort funcVals");
+      // [funcVals,j_mx] = sort(funcVals);
 
 		// Throw away the actual sorted result; just keep the indices
-		mxDestroyArray(mlfSort(&j_mx, funcVals_mx, NULL));
+		mxDestroyArray(mlfSort(&j_mx, funcVals_dr.asArray(), NULL));
 		}
 
 		{DOTRACE("reorder simplex");
@@ -1317,14 +1237,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		const int largest = int(jref.at(numModelParams)) - 1;
 		const int largest2 = int(jref.at(numModelParams-1)) - 1;
 
-		Mtx fvref(funcVals_mx, Mtx::REFER);
-
 		// These swaps are smart enough to check if the column numbers
 		// are the same before doing the swap
 
-		fvref.swapColumns(0, smallest);
-		fvref.swapColumns(largest, numModelParams);
-		fvref.swapColumns(largest2, numModelParams-1);
+		funcVals_dr.ncMtx().swapColumns(0, smallest);
+		funcVals_dr.ncMtx().swapColumns(largest, numModelParams);
+		funcVals_dr.ncMtx().swapColumns(largest2, numModelParams-1);
 
 		theSimplex_dr.ncMtx().swapColumns(0, smallest);
 		theSimplex_dr.ncMtx().swapColumns(largest, numModelParams);
@@ -1336,7 +1254,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 
       if (prnt == 3) {
 
-          // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals_mx(1)), how_mx]) 
+          // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount_mx, func_evals, funcVals(1)), how_mx]) 
           mlfDisp(
             mlfHorzcat(
               mclVe(
@@ -1345,7 +1263,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
                   _mxarray38_,
                   mxCreateScalarDouble(itercount),
                   mxCreateScalarDouble(func_evals),
-                  mclVe(mclIntArrayRef1(mclVsv(funcVals_mx, "funcVals_mx"), 1)),
+						mxCreateScalarDouble(funcVals_dr.asMtx().at(0,0)),
                   NULL)),
               mclVv(how_mx, "how_mx"),
               NULL));
@@ -1361,8 +1279,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
           // theSimplex
           mclPrintArray(theSimplex_dr.asArray(), "theSimplex");
 
-          // funcVals_mx
-          mclPrintArray(mclVsv(funcVals_mx, "funcVals_mx"), "funcVals_mx");
+          // funcVals
+          mclPrintArray(funcVals_dr.asArray(), "funcVals");
 
           // func_evals
           mclPrintArray(mxCreateScalarDouble(func_evals), "func_evals");
@@ -1405,8 +1323,8 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
     // 
-    // fval = min(funcVals_mx);
-    mlfAssign(fval, mlfMin(NULL, mclVv(funcVals_mx, "funcVals_mx"), NULL, NULL));
+    // fval = min(funcVals);
+    mlfAssign(fval, mlfMin(NULL, funcVals_dr.asArray(), NULL, NULL));
 
     // if func_evals >= maxfun 
     if (func_evals >= maxfun) {
@@ -1471,7 +1389,6 @@ static mxArray * doSimplexImpl(mxArray * * fval,
     mxDestroyArray(psi_mx);
     mxDestroyArray(sigma_mx);
     mxDestroyArray(two2np1_mx);
-    mxDestroyArray(funcVals_mx);
     mxDestroyArray(usual_delta_mx);
     mxDestroyArray(zero_term_delta_mx);
     mxDestroyArray(j_mx);
