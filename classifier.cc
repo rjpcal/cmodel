@@ -2,10 +2,10 @@
 //
 // classifier.cc
 //
-// Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Mar 28 10:33:58 2001
+// written: Fri Apr  6 10:27:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

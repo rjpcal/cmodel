@@ -2,10 +2,10 @@
 //
 // cmodelpbi.cc
 //
-// Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Wed Mar 21 14:04:23 2001
+// written: Fri Apr  6 10:27:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

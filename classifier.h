@@ -2,10 +2,10 @@
 //
 // classifier.h
 //
-// Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Fri Apr  6 10:23:25 2001
+// written: Fri Apr  6 10:27:21 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
