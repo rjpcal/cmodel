@@ -81,12 +81,12 @@ bool withinTolx(mxArray* simplex_mx, const double tolx)
 {
   const Mtx simplex(simplex_mx, Mtx::BORROW);
 
-  const MtxConstIter col0_ = simplex.colIter(0);
+  const MtxConstIter col0_ = simplex.columnIter(0);
 
   for (int col = 1; col < simplex.ncols(); ++col)
 	 {
 		MtxConstIter col0(col0_);
-		MtxConstIter coln = simplex.colIter(col);
+		MtxConstIter coln = simplex.columnIter(col);
 
 		for (; col0.hasMore(); ++col0, ++coln)
 		  if ( fabs(*col0 - *coln) > tolx ) return false;
@@ -1073,7 +1073,7 @@ DOTRACE("MdoSimplex");
 								.columns(0,numModelParams));
 
 		const double numparams_inv = 1.0/numModelParams;
-		MtxIter xbar_itr_ = xbar_ref.colIter(0);
+		MtxIter xbar_itr_ = xbar_ref.columnIter(0);
 
 		for (int r = 0; r < numModelParams; ++r, ++xbar_itr_)
 		  *xbar_itr_ = simplex.row(r).sum() * numparams_inv;
