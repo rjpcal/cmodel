@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Wed Feb 20 18:13:53 2002
+// written: Mon Mar  4 17:37:12 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -41,19 +41,19 @@ public:
 
   virtual int optimize();
 
-  virtual Mtx bestParams()
+  virtual Mtx bestParams() const
   { return itsSimplex.column(0); }
 
-  virtual double bestFval()
+  virtual double bestFval() const
   { return itsFvals.at(0,0); }
 
-  virtual int iterCount()
+  virtual int iterCount() const
   { return itsIterCount; }
 
-  virtual int funcCount()
+  virtual int funcCount() const
   { return itsObjective.evalCount() - itsInitialFevals; }
 
-  virtual const char* algorithm()
+  virtual const char* algorithm() const
   { return "Nelder-Mead simplex direct search"; }
 
 private:
@@ -149,40 +149,13 @@ private:
 
   void minimalSort();
 
-  bool withinTolf()
-  {
-    MtxConstIter fvals = itsFvals.rowIter(0);
-    const double f0 = *fvals;
-    ++fvals;
+  bool withinTolf() const;
 
-    for (; fvals.hasMore(); ++fvals)
-      {
-        if (fabs(*fvals - f0) > itsTolf)
-          return false;
-      }
+  bool withinTolx() const;
 
-    return true;
-  }
+  bool tooManyFevals() const;
 
-  bool withinTolx()
-  {
-    const MtxConstIter col0_ = itsSimplex.columnIter(0);
-
-    for (int col = 1; col < itsSimplex.ncols(); ++col)
-      {
-        MtxConstIter col0(col0_);
-        MtxConstIter coln = itsSimplex.columnIter(col);
-
-        for (; col0.hasMore(); ++col0, ++coln)
-          if ( fabs(*col0 - *coln) > itsTolx ) return false;
-      }
-
-    return true;
-  }
-
-  bool tooManyFevals();
-
-  bool tooManyIters();
+  bool tooManyIters() const;
 
   void doOneIter();
 

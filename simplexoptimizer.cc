@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Sun Mar  3 14:20:56 2002
+// written: Mon Mar  4 17:37:17 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -156,7 +156,38 @@ DOTRACE("SimplexOptimizer::optimize");
   return 1;
 }
 
-bool SimplexOptimizer::tooManyFevals()
+bool SimplexOptimizer::withinTolf() const
+{
+  MtxConstIter fvals = itsFvals.rowIter(0);
+  const double f0 = *fvals;
+  ++fvals;
+
+  for (; fvals.hasMore(); ++fvals)
+    {
+      if (fabs(*fvals - f0) > itsTolf)
+        return false;
+    }
+
+  return true;
+}
+
+bool SimplexOptimizer::withinTolx() const
+{
+  const MtxConstIter col0_ = itsSimplex.columnIter(0);
+
+  for (int col = 1; col < itsSimplex.ncols(); ++col)
+    {
+      MtxConstIter col0(col0_);
+      MtxConstIter coln = itsSimplex.columnIter(col);
+
+      for (; col0.hasMore(); ++col0, ++coln)
+        if ( fabs(*col0 - *coln) > itsTolx ) return false;
+    }
+
+  return true;
+}
+
+bool SimplexOptimizer::tooManyFevals() const
 {
   if (funcCount() < itsMaxFevals)
     return false;
@@ -174,7 +205,7 @@ bool SimplexOptimizer::tooManyFevals()
   return true;
 }
 
-bool SimplexOptimizer::tooManyIters()
+bool SimplexOptimizer::tooManyIters() const
 {
   if (itsIterCount < itsMaxIters)
     return false;
