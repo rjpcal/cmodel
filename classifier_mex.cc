@@ -147,8 +147,7 @@ DOTRACE("Mclassifier");
 
 	 Mtx allModelParams(modelParams_mx);
 
-	 mxArray* result_mx = mxCreateDoubleMatrix(allModelParams.ncols(), 1, mxREAL);
-	 Mtx result(result_mx);
+	 Mtx result(allModelParams.ncols(), 1);
 
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
@@ -212,7 +211,7 @@ DOTRACE("Mclassifier");
 
 	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-	 return result_mx;
+	 return result.makeMxArray();
   }
   catch (ErrorWithMsg& err) {
 	 mexErrMsgTxt(err.msg_cstr());
