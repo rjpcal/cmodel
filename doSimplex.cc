@@ -663,11 +663,28 @@ private:
 		}
   }
 
+  struct FuncPoint
+  {
+	 FuncPoint(const Mtx& x_, double f_) : x(x_), f(f_) {}
+
+	 const Mtx x;
+	 const double f;
+  };
+
+  FuncPoint evaluate(const Mtx& x)
+  {
+	 return FuncPoint(x, itsObjective.evaluate(x));
+  }
+
+  void putInSimplex(const FuncPoint& p, int pointNumber)
+  {
+	 itsSimplex.column(pointNumber) = p.x.column(0);
+	 itsFvals.at(0, pointNumber) = p.f;
+  }
+
   void putInSimplex(const Mtx& params, int simplexPoint)
   {
-	 itsSimplex.column(simplexPoint) = params.column(0);
-
-	 itsFvals.at(0, simplexPoint) = itsObjective.evaluate(params);
+	 putInSimplex(evaluate(params), simplexPoint);
   }
 
   void fullSort()
@@ -710,6 +727,8 @@ private:
 
 	 return true;
   }
+
+  void doOneIter();
 
   void printHeader()
   {
@@ -755,6 +774,11 @@ private:
 	 return NOTIFY;
   }
 
+  static const double RHO = 1.0;
+  static const double CHI = 2.0;
+  static const double PSI = 0.5;
+  static const double SIGMA = 0.5;
+
 public:
   SimplexOptimizer(FuncEvaluator& objective,
 						 const Mtx& x_in,
@@ -777,8 +801,15 @@ public:
 	 itsSimplex(nparams, nparams+1),
 	 itsFvals(1, nparams+1),
 
-	 itsIterCount(0)
-  {}
+	 itsIterCount(1)
+  {
+	 // Place input guess in the simplex! (credit L.Pfeffer at Stanford)
+	 putInSimplex(itsInitialParams, 0);
+
+	 buildInitialSimplex();
+
+	 fullSort();
+  }
 
   virtual ~SimplexOptimizer() {}
 
@@ -788,7 +819,7 @@ public:
   { return itsSimplex.column(0); }
 
   virtual double bestFval()
-  { return itsFvals.row(0).min(); }
+  { return itsFvals.at(0,0); }
 
   virtual int iterCount()
   { return itsIterCount; }
@@ -800,185 +831,26 @@ public:
   { return "Nelder-Mead simplex direct search"; }
 };
 
+
 int SimplexOptimizer::optimize()
 {
-
-  // HOME
-
-  const double RHO = 1.0;
-  const double CHI = 2.0;
-  const double PSI = 0.5;
-  const double SIGMA = 0.5;
-
-	// Place input guess in the simplex! (credit L.Pfeffer at Stanford)
-  putInSimplex(itsInitialParams, 0);
-
-  buildInitialSimplex();
-
-  fullSort();
-
-  itsIterCount = 1;
-
   printHeader();
   printIter("initial");
   printSimplex("initial");
 
-	//---------------------------------------------------------------------
-	//
-	// Iterate until the diameter of the simplex is less than itsTolx AND
-	// the function values differ from the min by less than itsTolf, or
-	// the max function evaluations are exceeded. (Cannot use OR
-	// instead of AND.)
-	//
-	//---------------------------------------------------------------------
-
+  // Iterate until the diameter of the simplex is less than itsTolx AND
+  // the function values differ from the min by less than itsTolf, or
+  // the max function evaluations are exceeded. (Cannot use OR
+  // instead of AND.)
 
   while (!withinTolf(itsFvals, itsTolf) || !
 			!withinTolx(itsSimplex, itsTolx))
+	 {
+		if (tooManyIters()) return 0;
+		if (tooManyFevals()) return 0;
 
-	 {DOTRACE("Main algorithm");
-
-	 if (tooManyIters()) return 0;
-	 if (tooManyFevals()) return 0;
-
-	 fixed_string how = "";
-
-	 // xbar = average of the itsNparams (NOT itsNparams+1) best points
-
-	 Mtx xbar(itsNparams,1);
-	 const Mtx simplex_1_n(itsSimplex.columns(0,itsNparams));
-
-	 const double numparams_inv = 1.0/itsNparams;
-	 MtxIter xbar_itr = xbar.columnIter(0);
-
-	 for (int r = 0; r < itsNparams; ++r, ++xbar_itr)
-		*xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
-
-
-  // Calculate the reflection point
-	 Mtx xr = (xbar*(1.0+RHO) - itsSimplex.columns(itsNparams,1) * RHO);
-
-	 double fxr = itsObjective.evaluate(xr);
-
-
-	 if (fxr < itsFvals.at(0,0))
-		{
-		  DOTRACE("fxr < itsFvals(:,1)");
-
-		  // Calculate the expansion point
-		  // xe = (1 + RHO*CHI)*xbar - RHO*CHI*itsSimplex(:,end);
-		  Mtx xe = ((xbar * (1 + RHO*CHI)) -
-						(itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
-
-		  double fxe = itsObjective.evaluate(xe);
-
-		  if (fxe < fxr)
-			 {
-				itsSimplex.column(itsNparams) = xe;
-				itsFvals.at(0,itsNparams) = fxe;
-				how = "expand";
-			 }
-		  else
-			 {
-				itsSimplex.column(itsNparams) = xr;
-				itsFvals.at(0,itsNparams) = fxr;
-				how = "reflect";
-			 }
-		}
-	 else
-		{
-		  DOTRACE("fxr >= itsFvals(:,1)");
-
-		  if (fxr < itsFvals.at(0,itsNparams-1))
-			 {
-				itsSimplex.column(itsNparams) = xr;
-				itsFvals.at(0,itsNparams) = fxr;
-				how = "reflect";
-			 }
-		  else
-			 {
-				// Perform contraction
-
-				if (fxr < itsFvals.at(0,itsNparams))
-				  {
-					 // Perform an outside contraction
-					 Mtx xc = (xbar*(1.0 + PSI*RHO) -
-								  (itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
-
-					 double fxc = itsObjective.evaluate(xc);
-
-					 if (fxc <= fxr)
-						{
-						  itsSimplex.column(itsNparams) = xc;
-						  itsFvals.at(0,itsNparams) = fxc;
-						  how = "contract outside";
-						}
-					 else
-						{
-						  how = "shrink";
-						}
-				  }
-				else
-				  {
-					 // Perform an inside contraction
-					 Mtx xcc = (xbar*(1.0-PSI) +
-									(itsSimplex.columns(itsNparams,1)* PSI));
-
-					 double fxcc = itsObjective.evaluate(xcc);
-
-					 if (fxcc < itsFvals.at(0,itsNparams))
-						{
-						  itsSimplex.column(itsNparams) = xcc;
-						  itsFvals.at(0,itsNparams) = fxcc;
-						  how = "contract inside";
-						}
-					 else
-						{
-						  how = "shrink";
-						}
-				  }
-
-				if (how == "shrink")
-				  {
-					 for (int j = 1; j < itsNparams+1; ++j)
-						{
-						  itsSimplex.column(j) =
-							 itsSimplex.columns(0,1) +
-							 (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
-
-						  itsFvals.at(0,j) =
-							 itsObjective.evaluate(itsSimplex.columns(j,1));
-						}
-				  }
-			 }
-		}
-
-	 {DOTRACE("reorder simplex");
-	 // [dummy,index] = sort(itsFvals);
-	 Mtx index = itsFvals.row(0).getSortOrder();
-
-	 const int smallest = int(index.at(0));
-	 const int largest = int(index.at(itsNparams));
-	 const int largest2 = int(index.at(itsNparams-1));
-
-	 // These swaps are smart enough to check if the column numbers
-	 // are the same before doing the swap
-
-	 itsFvals.swapColumns(0, smallest);
-	 itsFvals.swapColumns(largest, itsNparams);
-	 itsFvals.swapColumns(largest2, itsNparams-1);
-
-	 itsSimplex.swapColumns(0, smallest);
-	 itsSimplex.swapColumns(largest, itsNparams);
-	 itsSimplex.swapColumns(largest2, itsNparams-1);
-	 }
-
-
-	 ++itsIterCount;
-
-	 printIter(how);
-	 printSimplex(how);
-  } // end main algorithm loop
+		doOneIter();
+	 } // end main algorithm loop
 
   const char* format = 
 	 "\nOptimization terminated successfully:\n"
@@ -990,6 +862,149 @@ int SimplexOptimizer::optimize()
   mexPrintf(format, itsTolx, itsTolf);
 
   return 1;
+}
+
+
+void SimplexOptimizer::doOneIter()
+{
+DOTRACE("SimplexOptimizer::doOneIter");
+
+  // HOME
+
+  fixed_string how = "";
+
+  // xbar = average of the itsNparams (NOT itsNparams+1) best points
+
+  Mtx xbar(itsNparams,1);
+  const Mtx simplex_1_n(itsSimplex.columns(0,itsNparams));
+
+  const double numparams_inv = 1.0/itsNparams;
+  MtxIter xbar_itr = xbar.columnIter(0);
+
+  for (int r = 0; r < itsNparams; ++r, ++xbar_itr)
+	 *xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
+
+
+  // Calculate the reflection point
+  FuncPoint r = evaluate(xbar*(1.0+RHO) -
+								 itsSimplex.columns(itsNparams,1) * RHO);
+
+
+  if (r.f < itsFvals.at(0,0))
+	 {
+		DOTRACE("r.f < itsFvals(:,1)");
+
+		// Calculate the expansion point
+		// xe = (1 + RHO*CHI)*xbar - RHO*CHI*itsSimplex(:,end);
+		Mtx xe = ((xbar * (1 + RHO*CHI)) -
+					 (itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
+
+		double fxe = itsObjective.evaluate(xe);
+
+		if (fxe < r.f)
+		  {
+			 itsSimplex.column(itsNparams) = xe;
+			 itsFvals.at(0,itsNparams) = fxe;
+			 how = "expand";
+		  }
+		else
+		  {
+			 putInSimplex(r, itsNparams);
+			 how = "reflect";
+		  }
+	 }
+  else
+	 {
+		DOTRACE("r.f >= itsFvals(:,1)");
+
+		if (r.f < itsFvals.at(0,itsNparams-1))
+		  {
+			 putInSimplex(r, itsNparams);
+			 how = "reflect";
+		  }
+		else
+		  {
+			 // Perform contraction
+
+			 if (r.f < itsFvals.at(0,itsNparams))
+				{
+				  // Perform an outside contraction
+				  Mtx xc = (xbar*(1.0 + PSI*RHO) -
+								(itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
+
+				  double fxc = itsObjective.evaluate(xc);
+
+				  if (fxc <= r.f)
+					 {
+						itsSimplex.column(itsNparams) = xc;
+						itsFvals.at(0,itsNparams) = fxc;
+						how = "contract outside";
+					 }
+				  else
+					 {
+						how = "shrink";
+					 }
+				}
+			 else
+				{
+				  // Perform an inside contraction
+				  Mtx xcc = (xbar*(1.0-PSI) +
+								 (itsSimplex.columns(itsNparams,1)* PSI));
+
+				  double fxcc = itsObjective.evaluate(xcc);
+
+				  if (fxcc < itsFvals.at(0,itsNparams))
+					 {
+						itsSimplex.column(itsNparams) = xcc;
+						itsFvals.at(0,itsNparams) = fxcc;
+						how = "contract inside";
+					 }
+				  else
+					 {
+						how = "shrink";
+					 }
+				}
+
+			 if (how == "shrink")
+				{
+				  for (int j = 1; j < itsNparams+1; ++j)
+					 {
+						itsSimplex.column(j) =
+						  itsSimplex.columns(0,1) +
+						  (itsSimplex.columns(j,1) - itsSimplex.columns(0,1)) * SIGMA;
+
+						itsFvals.at(0,j) =
+						  itsObjective.evaluate(itsSimplex.columns(j,1));
+					 }
+				}
+		  }
+	 }
+
+  {DOTRACE("reorder simplex");
+  // [dummy,index] = sort(itsFvals);
+  Mtx index = itsFvals.row(0).getSortOrder();
+
+  const int smallest = int(index.at(0));
+  const int largest = int(index.at(itsNparams));
+  const int largest2 = int(index.at(itsNparams-1));
+
+  // These swaps are smart enough to check if the column numbers
+  // are the same before doing the swap
+
+  itsFvals.swapColumns(0, smallest);
+  itsFvals.swapColumns(largest, itsNparams);
+  itsFvals.swapColumns(largest2, itsNparams-1);
+
+  itsSimplex.swapColumns(0, smallest);
+  itsSimplex.swapColumns(largest, itsNparams);
+  itsSimplex.swapColumns(largest2, itsNparams-1);
+  }
+
+
+  ++itsIterCount;
+
+  printIter(how);
+  printSimplex(how);
 }
 
 
