@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Apr 26 11:51:01 2001
+// written: Thu Apr 26 18:49:46 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -42,7 +42,6 @@
 namespace {
   shared_ptr<CModelCssm>* recentModel = 0;
   Mtx* recentObjParams = 0;
-  Mtx* recentIncidence = 0;
   int recentNumStored = -1;
 
   MexBuf* mexBuf = 0;
@@ -60,7 +59,6 @@ DOTRACE("InitializeModule_classifier");
 #endif
   recentModel = new shared_ptr<CModelCssm>(0);
   recentObjParams = new Mtx(0,0);
-  recentIncidence = new Mtx(0,0);
 }
 
 void TerminateModule_classifier()
@@ -70,7 +68,6 @@ DOTRACE("TerminateModule_classifier");
   mexPrintf("unloading 'classifier' mex file\n");
 #endif
 
-  delete recentIncidence;
   delete recentObjParams;
   delete recentModel;
 
@@ -90,7 +87,6 @@ _mexLocalFunctionTable _local_function_table_classifier
 
 shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
 												  const Mtx& objParams,
-												  const Mtx& observedIncidence,
 												  mxArray* extraArgs_mx)
 {
 DOTRACE("makeClassifier");
@@ -106,8 +102,7 @@ DOTRACE("makeClassifier");
 		  }
 
 		if ( (numStoredExemplars == recentNumStored) &&
-			  (objParams == *recentObjParams) &&
-			  (observedIncidence == *recentIncidence) )
+			  (objParams == *recentObjParams) )
 		  {
 			 DOTRACE("use old");
 
@@ -120,13 +115,10 @@ DOTRACE("makeClassifier");
 			 *recentObjParams = objParams;
 			 recentObjParams->makeUnique();
 
-			 *recentIncidence = observedIncidence;
-			 recentIncidence->makeUnique();
-
 			 recentNumStored = numStoredExemplars;
 
           recentModel->reset(
-              new CModelCssm(*recentObjParams, *recentIncidence,
+              new CModelCssm(*recentObjParams,
                              CModelExemplar::EXP_DECAY, recentNumStored));
 
 			 return *recentModel;
@@ -135,43 +127,37 @@ DOTRACE("makeClassifier");
   else if (whichType == "gcm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelGcm(objParams, observedIncidence,
-							 CModelExemplar::EXP_DECAY));
+		  new CModelGcm(objParams, CModelExemplar::EXP_DECAY));
 	 }
   else if (whichType == "adm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelGcm(objParams, observedIncidence,
-							 CModelExemplar::LINEAR_DECAY));
+		  new CModelGcm(objParams, CModelExemplar::LINEAR_DECAY));
 	 }
   else if (whichType == "pbi")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelPbi(objParams, observedIncidence));
+		  new CModelPbi(objParams));
 	 }
   else if (whichType == "wpsm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelWpsm(objParams, observedIncidence,
-							  CModelExemplar::EXP_DECAY));
+		  new CModelWpsm(objParams, CModelExemplar::EXP_DECAY));
 	 }
   else if (whichType == "wpm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelWpsm(objParams, observedIncidence,
-							  CModelExemplar::LINEAR_DECAY));
+		  new CModelWpsm(objParams, CModelExemplar::LINEAR_DECAY));
 	 }
   else if (whichType == "wcvm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelCueValidity(objParams, observedIncidence,
-										CModelCueValidity::NO_FREQ_WEIGHT));
+		  new CModelCueValidity(objParams, CModelCueValidity::NO_FREQ_WEIGHT));
 	 }
   else if (whichType == "wfcvm")
 	 {
 	   return shared_ptr<Classifier>(
-		  new CModelCueValidity(objParams, observedIncidence,
-										CModelCueValidity::FREQ_WEIGHT));
+		  new CModelCueValidity(objParams, CModelCueValidity::FREQ_WEIGHT));
 	 }
   else
 	 {
@@ -231,14 +217,8 @@ DOTRACE("Mclassifier");
 	 const Mtx objParams(MxWrapper::extractStructField(extraArgs_mx,
 																		"objParams"));
 
-	 const Mtx observedIncidence(
-        MxWrapper::extractStructField(extraArgs_mx,
-												  "observedIncidence"));
-
-	 shared_ptr<Classifier> model = makeClassifier(modelName,
-																  objParams,
-																  observedIncidence,
-																  extraArgs_mx);
+	 shared_ptr<Classifier> model =
+		makeClassifier(modelName, objParams, extraArgs_mx);
 
 	 Classifier::RequestResult res = model->handleRequest(actionRequest,
 																			allModelParams,
