@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Mon Feb 25 13:52:50 2002
+// written: Tue Mar  5 19:17:55 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -91,7 +91,7 @@ AnnealOpts::AnnealOpts(mxArray* arr) :
   numTemps(coolingSchedule.nelems()),
   tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
   numModelParams(bounds.mrows()),
-  numStartingPoints(std::max(100, 20*numModelParams)),
+  numStartingPoints(std::max(100, 50*numModelParams)),
   valueScalingRange(makeScalingRange(Mx::getIntField(arr, "gridSpacing")))
 {
   if (bounds.ncols() != 2)
