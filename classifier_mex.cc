@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Feb 25 15:11:58 2002
+// written: Mon Feb 25 16:13:20 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -215,8 +215,6 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
 {
   DOTRACE("mlxClassifier");
 
-  mxArray* mprhs[NARGIN];
-
   if (nlhs != NARGOUT)
     {
       mexErrMsgTxt("Error: classifier was called with the wrong "
@@ -229,35 +227,14 @@ void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
                    "number of inputs (should be 4).");
     }
 
-  for (int i = 0; i < NARGIN; ++i)
-    {
-      mprhs[i] = prhs[i];
-    }
+  mlfEnterNewContext(0, NARGIN, prhs[0], prhs[1], prhs[2], prhs[3]);
 
+  plhs[0] = Mclassifier(Mtx(prhs[0], Mtx::COPY), // model params
+                        Mx::getString(prhs[1]), // model name
+                        Mx::getString(prhs[2]), // action request
+                        prhs[3]); // extra args struct
 
-  mlfEnterNewContext(0, NARGIN, mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
-
-  try
-    {
-      plhs[0] = Mclassifier(Mtx(mprhs[0], Mtx::COPY), // model params
-                            Mx::getString(mprhs[1]), // model name
-                            Mx::getString(mprhs[2]), // action request
-                            mprhs[3]); // extra args struct
-    }
-  catch (Util::Error& err)
-    {
-      mexErrMsgTxt(err.msg_cstr());
-    }
-  catch (std::exception& err)
-    {
-      mexErrMsgTxt(err.what());
-    }
-  catch (...)
-    {
-      mexErrMsgTxt("an unknown C++ exception occurred.");
-    }
-
-  mlfRestorePreviousContext(0, NARGIN, mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
+  mlfRestorePreviousContext(0, NARGIN, prhs[0], prhs[1], prhs[2], prhs[3]);
 }
 
 
