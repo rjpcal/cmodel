@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 09:24:29 2002
+// written: Fri Feb 15 09:55:02 2002
 // $Id$
 //
 //
@@ -94,204 +94,6 @@ void TerminateModule_annealVisitParameters()
   std::cerr.rdbuf(0);
 
   delete mexBuf;
-}
-
-mxArray* MannealVisitParameters(int nargout_,
-                                mxArray* bestModel,
-                                mxArray* valueScalingRange,
-                                mxArray* deltas,
-                                mxArray* bounds,
-                                mxArray* canUseMatrix,
-                                mxArray* FUN,
-                                mxArray* temp,
-                                mxArray* varargin);
-
-Mtx makeTestModels(int x_zerobased,
-                   const Mtx& bestModel,
-                   const Mtx& valueScalingRange,
-                   const double delta,
-                   const Mtx& bounds);
-
-Mtx doFuncEvals(bool canUseMatrix,
-                const Mtx& models,
-                mxArray* func,
-                mxArray* varargin);
-
-int sampleFromPdf(const Mtx& temp, const Mtx& costs);
-
-
-Mtx makePDF(const Mtx& temp, const Mtx& costs);
-
-/*
- * The function "mlxAnnealVisitParameters" contains the feval interface for the
- * "annealVisitParameters" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 1-28). The feval function calls the implementation version of
- * annealVisitParameters through this function. This function processes any
- * input arguments and passes them to the implementation version of the
- * function, appearing above.
- */
-void mlxAnnealVisitParameters(int nlhs, mxArray* plhs[],
-                              int nrhs, mxArray* prhs[])
-{
-DOTRACE("mlxAnnealVisitParameters");
-
-  if (nlhs > 1)
-    {
-      mexErrMsgTxt("Error: annealVisitParameters was called with more "
-                   "than the declared number of outputs (1).");
-    }
-  if (nrhs < 7)
-    {
-      mexErrMsgTxt("Error: annealVisitParameters was called with fewer "
-                   "than the declared number of inputs (7).");
-    }
-
-  mxArray* varargin = NULL;
-
-  mlfEnterNewContext(0,
-                     7,
-                     prhs[0],
-                     prhs[1],
-                     prhs[2],
-                     prhs[3],
-                     prhs[4],
-                     prhs[5],
-                     prhs[6]);
-  varargin = NULL;
-  mlfAssign(&varargin, mclCreateVararginCell(nrhs - 7, prhs + 7));
-
-  plhs[0] = MannealVisitParameters(nlhs,
-                                   prhs[0],
-                                   prhs[1],
-                                   prhs[2],
-                                   prhs[3],
-                                   prhs[4],
-                                   prhs[5],
-                                   prhs[6],
-                                   varargin);
-
-  mlfRestorePreviousContext(0,
-                            7,
-                            prhs[0],
-                            prhs[1],
-                            prhs[2],
-                            prhs[3],
-                            prhs[4],
-                            prhs[5],
-                            prhs[6]);
-
-  mxDestroyArray(varargin);
-}
-
-/*
- * The function "MannealVisitParameters" is the implementation version of the
- * "annealVisitParameters" M-function from file
- * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
- * (lines 1-28). It contains the actual compiled code for that M-function. It
- * is a static function and must only be called from one of the interface
- * functions, appearing below.
- */
-
-mxArray* MannealVisitParameters(int nargout_,
-                                mxArray* bestModel_mx,
-                                mxArray* valueScalingRange_mx,
-                                mxArray* deltas_mx,
-                                mxArray* bounds_mx,
-                                mxArray* canUseMatrix_mx,
-                                mxArray* FUN_mx,
-                                mxArray* temp_mx,
-                                mxArray* varargin_mx)
-{
-DOTRACE("MannealVisitParameters");
-
-  try
-    {
-
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1)
-        {
-          Util::Prof::printAllProfData(std::cerr);
-          return mxCreateScalarDouble(-1.0);
-        }
-
-      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2)
-        {
-          Util::Prof::resetAllProfData();
-          return mxCreateScalarDouble(-2.0);
-        }
-#endif
-
-      mclCopyArray(&bestModel_mx);
-
-      Mtx bestModel(bestModel_mx, Mtx::REFER);
-
-      const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
-
-      int nevals = 0;
-      int s_zerobased = 0;
-
-      const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
-      const Mtx deltas(deltas_mx, Mtx::BORROW);
-      const Mtx bounds(bounds_mx, Mtx::BORROW);
-
-      Mtx costs(0,0);
-
-      // for x = find(deltas' ~= 0)
-      for (int x = 0; x < deltas.nelems(); ++x)
-        {
-          const double delta = deltas.at(x);
-
-          if (delta == 0.0) continue;
-
-          Mtx modelmatrix = makeTestModels(x,
-                                           bestModel,
-                                           valueScalingRange,
-                                           delta,
-                                           bounds);
-
-          // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-          costs = doFuncEvals(canUseMatrix,
-                              modelmatrix,
-                              FUN_mx,
-                              mlfIndexRef(varargin_mx,
-                                          "{?}",
-                                          mlfCreateColonIndex()));
-
-          // S.nevals = S.nevals + length(costs);
-          nevals += costs.nelems();;
-
-          // Sample from probability distribution
-          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW), costs);
-
-          bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
-        }
-
-      const char* fieldNames[] = { "nevals", "newModel", "cost" };
-      mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
-
-      // S.nevals = 0;
-      mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
-
-      // S.newModel = bestModel;
-      mxSetField(output, 0, "newModel", bestModel_mx);
-
-      // S.cost = costs(s);
-      mxSetField(output, 0, "cost",
-                 mxCreateScalarDouble(costs.at(s_zerobased)));
-
-      return output;
-    }
-  catch (Util::Error& err)
-    {
-      mexErrMsgTxt(err.msg_cstr());
-    }
-  catch (...)
-    {
-      mexErrMsgTxt("an unknown C++ exception occurred.");
-    }
-
-  return (mxArray*) 0; // can't happen, but placate compiler
 }
 
 //---------------------------------------------------------------------
@@ -446,37 +248,6 @@ DOTRACE("doFuncEvals");
 
 //---------------------------------------------------------------------
 //
-// sampleFromPdf()
-//
-//---------------------------------------------------------------------
-
-int sampleFromPdf(const Mtx& temp, const Mtx& costs)
-{
-DOTRACE("sampleFromPdf");
-
-  Mtx dist = makePDF(temp, costs);
-
-  const double cutoff = matlabRand();
-
-  double cumsum = 0.0;
-  int s = -1;
-  for (int i = 0; i < dist.nelems(); ++i)
-    {
-      cumsum += dist.at(i);
-
-      if (cumsum >= cutoff) { s = i; break; }
-    }
-
-  if (s < 0)
-    {
-      mexErrMsgTxt("snafu in sampleFromPdf");
-    }
-
-  return s;
-}
-
-//---------------------------------------------------------------------
-//
 // makePDF()
 //
 //---------------------------------------------------------------------
@@ -522,6 +293,215 @@ DOTRACE("makePDF");
   pdf /= pdf.sum();
 
   return pdf;
+}
+
+//---------------------------------------------------------------------
+//
+// sampleFromPdf()
+//
+//---------------------------------------------------------------------
+
+int sampleFromPdf(const Mtx& temp, const Mtx& costs)
+{
+DOTRACE("sampleFromPdf");
+
+  Mtx dist = makePDF(temp, costs);
+
+  const double cutoff = matlabRand();
+
+  double cumsum = 0.0;
+  int s = -1;
+  for (int i = 0; i < dist.nelems(); ++i)
+    {
+      cumsum += dist.at(i);
+
+      if (cumsum >= cutoff) { s = i; break; }
+    }
+
+  if (s < 0)
+    {
+      mexErrMsgTxt("snafu in sampleFromPdf");
+    }
+
+  return s;
+}
+
+/*
+ * The function "MannealVisitParameters" is the implementation version of the
+ * "annealVisitParameters" M-function from file
+ * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
+ * (lines 1-28). It contains the actual compiled code for that M-function. It
+ * is a static function and must only be called from one of the interface
+ * functions, appearing below.
+ */
+
+mxArray* MannealVisitParameters(int nargout_,
+                                mxArray* bestModel_mx,
+                                mxArray* valueScalingRange_mx,
+                                mxArray* deltas_mx,
+                                mxArray* bounds_mx,
+                                mxArray* canUseMatrix_mx,
+                                mxArray* FUN_mx,
+                                mxArray* temp_mx,
+                                mxArray* varargin_mx)
+{
+DOTRACE("MannealVisitParameters");
+
+  try
+    {
+
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1)
+        {
+          Util::Prof::printAllProfData(std::cerr);
+          return mxCreateScalarDouble(-1.0);
+        }
+
+      if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2)
+        {
+          Util::Prof::resetAllProfData();
+          return mxCreateScalarDouble(-2.0);
+        }
+#endif
+
+      mclCopyArray(&bestModel_mx);
+
+      Mtx bestModel(bestModel_mx, Mtx::REFER);
+
+      const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
+
+      int nevals = 0;
+      int s_zerobased = -1;
+
+      const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
+      const Mtx deltas(deltas_mx, Mtx::BORROW);
+      const Mtx bounds(bounds_mx, Mtx::BORROW);
+
+      Mtx costs(0,0);
+
+      // for x = find(deltas' ~= 0)
+      for (int x = 0; x < deltas.nelems(); ++x)
+        {
+          const double delta = deltas.at(x);
+
+          if (delta == 0.0) continue;
+
+          Mtx modelmatrix = makeTestModels(x,
+                                           bestModel,
+                                           valueScalingRange,
+                                           delta,
+                                           bounds);
+
+          // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
+          costs = doFuncEvals(canUseMatrix,
+                              modelmatrix,
+                              FUN_mx,
+                              mlfIndexRef(varargin_mx,
+                                          "{?}",
+                                          mlfCreateColonIndex()));
+
+          // S.nevals = S.nevals + length(costs);
+          nevals += costs.nelems();;
+
+          // Sample from probability distribution
+          s_zerobased = sampleFromPdf(Mtx(temp_mx, Mtx::BORROW), costs);
+
+          bestModel.at(x, 0) = modelmatrix.at(x, s_zerobased);
+        }
+
+      if (s_zerobased < 0)
+        {
+          mexErrMsgTxt("didn't run any annealing iterations because "
+                       "there were no non-zero deltas");
+        }
+
+      const char* fieldNames[] = { "nevals", "newModel", "cost" };
+      mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
+
+      // S.nevals = 0;
+      mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
+
+      // S.newModel = bestModel;
+      mxSetField(output, 0, "newModel", bestModel_mx);
+
+      // S.cost = costs(s);
+      mxSetField(output, 0, "cost",
+                 mxCreateScalarDouble(costs.at(s_zerobased)));
+
+      return output;
+    }
+  catch (Util::Error& err)
+    {
+      mexErrMsgTxt(err.msg_cstr());
+    }
+  catch (...)
+    {
+      mexErrMsgTxt("an unknown C++ exception occurred.");
+    }
+
+  return (mxArray*) 0; // can't happen, but placate compiler
+}
+
+/*
+ * The function "mlxAnnealVisitParameters" contains the feval interface for the
+ * "annealVisitParameters" M-function from file
+ * "/cit/rjpeters/science/psyphy/classmodels/matlab/annealVisitParameters.m"
+ * (lines 1-28). The feval function calls the implementation version of
+ * annealVisitParameters through this function. This function processes any
+ * input arguments and passes them to the implementation version of the
+ * function, appearing above.
+ */
+void mlxAnnealVisitParameters(int nlhs, mxArray* plhs[],
+                              int nrhs, mxArray* prhs[])
+{
+DOTRACE("mlxAnnealVisitParameters");
+
+  if (nlhs > 1)
+    {
+      mexErrMsgTxt("Error: annealVisitParameters was called with more "
+                   "than the declared number of outputs (1).");
+    }
+  if (nrhs < 7)
+    {
+      mexErrMsgTxt("Error: annealVisitParameters was called with fewer "
+                   "than the declared number of inputs (7).");
+    }
+
+  mxArray* varargin = NULL;
+
+  mlfEnterNewContext(0,
+                     7,
+                     prhs[0],
+                     prhs[1],
+                     prhs[2],
+                     prhs[3],
+                     prhs[4],
+                     prhs[5],
+                     prhs[6]);
+  varargin = NULL;
+  mlfAssign(&varargin, mclCreateVararginCell(nrhs - 7, prhs + 7));
+
+  plhs[0] = MannealVisitParameters(nlhs,
+                                   prhs[0],
+                                   prhs[1],
+                                   prhs[2],
+                                   prhs[3],
+                                   prhs[4],
+                                   prhs[5],
+                                   prhs[6],
+                                   varargin);
+
+  mlfRestorePreviousContext(0,
+                            7,
+                            prhs[0],
+                            prhs[1],
+                            prhs[2],
+                            prhs[3],
+                            prhs[4],
+                            prhs[5],
+                            prhs[6]);
+
+  mxDestroyArray(varargin);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
