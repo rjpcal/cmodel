@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:33:32 2002
+// written: Mon Feb 18 18:39:30 2002
 // $Id$
 //
 //
@@ -275,10 +275,23 @@ public:
     itsPvararg(pvararg),
     itsCanUseMatrix(canUseMatrix),
     itsPrhs(new (mxArray*)[nvararg+1])
-  {}
+  {
+    itsPrhs[0] = 0;
+
+    for (int i = 0; i < itsNvararg; ++i)
+      {
+        itsPrhs[i+1] = 0;
+        mlfAssign(&itsPrhs[i+1], mxDuplicateArray(itsPvararg[i]));
+      }
+  }
 
   virtual ~Objective()
   {
+    for (int i = 0; i < itsNvararg; ++i)
+      {
+        mxDestroyArray(itsPrhs[i+1]);
+      }
+
     delete [] itsPrhs;
   }
 
@@ -295,15 +308,8 @@ private:
     // explicitly destroy it later on
     itsPrhs[0] = models_mx;
 
-    int nrhs = 1;
-
-    for (int i = 0; i < itsNvararg; ++i)
-      {
-        itsPrhs[nrhs++] = mxDuplicateArray(itsPvararg[i]);
-      }
-
-    // costs = feval(func, models, varargin{:});
-    int result = mexCallMATLAB(1, &costs_mx, nrhs, itsPrhs, itsFuncName.c_str());
+    int result = mexCallMATLAB(1, &costs_mx, itsNvararg+1, itsPrhs,
+                               itsFuncName.c_str());
 
     if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
 
@@ -327,35 +333,21 @@ private:
 
     mxArray* plhs[1] = { 0 };
 
-    itsPrhs[0] = 0;
-
-    int nrhs = 1;
-
-    for (int i = 0; i < itsNvararg; ++i)
-      {
-        itsPrhs[nrhs] = 0; mlfAssign(itsPrhs+nrhs, mxDuplicateArray(itsPvararg[i]));
-        ++nrhs;
-      }
-
     for (int e = 0; e < NM; ++e)
       {
         //costs(e) = feval(func, models(:,e), varargin{:});
         itsPrhs[0] = mclArrayRef2(models_mx,
-                               mlfCreateColonIndex(),
-                               mlfScalar(e+1));
+                                  mlfCreateColonIndex(),
+                                  mlfScalar(e+1));
 
-        int result = mexCallMATLAB(1, plhs, nrhs, itsPrhs, itsFuncName.c_str());
+        int result = mexCallMATLAB(1, plhs, itsNvararg+1, itsPrhs,
+                                   itsFuncName.c_str());
 
         if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
 
         costs.at(e) = mxGetScalar(plhs[0]);
 
         mxDestroyArray(plhs[0]);
-      }
-
-    while (--nrhs >= 1)
-      {
-        mxDestroyArray(itsPrhs[nrhs]); itsPrhs[nrhs] = 0;
       }
 
     mxDestroyArray(models_mx);
