@@ -3,7 +3,7 @@
 // nrutil.h
 //
 // created: Thu Apr 19 17:31:40 2001
-// written: Thu Apr 19 17:31:46 2001
+// written: Thu Apr 19 17:33:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@ inline int IMIN(int a, int b)
 
 inline double SQR(double a) { return a*a; }
 
-double pythag(double a, double b)
+inline double pythag(double a, double b)
 {
   double absa,absb;
   absa = fabs(a);
@@ -33,19 +33,19 @@ double pythag(double a, double b)
   else return (absb == 0.0 ? 0.0 : absb*sqrt(1.0+SQR(absa/absb)));
 }
 
-double* vector(long nl, long nh)
+inline double* vector(long nl, long nh)
 {
   double* v;
   v = (double*) malloc((size_t) ((nh-nl+1+NR_END)*sizeof(double)));
   return v-nl+NR_END;
 }
 
-void free_vector(double* v, long nl, long nh)
+inline void free_vector(double* v, long nl, long nh)
 {
   free(v+nl-NR_END);
 }
 
-double** matrix(long nrl, long nrh, long ncl, long nch)
+inline double** matrix(long nrl, long nrh, long ncl, long nch)
 {
   long i, nrow=nrh-nrl+1, ncol=nch-ncl+1;
   double **m;
@@ -66,7 +66,7 @@ double** matrix(long nrl, long nrh, long ncl, long nch)
   return m;
 }
 
-void free_matrix(double **m, long nrl, long nrh, long ncl, long nch)
+inline void free_matrix(double **m, long nrl, long nrh, long ncl, long nch)
 {
   free(m[nrl]+ncl-NR_END);
   free(m+nrl-NR_END);
