@@ -73,7 +73,7 @@ DOTRACE("CModelExemplar::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      Mtx category_ = extraArgs.getField("category").getMtx();
+      Mtx category_ = extraArgs.getField("category").asMtx();
 
       int category = int(category_.at(0));
 
