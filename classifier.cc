@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Apr 18 15:43:44 2001
+// written: Wed Apr 18 16:16:33 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -188,7 +188,7 @@ DOTRACE("Classifier::deviance");
 
 Classifier::RequestResult Classifier::handleRequest(fixed_string action,
 																	 const Mtx& allModelParams,
-																	 mxArray* extraArgs_mx)
+																	 const MxWrapper& extraArgs)
 {
 DOTRACE("Classifier::handleRequest");
 
@@ -246,9 +246,7 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "classify" )
 	 {
-		Mtx testObjects =
-		  Mtx(MxWrapper::extractStructField(extraArgs_mx, "testObjects"),
-				Mtx::COPY);
+		Mtx testObjects = extraArgs.getStructField("testObjects").getMtx();
 
 		Mtx result(testObjects.mrows(), allModelParams.ncols());
 

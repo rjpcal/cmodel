@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Apr 18 15:44:53 2001
+// written: Wed Apr 18 16:16:24 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -106,14 +106,14 @@ CModelExemplar::~CModelExemplar()
 Classifier::RequestResult
 CModelExemplar::handleRequest(fixed_string action,
 										const Mtx& allModelParams,
-										mxArray* extraArgs_mx)
+										const MxWrapper& extraArgs)
 {
 DOTRACE("CModelExemplar::handleRequest");
 
   if ( action == "getStoredExemplars" )
 	 {
-		Mtx category_ = 
-		  Mtx(MxWrapper::extractStructField(extraArgs_mx, "category"), Mtx::COPY);
+		Mtx category_ = extraArgs.getStructField("category").getMtx();
+
 		int category = int(category_.at(0));
 
 		Slice modelParams = allModelParams.column(0);
@@ -133,7 +133,7 @@ DOTRACE("CModelExemplar::handleRequest");
 								 "'getStoredExemplars'");
 	 }
 
-  return Classifier::handleRequest(action, allModelParams, extraArgs_mx);
+  return Classifier::handleRequest(action, allModelParams, extraArgs);
 }
 
 //---------------------------------------------------------------------

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Tue Apr 10 14:44:33 2001
+// written: Wed Apr 18 16:16:19 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -38,7 +38,7 @@ public:
   // process the request.
   virtual RequestResult handleRequest(fixed_string action,
 												  const Mtx& modelParams,
-												  mxArray* extraArgs_mx);
+												  const MxWrapper& extraArgs);
 
 protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
