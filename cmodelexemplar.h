@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Tue Mar 13 12:04:13 2001
+// written: Tue Mar 13 12:50:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -58,8 +58,8 @@ private:
 							  const ConstSlice& storedExemplar1,
 							  const ConstSlice& storedExemplar2);
 
-  virtual void computeDiffEv(Mtx& modelParams);
-  virtual double fetchSigmaNoise(const Mtx& modelParams) const;
+  virtual void computeDiffEv(Slice& modelParams);
+  virtual double computeSigmaNoise(double rawSigma) const;
 
   virtual void loadModelParams(Slice& modelParams);
 

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:09:09 2001
-// written: Mon Mar 12 16:54:04 2001
+// written: Tue Mar 13 12:49:54 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,17 +25,17 @@ CModelPbi::CModelPbi(const Mtx& objParams, const Mtx& observedIncidence) :
 
 CModelPbi::~CModelPbi() {}
 
-void CModelPbi::computeDiffEv(Mtx& modelParams)
+void CModelPbi::computeDiffEv(Slice& modelParams)
 {
 DOTRACE("CModelPbi::computeDiffEv");
 
-  Slice attWeights = modelParams.asSlice().leftmost(DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
   for (int i = 0; i < numAllExemplars(); ++i)
 	 diffEvidence(i) = -1.0 * Slice::dot(attWeights, exemplar(i));
 }
 
-double CModelPbi::fetchSigmaNoise(const Mtx& /*modelParams*/) const
+double CModelPbi::computeSigmaNoise(double /* rawSigma */) const
 {
   return 1.0;
 }

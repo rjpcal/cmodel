@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 18:08:46 2001
-// written: Mon Mar 12 12:31:47 2001
+// written: Tue Mar 13 12:50:30 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -22,8 +22,8 @@ public:
   virtual ~CModelPbi();
 
 private:
-  virtual void computeDiffEv(Mtx& modelParams);
-  virtual double fetchSigmaNoise(const Mtx& modelParams) const;
+  virtual void computeDiffEv(Slice& modelParams);
+  virtual double computeSigmaNoise(double rawSigma) const;
 };
 
 static const char vcid_cmodelpbi_h[] = "$Header$";

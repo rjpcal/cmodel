@@ -172,7 +172,7 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Mtx modelParams(allModelParams.columnSubMtx(i));
+				Slice modelParams(allModelParams.column(i));
 				result.at(i) = multiplier * model->currentLogL(modelParams);
 			 }
 		}
@@ -180,7 +180,6 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Mtx modelParams(allModelParams.columnSubMtx(i));
 				result.at(i) = multiplier * model->fullLogL();
 			 }
 		}
@@ -188,7 +187,7 @@ DOTRACE("Mclassifier");
 		{
 		  for (int i = 0; i < allModelParams.ncols(); ++i)
 			 {
-				Mtx modelParams(allModelParams.columnSubMtx(i));
+				Slice modelParams(allModelParams.column(i));
 				result.at(i) = multiplier * model->deviance(modelParams);
 			 }
 		}

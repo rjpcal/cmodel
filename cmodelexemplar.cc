@@ -200,7 +200,7 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
 //
 //---------------------------------------------------------------------
 
-void CModelExemplar::computeDiffEv(Mtx& modelParams) {
+void CModelExemplar::computeDiffEv(Slice& modelParams) {
 DOTRACE("CModelExemplar::computeDiffEv");
 
   //---------------------------------------------------------------------
@@ -208,12 +208,13 @@ DOTRACE("CModelExemplar::computeDiffEv");
   // Set up the attentional weights.
   //
 
-  Slice attWeights = modelParams.asSlice().leftmost(DIM_OBJ_PARAMS);
+  Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
   for (int i = 0; i < attWeights.nelems(); ++i)
 	 attWeights[i] = abs(attWeights[i]);
 
-  Slice otherParams = modelParams.asSlice().rightmost(modelParams.nelems()-6);
+  Slice otherParams = modelParams.rightmost(modelParams.nelems()-
+														  (DIM_OBJ_PARAMS+2));
 
   loadModelParams(otherParams);
 
@@ -240,9 +241,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
   }
 }
 
-double CModelExemplar::fetchSigmaNoise(const Mtx& modelParams) const
+double CModelExemplar::computeSigmaNoise(double rawSigma) const
 {
-  return modelParams.at(5) * sqrt(itsNumStoredExemplars*2.0);
+  return rawSigma * sqrt(itsNumStoredExemplars*2.0);
 }
 
 void CModelExemplar::loadModelParams(Slice& modelParams) {}

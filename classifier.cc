@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Mar 13 11:06:55 2001
+// written: Tue Mar 13 12:55:35 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -106,7 +106,7 @@ DOTRACE("Classifier::computeLogL");
   return ll;
 }
 
-double Classifier::currentLogL(Mtx& modelParams)
+double Classifier::currentLogL(Slice& modelParams)
 {
 DOTRACE("Classifier::currentLogL");
 
@@ -123,9 +123,9 @@ DOTRACE("Classifier::currentLogL");
 
   // the threshold is right after the DIM_OBJ_PARAMS number of
   // attentional weights
-  const double thresh = modelParams.at(DIM_OBJ_PARAMS);
+  const double thresh = modelParams[DIM_OBJ_PARAMS];
 
-  const double sigmaNoise = fetchSigmaNoise(modelParams);
+  const double sigmaNoise = computeSigmaNoise(modelParams[DIM_OBJ_PARAMS+1]);
 
   // predictedProbability = forwardProbit(diffEvidence, thresh, sigmaNoise);
   forwardProbit(thresh, sigmaNoise);
@@ -144,7 +144,8 @@ double Classifier::fullLogL() {
   return computeLogL(FULL);
 }
 
-double Classifier::deviance(Mtx& modelParams) {
+double Classifier::deviance(Slice& modelParams) {
+
   double llc = currentLogL(modelParams);
   double llf = fullLogL();
 

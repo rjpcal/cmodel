@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Mon Mar 12 16:29:27 2001
+// written: Tue Mar 13 12:55:28 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,9 +17,10 @@
 #define MLF_V2 1
 #endif
 
+class ConstSlice;
+class Slice;
 class Mtx;
 
-class ConstSlice;
 
 class Classifier {
 private:
@@ -42,19 +43,19 @@ private:
   }
 
   // Must be overridden by subclasses
-  virtual void computeDiffEv(Mtx& modelParams) = 0;
+  virtual void computeDiffEv(Slice& modelParams) = 0;
 
-  virtual double fetchSigmaNoise(const Mtx& modelParams) const = 0;
+  virtual double computeSigmaNoise(double rawSigma) const = 0;
 
 public:
   Classifier(const Mtx& objParams, const Mtx& observedIncidence);
   virtual ~Classifier();
 
-  double currentLogL(Mtx& modelParams);  
+  double currentLogL(Slice& modelParams);  
 
   double fullLogL();
 
-  double deviance(Mtx& modelParams);
+  double deviance(Slice& modelParams);
 
 protected:
   double& diffEvidence(int i) { return itsDiffEvidence[i]; }
