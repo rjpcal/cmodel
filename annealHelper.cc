@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:56:52 2002
+// written: Mon Feb 18 17:00:34 2002
 // $Id$
 //
 //
@@ -365,11 +365,8 @@ struct AnnealOpts
     valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
     deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
-    energy(int(tempRepeats.sum()), numruns),
-    startValues(Mx::getField(arr, "centers"), Mtx::COPY)
-  {
-    energy.setAll(std::numeric_limits<double>::max());
-  }
+    centers(Mx::getField(arr, "centers"), Mtx::COPY)
+  {}
 
   const int numRuns;
   const bool talking;
@@ -383,8 +380,7 @@ struct AnnealOpts
   const Mtx valueScalingRange;
   const Mtx bounds;
   const Mtx deltas;
-  Mtx energy;
-  Mtx startValues;
+  const Mtx centers;
 };
 
 //---------------------------------------------------------------------
@@ -403,6 +399,8 @@ private:
   Mtx itsBestCosts;
   Mtx itsModelHist; // FIXME does this really need to be a member variable?
   Mtx itsMhat;
+  Mtx itsEnergy;
+  Mtx itsStartValues;
 
   const fstring itsFunFunName;
   const int itsNvararg;
@@ -421,11 +419,15 @@ public:
     itsBestCosts(itsOpts.numRuns, 1),
     itsModelHist(itsOpts.numModelParams, int(itsOpts.tempRepeats.sum())),
     itsMhat(itsOpts.numModelParams, itsOpts.numRuns),
+    itsEnergy(int(itsOpts.tempRepeats.sum()), itsOpts.numRuns),
+    itsStartValues(itsOpts.centers),
 
     itsFunFunName(funcName),
     itsNvararg(nvararg),
     itsPvararg(pvararg)
-  {}
+  {
+    itsEnergy.setAll(std::numeric_limits<double>::max());
+  }
 
   void oneRun();
 
@@ -445,7 +447,7 @@ public:
     mxSetField(output, 0, "bestCost", itsBestCosts.makeMxArray());
     mxSetField(output, 0, "mhat", itsMhat.makeMxArray());
     mxSetField(output, 0, "model", itsModelHist.makeMxArray());
-    mxSetField(output, 0, "energy", itsOpts.energy.makeMxArray());
+    mxSetField(output, 0, "energy", itsEnergy.makeMxArray());
     mxSetField(output, 0, "numFunEvals", itsNumFunEvals.makeMxArray());
 
     return output;
@@ -475,7 +477,7 @@ public:
     for (int r = 0; r < models.mrows(); ++r)
       {
         models.row(r) *= itsDeltas.at(r);
-        models.row(r) += itsOpts.startValues.at(r);
+        models.row(r) += itsStartValues.at(r);
       }
 
     return models;
@@ -670,10 +672,10 @@ DOTRACE("AnnealingRun::oneRun");
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
                         int(itsNumFunEvals.at(itsRunNum)),
                         temp,
-                        itsOpts.energy.column(itsRunNum).min());
+                        itsEnergy.column(itsRunNum).min());
             }
 
-          itsOpts.energy.at(nvisits-1,itsRunNum) =
+          itsEnergy.at(nvisits-1,itsRunNum) =
             visitParameters(bestModel, temp);
 
           for (int i = 0; i < bestModel.nelems(); ++i)
@@ -703,7 +705,7 @@ DOTRACE("AnnealingRun::oneRun");
   {
     // FIXME ought to use a smarter algorithm to keep track of the best cost
 
-    Mtx currentEnergy = itsOpts.energy.column(itsRunNum);
+    Mtx currentEnergy = itsEnergy.column(itsRunNum);
 
     int best_pos = 0;
     const double best_energy = currentEnergy.min(&best_pos);
@@ -716,7 +718,7 @@ DOTRACE("AnnealingRun::oneRun");
 
   if (itsOpts.doNewton) runSimplex();
 
-  itsOpts.startValues.column(0) = itsMhat.column(itsRunNum);
+  itsStartValues.column(0) = itsMhat.column(itsRunNum);
 
   ++itsRunNum;
 }
