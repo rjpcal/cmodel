@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Feb 19 10:58:21 2002
+// written: Tue Feb 19 17:11:23 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -278,10 +278,10 @@ DOTRACE("AnnealingOptimizer::doOneRun");
 
   Mtx currentEnergy = itsEnergy.column(itsRunNum);
 
-  int best_pos = 0;
-  const double best_energy = currentEnergy.min(&best_pos);
+  Mtx::const_iterator best_energy = currentEnergy.find_min();
+  int best_pos = best_energy - currentEnergy.begin();
 
-  itsBestCosts.at(itsRunNum) = best_energy;
+  itsBestCosts.at(itsRunNum) = *best_energy;
   itsBestModels.column(itsRunNum) = itsModelHist.column(best_pos);
 
   displayParams(itsBestModels.column(itsRunNum), itsBestCosts.at(itsRunNum));
@@ -308,12 +308,12 @@ DOTRACE("AnnealingOptimizer::getOutput");
 
   mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
-  int best_pos = -1;
-  double best_cost = itsBestCosts.min(&best_pos);
+  Mtx::const_iterator best_cost = itsBestCosts.find_min();
+  int best_pos = best_cost - itsBestCosts.begin();
 
   Mtx mhat = itsBestModels.column(best_pos);
 
-  mxSetField(output, 0, "bestCost", mxCreateScalarDouble(best_cost));
+  mxSetField(output, 0, "bestCost", mxCreateScalarDouble(*best_cost));
   mxSetField(output, 0, "mhat", mhat.makeMxArray());
   mxSetField(output, 0, "model", itsModelHist.makeMxArray());
   mxSetField(output, 0, "energy", itsEnergy.makeMxArray());
@@ -432,14 +432,14 @@ DOTRACE("AnnealingOptimizer::createStartingModel");
     log10(startingCosts.sum() / startingCosts.nelems())
     - itsOpts.tempScales.at(itsRunNum);
 
-  int startingPos = 0;
-  const double startingCost = startingCosts.min(&startingPos);
+  Mtx::const_iterator startingCost = startingCosts.find_min();
+  const int startingPos = startingCost - startingCosts.begin();
 
   if (itsOpts.talking)
     {
       std::cerr << "\nStarting cost "
                 << std::setw(7) << std::fixed << std::setprecision(2)
-                << startingCost;
+                << *startingCost;
       std::cerr << "\n\nBeginning run #" << itsRunNum+1 << ". ";
       std::cerr << "Critical temperature at "
                 << std::setw(3) << std::fixed << std::setprecision(2)
