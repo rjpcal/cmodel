@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 12:56:50 2001
+// written: Wed Apr 18 14:31:36 2001
 // $Id$
 //
 //
@@ -26,6 +26,7 @@
 #include "doSimplex.h"
 
 #include "error.h"
+#include "mexbuf.h"
 #include "mtx.h"
 #include "multivarfunction.h"
 #include "strings.h"
@@ -94,27 +95,6 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 
   return int(mxGetScalar(arr));
 }
-
-class MexBuf : public streambuf
-{
-public:
-  MexBuf() : streambuf() { setbuf(0,0); }
-
-  virtual int overflow(int c)
-  {
-	 if (c != EOF)
-		mexPrintf("%c", c);
-	 return c;
-  }
-
-  virtual streamsize xsputn(const char* s, const streamsize n)
-  {
-	 streamsize c = n;
-	 while (*s && c--)
-		mexPrintf("%c", *s++);
-  	 return n;
-  }
-};
 
 namespace {
   MexBuf* mexBuf = 0;
