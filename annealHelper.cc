@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:53:54 2002
+// written: Mon Feb 18 18:17:40 2002
 // $Id$
 //
 //
@@ -210,7 +210,7 @@ DOTRACE("doParallelFuncEvals");
   // costs = feval(func, models, varargin{:});
   int result = mexCallMATLAB(1, &costs_mx, nrhs, prhs, func_name.c_str());
 
-  if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+  if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doParallelFuncEvals");
 
   Mtx costs(costs_mx, Mtx::COPY);
 
@@ -263,7 +263,7 @@ DOTRACE("doSerialFuncEvals");
 
       int result = mexCallMATLAB(1, plhs, nrhs, prhs, func_name.c_str());
 
-      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doSerialFuncEvals");
 
       costs.at(e) = mxGetScalar(plhs[0]);
 
@@ -359,6 +359,47 @@ DOTRACE("sampleFromPdf");
 
   return s;
 }
+
+class Objective : public MultivarFunction
+{
+private:
+  const fstring itsFuncName;
+  const int itsNvararg;
+  mxArray** const itsPvararg;
+  const bool itsCanUseMatrix;
+
+public:
+  Objective(const fstring& funcName, int nvararg, mxArray** pvararg,
+            bool canUseMatrix = false)
+    :
+    itsFuncName(funcName),
+    itsNvararg(nvararg),
+    itsPvararg(pvararg),
+    itsCanUseMatrix(canUseMatrix)
+  {}
+
+  Mtx evaluateEach(const Mtx& models) const
+  {
+    if (itsCanUseMatrix)
+      return doParallelFuncEvals(models, itsFuncName,
+                                 itsNvararg, itsPvararg);
+
+    return doSerialFuncEvals(models, itsFuncName,
+                             itsNvararg, itsPvararg);
+  }
+
+  virtual double doEvaluate(const Mtx& model)
+  {
+    Mtx result = evaluateEach(model.asColumn());
+    return result.at(0);
+  }
+};
+
+///////////////////////////////////////////////////////////////////////
+//
+// AnnealOpts
+//
+///////////////////////////////////////////////////////////////////////
 
 struct AnnealOpts
 {
@@ -457,9 +498,7 @@ private:
   Mtx itsEnergy;
   Mtx itsStartValues;
 
-  const fstring itsFunFunName;
-  const int itsNvararg;
-  mxArray** const itsPvararg;
+  Objective itsObjective;
 
 public:
   AnnealingOptimizer(const fstring& funcName,
@@ -477,9 +516,7 @@ public:
     itsEnergy(int(itsOpts.coolingSchedule.sum()), itsOpts.numRuns),
     itsStartValues(itsOpts.centers),
 
-    itsFunFunName(funcName),
-    itsNvararg(nvararg),
-    itsPvararg(pvararg)
+    itsObjective(funcName, nvararg, pvararg, itsOpts.canUseMatrix)
   {
     itsEnergy.setAll(std::numeric_limits<double>::max());
   }
@@ -522,16 +559,6 @@ public:
   // Returns the cost at the best model that was found
   double visitParameters(Mtx& bestModel, const double temp);
 
-  Mtx doFuncEvals(const Mtx& models)
-  {
-    if (itsOpts.canUseMatrix)
-      return doParallelFuncEvals(models, itsFunFunName,
-                                 itsNvararg, itsPvararg);
-
-    return doSerialFuncEvals(models, itsFunFunName,
-                             itsNvararg, itsPvararg);
-  }
-
   Mtx makeRandomModels()
   {
     Mtx models = matlabRand(itsOpts.numModelParams,
@@ -555,7 +582,7 @@ public:
 
     const Mtx startingModels = makeRandomModels();
 
-    const Mtx startingCosts = doFuncEvals(startingModels);
+    const Mtx startingCosts = itsObjective.evaluateEach(startingModels);
 
     *criticalTemp =
       log10(startingCosts.sum() / startingCosts.nelems())
@@ -590,12 +617,7 @@ public:
 
   void runSimplex()
   {
-    mxArray* funfun_mx = 0;
-    mlfAssign(&funfun_mx, mxCreateString(itsFunFunName.c_str()));
-
-    MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
-
-    SimplexOptimizer opt(objective,
+    SimplexOptimizer opt(itsObjective,
                          Mtx(itsMhat.column(itsRunNum)),
                          fstring("notify"),
                          itsOpts.numModelParams,
@@ -642,9 +664,6 @@ public:
                         "but failed to remain within constraints.\n\n");
           }
       }
-
-
-    mxDestroyArray(funfun_mx);
   }
 };
 
@@ -668,7 +687,7 @@ double AnnealingOptimizer::visitParameters(Mtx& bestModel, const double temp)
                                        delta,
                                        itsOpts.bounds);
 
-      costs = doFuncEvals(modelmatrix);
+      costs = itsObjective.evaluateEach(modelmatrix);
 
       nevals += costs.nelems();
 
