@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Wed Mar 21 13:57:31 2001
+// written: Wed Mar 28 10:17:13 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,9 +21,9 @@
 
 class Classifier {
 private:
-  const Mtx& itsObjParams;
+  const Mtx itsObjParams;
   int itsNumAllExemplars;
-  const Mtx& itsObservedIncidence;
+  const Mtx itsObservedIncidence;
   Mtx itsDiffEvidence;
   double* const itsPredictedProbability;
 
