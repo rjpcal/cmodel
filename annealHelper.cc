@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:36:13 2002
+// written: Mon Feb 18 17:53:54 2002
 // $Id$
 //
 //
@@ -46,6 +46,16 @@ namespace Mx
   inline mxArray* getField(mxArray* structArray, const char* fieldName)
   {
     return MxWrapper::extractStructField(structArray, fieldName);
+  }
+
+  inline int getIntField(mxArray* structArray, const char* fieldName)
+  {
+    return int(mxGetScalar(Mx::getField(structArray, fieldName)));
+  }
+
+  inline bool getBoolField(mxArray* structArray, const char* fieldName)
+  {
+    return (mxGetScalar(Mx::getField(structArray, fieldName)) != 0.0);
   }
 }
 
@@ -369,22 +379,37 @@ private:
     return result;
   }
 
+  Mtx makeCoolingSchedule(int scale)
+  {
+    const int N = 9;
+
+    double repeats[N] = { 1.0, 2.0, 4.0, 6.0, 10.0, 6.0, 4.0, 2.0, 1.0 };
+
+    Mtx result(1, N);
+
+    for (int i = 0; i < N; ++i)
+      {
+        result.at(i) = scale * repeats[i];
+      }
+
+    return result;
+  }
+
 public:
   AnnealOpts(mxArray* arr) :
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
     deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
     centers(Mx::getField(arr, "centers"), Mtx::COPY),
-    numRuns(int(mxGetScalar(Mx::getField(arr, "numruns")))),
-    talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
-    canUseMatrix(mxGetScalar(Mx::getField(arr, "canUseMatrix")) != 0.0),
-    doNewton(mxGetScalar(Mx::getField(arr, "newton")) != 0.0),
-    tempRepeats(Mx::getField(arr, "tempRepeats"), Mtx::COPY),
-    numTemps(tempRepeats.nelems()),
+    numRuns(Mx::getIntField(arr, "numruns")),
+    talking(Mx::getBoolField(arr, "talk")),
+    canUseMatrix(Mx::getBoolField(arr, "canUseMatrix")),
+    doNewton(Mx::getBoolField(arr, "newton")),
+    coolingSchedule(makeCoolingSchedule(Mx::getIntField(arr, "scale"))),
+    numTemps(coolingSchedule.nelems()),
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
     numModelParams(bounds.mrows()),
     numStartingPoints(std::max(100, 20*numModelParams)),
-    valueScalingRange(makeScalingRange
-                      (int(mxGetScalar(Mx::getField(arr, "gridSpacing")))))
+    valueScalingRange(makeScalingRange(Mx::getIntField(arr, "gridSpacing")))
   {
     if (bounds.ncols() != 2)
       {
@@ -405,7 +430,7 @@ public:
   const bool talking;
   const bool canUseMatrix;
   const bool doNewton;
-  const Mtx tempRepeats;
+  const Mtx coolingSchedule;
   const int numTemps;
   const Mtx tempScales;
   const int numModelParams;
@@ -447,9 +472,9 @@ public:
     itsDeltas(itsOpts.deltas),
     itsNumFunEvals(itsOpts.numRuns, 1),
     itsBestCosts(itsOpts.numRuns, 1),
-    itsModelHist(itsOpts.numModelParams, int(itsOpts.tempRepeats.sum())),
+    itsModelHist(itsOpts.numModelParams, int(itsOpts.coolingSchedule.sum())),
     itsMhat(itsOpts.numModelParams, itsOpts.numRuns),
-    itsEnergy(int(itsOpts.tempRepeats.sum()), itsOpts.numRuns),
+    itsEnergy(int(itsOpts.coolingSchedule.sum()), itsOpts.numRuns),
     itsStartValues(itsOpts.centers),
 
     itsFunFunName(funcName),
@@ -702,7 +727,7 @@ DOTRACE("AnnealingOptimizer::doOneRun");
         pow(10.0, (criticalTemp + 1.0
                    - 2.0*double(temps_i)/(itsOpts.numTemps-1)));
 
-      const int temp_repeat = int(itsOpts.tempRepeats.at(temps_i));
+      const int temp_repeat = int(itsOpts.coolingSchedule.at(temps_i));
 
       for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
