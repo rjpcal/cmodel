@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 15:53:33 2002
+// written: Mon Feb 18 16:02:09 2002
 // $Id$
 //
 //
@@ -353,15 +353,20 @@ DOTRACE("sampleFromPdf");
 struct Astate
 {
   Astate(mxArray* arr, int numruns) :
+    talking(mxGetScalar(Mx::getField(arr, "talk")) != 0.0),
     numTemps(int(mxGetScalar(Mx::getField(arr, "numTemps")))),
     tempRepeats(Mx::getField(arr, "x"), Mtx::COPY),
     tempScales(Mx::getField(arr, "tempScales"), Mtx::COPY),
     numModelParams(int(mxGetScalar(Mx::getField(arr, "numModelParams")))),
     numStartingPoints(int(mxGetScalar(Mx::getField(arr, "numStartingPoints")))),
     bestCost(numruns, 1),
-    modelHist(numModelParams, int(tempRepeats.sum()))
-  {}
+    modelHist(numModelParams, int(tempRepeats.sum())),
+    energy(int(tempRepeats.sum()), numruns)
+  {
+    energy.setAll(std::numeric_limits<double>::max());
+  }
 
+  const bool talking;
   const int numTemps;
   const Mtx tempRepeats;
   const Mtx tempScales;
@@ -369,6 +374,7 @@ struct Astate
   const int numStartingPoints;
   Mtx bestCost;
   Mtx modelHist;
+  Mtx energy;
 };
 
 //---------------------------------------------------------------------
@@ -383,11 +389,11 @@ private:
   mxArray* const itsAstate_mx;
   Astate& itsAstate;
   const int itsRunNum;
-  const bool itsTalking;
+//   const bool itsTalking;
   int itsNvisits;
   double itsCriticalTemp;
   Mtx itsNumFunEvals;
-  Mtx itsEnergy;
+//   Mtx itsEnergy;
   Mtx itsMinUsedParams;
   Mtx itsMaxUsedParams;
   Mtx itsDeltas;
@@ -412,11 +418,11 @@ public:
     itsAstate_mx(mxDuplicateArray(old_astate_mx)),
     itsAstate(astate),
     itsRunNum(runNum),
-    itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
+//     itsTalking(mxGetScalar(Mx::getField(itsAstate_mx, "talk")) != 0.0),
     itsNvisits(0),
     itsCriticalTemp(std::numeric_limits<double>::max()),
     itsNumFunEvals(Mx::getField(itsAstate_mx, "numFunEvals"), Mtx::REFER),
-    itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
+//     itsEnergy(Mx::getField(itsAstate_mx, "energy"), Mtx::REFER),
     itsMinUsedParams(0,0),
     itsMaxUsedParams(0,0),
     itsDeltas(Mx::getField(itsAstate_mx, "currentDeltas"), Mtx::REFER),
@@ -495,7 +501,7 @@ public:
   {
     DOTRACE("printRunHeader");
 
-    if (!itsTalking) return;
+    if (!itsAstate.talking) return;
 
     mexPrintf("\nStarting cost %7.2f", startingCost);
     mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
@@ -507,7 +513,7 @@ public:
 
   void displayParams(const Mtx& model, double cost)
   {
-    if (!itsTalking) return;
+    if (!itsAstate.talking) return;
 
     mexPrintf("\nparams: ");
     for (int i = 0; i < model.nelems(); ++i)
@@ -541,7 +547,7 @@ public:
   {
     // FIXME ought to use a smarter algorithm to keep track of the best cost
 
-    Mtx currentEnergy = itsEnergy.column(itsRunNum);
+    Mtx currentEnergy = itsAstate.energy.column(itsRunNum);
 
     int best_pos = 0;
     const double best_energy = currentEnergy.min(&best_pos);
@@ -581,7 +587,7 @@ public:
       {
         displayParams(mstar, Ostar);
 
-        if (itsTalking)
+        if (itsAstate.talking)
           mexPrintf("%d iterations\n", opt.iterCount());
 
         bool inBounds = true;
@@ -597,13 +603,13 @@ public:
           {
             itsMhat.column(itsRunNum) = mstar;
             itsAstate.bestCost.at(itsRunNum) = Ostar;
-            if (itsTalking)
+            if (itsAstate.talking)
               mexPrintf("\nSimplex method lowered cost "
                         "and remained within constraints.\n\n");
           }
         else
           {
-            if (itsTalking)
+            if (itsAstate.talking)
               mexPrintf("\nSimplex method lowered cost "
                         "but failed to remain within constraints.\n\n");
           }
@@ -693,15 +699,15 @@ DOTRACE("AnnealingRun::go");
         {
           ++itsNvisits;
 
-          if (itsTalking && (itsNvisits % 10 == 0))
+          if (itsAstate.talking && (itsNvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
                         int(itsNumFunEvals.at(itsRunNum)),
                         temp,
-                        itsEnergy.column(itsRunNum).leftmost(itsNvisits-1).min());
+                        itsAstate.energy.column(itsRunNum).min());
             }
 
-          itsEnergy.at(itsNvisits-1,itsRunNum) =
+          itsAstate.energy.at(itsNvisits-1,itsRunNum) =
             visitParameters(bestModel, temp);
 
           updateUsedParams(bestModel);
@@ -770,8 +776,7 @@ public:
 
     mxSetField(output, 0, "model", astate.modelHist.makeMxArray());
 
-    mxSetField(output, 0, fieldnames[3],
-               mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[3])));
+    mxSetField(output, 0, "energy", astate.energy.makeMxArray());
 
     mxSetField(output, 0, fieldnames[4],
                mxDuplicateArray(mxGetField(astate_mx, 0, fieldnames[4])));
