@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Wed Mar 14 17:23:41 2001
+// written: Thu Mar 15 15:51:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -148,7 +148,7 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 
 	 diffEvidence(y) += exp(-sim1);
 
-		// compute similarity of ex-y to stored-2-x
+	 // compute similarity of ex-y to stored-2-x
 	 double sim2 =
 		minkDist(attWeights,
 					exemplar(y).begin(),
@@ -181,8 +181,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
-  for (int i = 0; i < attWeights.nelems(); ++i)
-	 attWeights[i] = abs(attWeights[i]);
+  attWeights.apply(abs);
 
   Slice otherParams = modelParams.rightmost(modelParams.nelems()-
 														  (DIM_OBJ_PARAMS+2));
