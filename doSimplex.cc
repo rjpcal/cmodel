@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 06:20:45 2001
-// written: Wed Apr 18 15:05:45 2001
+// written: Wed Apr 18 15:42:07 2001
 // $Id$
 //
 //
@@ -28,6 +28,7 @@
 #include "error.h"
 #include "mexbuf.h"
 #include "mtx.h"
+#include "mxwrapper.h"
 #include "multivarfunction.h"
 #include "simplexoptimizer.h"
 #include "strings.h"
@@ -83,7 +84,7 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
 {
   if (mxIsChar(arr))
 	 {
-		if (Mtx::extractString(arr) == "200*numberofvariables")
+		if (MxWrapper::extractString(arr) == "200*numberofvariables")
 		  {
 			 return 200*numModelParams;
 		  }
@@ -364,7 +365,7 @@ DOTRACE("MdoSimplex");
 
 	 SimplexOptimizer opt(objective,
 								 Mtx(x_in),
-								 Mtx::extractString(printtype_mx),
+								 MxWrapper::extractString(printtype_mx),
 								 numModelParams,
 								 extractMaxIters(maxfun_mx, numModelParams),
 								 extractMaxIters(maxiter_mx, numModelParams),

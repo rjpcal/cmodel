@@ -11,6 +11,7 @@
 #include "error.h"
 #include "mexbuf.h"
 #include "mtx.h"
+#include "mxwrapper.h"
 #include "rutil.h"
 #include "strings.h"
 
@@ -494,7 +495,7 @@ DOTRACE("doFuncEvals");
 
 		int nrhs = 6;
 
-  		fixed_string cmd_name = Mtx::extractString(func);
+  		fixed_string cmd_name = MxWrapper::extractString(func);
 
   		int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 

@@ -29,6 +29,7 @@
 #include "error.h"
 #include "mexbuf.h"
 #include "mtx.h"
+#include "mxwrapper.h"
 #include "rutil.h"
 #include "strings.h"
 #include "util/pointers.h"
@@ -192,9 +193,9 @@ DOTRACE("Mclassifier");
 
   try {
 
-	 fixed_string modelName = Mtx::extractString(modelName_mx);
+	 fixed_string modelName = MxWrapper::extractString(modelName_mx);
 
-	 fixed_string actionRequest = Mtx::extractString(actionRequest_mx);
+	 fixed_string actionRequest = MxWrapper::extractString(actionRequest_mx);
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
 	 if (extraArgs_mx && mxIsStruct(extraArgs_mx))

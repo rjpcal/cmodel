@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Tue Apr 10 15:19:23 2001
+// written: Wed Apr 18 15:44:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,6 +18,7 @@
 #include "error.h"
 #include "minivec.h"
 #include "mtx.h"
+#include "mxwrapper.h"
 #include "num.h"
 #include "strings.h"
 
@@ -111,7 +112,8 @@ DOTRACE("CModelExemplar::handleRequest");
 
   if ( action == "getStoredExemplars" )
 	 {
-		Mtx category_ = Mtx::extractStructField(extraArgs_mx, "category");
+		Mtx category_ = 
+		  Mtx(MxWrapper::extractStructField(extraArgs_mx, "category"), Mtx::COPY);
 		int category = int(category_.at(0));
 
 		Slice modelParams = allModelParams.column(0);

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Apr 10 14:38:58 2001
+// written: Wed Apr 18 15:43:44 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -16,6 +16,7 @@
 #include "classifier.h"
 
 #include "error.h"
+#include "mxwrapper.h"
 #include "num.h"
 #include "strings.h"
 
@@ -245,7 +246,9 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "classify" )
 	 {
-		Mtx testObjects = Mtx::extractStructField(extraArgs_mx, "testObjects");
+		Mtx testObjects =
+		  Mtx(MxWrapper::extractStructField(extraArgs_mx, "testObjects"),
+				Mtx::COPY);
 
 		Mtx result(testObjects.mrows(), allModelParams.ncols());
 
