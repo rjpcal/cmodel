@@ -652,18 +652,19 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     mxDestroyArray(mprhs[8]);
 }
 
-static mxArray * doSimplexImpl(mxArray * * fval,
-										 mxArray * * exitflag,
-										 mxArray * * output,
-										 int nargout_,
-										 FuncEvaluator& objective,
-										 const Mtx& x_in,
-										 const int prnt,
-										 const double tolx,
-										 const double tolf,
-										 const int numModelParams,
-										 const int maxfun,
-										 const int maxiter)
+static void doSimplexImpl(Mtx& best_x,
+								  double& best_fval,
+								  int& exitFlag,
+								  mxArray * * output,
+								  int nargout_,
+								  FuncEvaluator& objective,
+								  const Mtx& x_in,
+								  const int prnt,
+								  const double tolx,
+								  const double tolf,
+								  const int numModelParams,
+								  const int maxfun,
+								  const int maxiter)
 {
 
 // HOME
@@ -739,9 +740,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		mexPrintf("func_evals: %d\n", objective.evalCount());
 	 }
 
-  // exitflag = 1;
-  mlfAssign(exitflag, _mxarray11_);
-
+  exitFlag = 1;
 
   //---------------------------------------------------------------------
   //
@@ -961,7 +960,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 		}
   }
 
-  xx = theSimplex.columns(0,1);
+  xx = theSimplex.column(0);
 
   // end Main algorithm
 
@@ -972,7 +971,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
   // output.algorithm = 'Nelder-Mead simplex direct search';
   mlfIndexAssign(output, ".algorithm", _mxarray63_);
 
-  mlfAssign(fval, mxCreateScalarDouble(funcVals.row(0).min()));
+  best_fval = funcVals.row(0).min();
 
   if (objective.evalCount() >= maxfun)
 	 {
@@ -981,10 +980,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxFunEvals option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						mxGetScalar(*fval));
+						best_fval);
 		}
 
-		mlfAssign(exitflag, mxCreateScalarDouble(0));
+		exitFlag = 0;
 	 }
   else if (itercount >= maxiter)
 	 {
@@ -993,10 +992,10 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 						"has been exceeded\n");
 		  mexPrintf("         - increase MaxIter option.\n");
 		  mexPrintf("         Current function value: %f \n\n",
-						mxGetScalar(*fval));
+						best_fval);
 		}
 
-		mlfAssign(exitflag, mxCreateScalarDouble(0));
+		exitFlag = 0;
 	 }
   else
 	 {
@@ -1012,14 +1011,12 @@ static mxArray * doSimplexImpl(mxArray * * fval,
 			 mexPrintf(format, tolx, tolf);
 		  }
 
-		mlfAssign(exitflag, mxCreateScalarDouble(1.0));
+		exitFlag = 1;
   }
 
-  mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
-  mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
   mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
 
-  return xx.makeMxArray();
+  best_x = xx;
 }
 
 
@@ -1036,7 +1033,7 @@ static mxArray * doSimplexImpl(mxArray * * fval,
  */
 
 static mxArray * MdoSimplex(mxArray * * fval,
-                            mxArray * * exitflag,
+                            mxArray * * exitflag_mx,
                             mxArray * * output,
                             int nargout_,
                             mxArray * funfcn_mx,
@@ -1085,18 +1082,24 @@ DOTRACE("MdoSimplex");
 
   FuncEvaluator objective(funfcn_mx, varargin);
 
-  mxArray* result = doSimplexImpl(fval, exitflag, output, nargout_,
-											 objective,
-											 Mtx(x_in),
-											 extractPrinttype(printtype_mx),
-											 mxGetScalar(tolx_mx),
-											 mxGetScalar(tolf_mx),
-											 numModelParams,
-											 extractMaxIters(maxfun_mx, numModelParams),
-											 extractMaxIters(maxiter_mx, numModelParams)
-											 );
+  Mtx best_x(0,0);
+  double best_fval = 0.0;
+  int exitFlag = 0;
+  doSimplexImpl(best_x, best_fval, exitFlag, output, nargout_,
+					 objective,
+					 Mtx(x_in),
+					 extractPrinttype(printtype_mx),
+					 mxGetScalar(tolx_mx),
+					 mxGetScalar(tolf_mx),
+					 numModelParams,
+					 extractMaxIters(maxfun_mx, numModelParams),
+					 extractMaxIters(maxiter_mx, numModelParams)
+					 );
+
+  *fval = mxCreateScalarDouble(best_fval);
+  *exitflag_mx = mxCreateScalarDouble(exitFlag);
 
   mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-  return result;
+  return best_x.makeMxArray();
 }
