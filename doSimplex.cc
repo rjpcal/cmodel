@@ -938,7 +938,7 @@ DOTRACE("SimplexOptimizer::doOneIter");
   Mtx direction(xbar - itsSimplex.columns(itsNparams,1));
 
   // Calculate the reflection point
-  FuncPoint rflPt = evaluate(xbar*2.0 - itsSimplex.columns(itsNparams,1));
+  FuncPoint rflPt = evaluate(xbar + direction);
 
   if (rflPt.betterThan(simplexAt(0)))
  	 {
