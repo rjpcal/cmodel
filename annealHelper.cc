@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 14:39:57 2002
+// written: Thu Feb 14 14:55:23 2002
 // $Id$
 //
 //
@@ -139,27 +139,24 @@ void mlxAnnealVisitParameters(int nlhs,
 {
 DOTRACE("mlxAnnealVisitParameters");
   mxArray* mprhs[8];
-  mxArray* mplhs[1];
-  int i;
+
   if (nlhs > 1)
     {
-      mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
-                   "Column: 1 The function \"annealVisitParameters\" was "
-                   "called with more than the declared number of outputs "
-                   "(1).");
+      mexErrMsgTxt("Error: annealVisitParameters was called with more "
+                   "than the declared number of outputs (1).");
     }
-  for (i = 0; i < 1; ++i)
+  if (nrhs < 7)
     {
-      mplhs[i] = mclGetUninitializedArray();
+      mexErrMsgTxt("Error: annealVisitParameters was called with fewer "
+                   "than the declared number of inputs (7).");
     }
-  for (i = 0; i < 7 && i < nrhs; ++i)
+
+  for (int i = 0; i < 7; ++i)
     {
       mprhs[i] = prhs[i];
     }
-  for (; i < 7; ++i)
-    {
-      mprhs[i] = NULL;
-    }
+  mprhs[7] = NULL;
+
   mlfEnterNewContext(0,
                      7,
                      mprhs[0],
@@ -172,15 +169,15 @@ DOTRACE("mlxAnnealVisitParameters");
   mprhs[7] = NULL;
   mlfAssign(&mprhs[7], mclCreateVararginCell(nrhs - 7, prhs + 7));
 
-  mplhs[0] = MannealVisitParameters(nlhs,
-                                    mprhs[0],
-                                    mprhs[1],
-                                    mprhs[2],
-                                    mprhs[3],
-                                    mprhs[4],
-                                    mprhs[5],
-                                    mprhs[6],
-                                    mprhs[7]);
+  plhs[0] = MannealVisitParameters(nlhs,
+                                   mprhs[0],
+                                   mprhs[1],
+                                   mprhs[2],
+                                   mprhs[3],
+                                   mprhs[4],
+                                   mprhs[5],
+                                   mprhs[6],
+                                   mprhs[7]);
 
   mlfRestorePreviousContext(0,
                             7,
@@ -191,7 +188,7 @@ DOTRACE("mlxAnnealVisitParameters");
                             mprhs[4],
                             mprhs[5],
                             mprhs[6]);
-  plhs[0] = mplhs[0];
+
   mxDestroyArray(mprhs[7]);
 }
 
@@ -272,6 +269,10 @@ DOTRACE("MannealVisitParameters");
       int nevals = 0;
       int s_zerobased = 0;
 
+      const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
+      const Mtx deltas(deltas_mx, Mtx::BORROW);
+      const Mtx bounds(bounds_mx, Mtx::BORROW);
+
       // for x = find(deltas' ~= 0)
       {
         mclForLoopIterator viter__;
@@ -289,9 +290,6 @@ DOTRACE("MannealVisitParameters");
 
             // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
             // deltas, bounds);
-            const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
-            const Mtx deltas(deltas_mx, Mtx::BORROW);
-            const Mtx bounds(bounds_mx, Mtx::BORROW);
             Mtx modelmatrix = makeTestModels(x_zerobased,
                                              bestModel,
                                              valueScalingRange,
