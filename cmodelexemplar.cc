@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Thu Apr 26 18:40:32 2001
+// written: Fri May 11 16:30:19 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,14 +15,14 @@
 
 #include "cmodelexemplar.h"
 
-#include "error.h"
-#include "minivec.h"
+#include "util/error.h"
+#include "util/minivec.h"
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "num.h"
-#include "strings.h"
+#include "util/strings.h"
 
-#include "trace.h"
+#include "util/trace.h"
 
 #include <cmath>
 

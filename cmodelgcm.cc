@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:42:01 2001
-// written: Thu Apr 26 18:41:49 2001
+// written: Fri May 11 16:29:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,10 +15,10 @@
 
 #include "cmodelgcm.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "mtx.h"
 
-#include "trace.h"
+#include "util/trace.h"
 
 
 CModelGcm::CModelGcm(const Mtx& objParams,

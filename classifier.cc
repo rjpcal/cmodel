@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Apr 26 19:16:23 2001
+// written: Fri May 11 16:30:10 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,17 +15,17 @@
 
 #include "classifier.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "mxwrapper.h"
 #include "multivarfunction.h"
 #include "num.h"
 #include "simplexoptimizer.h"
-#include "strings.h"
+#include "util/strings.h"
 
 #include <iostream.h>
 
-#include "trace.h"
-#include "debug.h"
+#include "util/trace.h"
+#include "util/debug.h"
 
 class LLEvaluator : public MultivarFunction {
   Classifier& itsC;

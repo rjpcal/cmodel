@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Thu Apr 26 18:41:11 2001
+// written: Fri May 11 16:29:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,13 +15,13 @@
 
 #include "cmodelcssm.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "num.h"
 #include "mtx.h"
 
 #include <cmath>
 
-#include "trace.h"
+#include "util/trace.h"
 
 CModelCssm::CModelCssm(const Mtx& objParams,
 							  TransferFunction transferFunc,

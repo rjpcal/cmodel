@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 17:35:56 2001
-// written: Thu Apr 26 18:46:47 2001
+// written: Fri May 11 16:29:53 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,10 +15,10 @@
 
 #include "cmodelwpsm.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "mtx.h"
 
-#include "trace.h"
+#include "util/trace.h"
 
 
 CModelWpsm::CModelWpsm(const Mtx& objParams,

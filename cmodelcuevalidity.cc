@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Thu Apr 26 18:39:41 2001
+// written: Fri May 11 16:29:19 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,7 +17,7 @@
 
 #include "mtx.h"
 
-#include "trace.h"
+#include "util/trace.h"
 
 #include <map>
 

@@ -8,18 +8,18 @@
  */
 #include "annealVisitParameters.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "rutil.h"
-#include "strings.h"
+#include "util/strings.h"
 
 #include <iostream.h>
 #include "libmatlbm.h"
 
-#include "trace.h"
-#include "debug.h"
+#include "util/trace.h"
+#include "util/debug.h"
 
 static mxArray* _mxarray20_;
 static mxArray* _mxarray21_;

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Apr 18 17:47:45 2001
+// written: Fri May 11 16:30:10 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -15,12 +15,12 @@
 
 #include "simplexoptimizer.h"
 
-#include "strings.h"
+#include "util/strings.h"
 
 #include <iostream.h>
 #include <iomanip.h>
 
-#include "trace.h"
+#include "util/trace.h"
 
 namespace
 {

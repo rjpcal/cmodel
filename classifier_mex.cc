@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Apr 26 22:59:36 2001
+// written: Fri May 11 16:30:10 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -26,18 +26,18 @@
 #include "cmodelpbi.h"
 #include "cmodelwpsm.h"
 
-#include "error.h"
+#include "util/error.h"
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "rutil.h"
-#include "strings.h"
+#include "util/strings.h"
 #include "util/pointers.h"
 
 #include <iostream.h>
 #include "libmatlb.h"
 
-#include "trace.h"
+#include "util/trace.h"
 
 namespace {
   shared_ptr<CModelCssm>* recentModel = 0;
