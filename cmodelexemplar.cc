@@ -17,7 +17,6 @@
 #include "cmodel/minkbinder.h"
 
 #include "mtx/mtx.h"
-#include "mtx/num.h"
 
 #include "mx/mxwrapper.h"
 

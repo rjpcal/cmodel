@@ -15,7 +15,7 @@
 
 #include "cmodel/classifier.h"
 
-#include "mtx/num.h"
+#include "mtx/mathspecial.h"
 
 #include "optim/annealingoptimizer.h"
 #include "optim/multivarfunction.h"

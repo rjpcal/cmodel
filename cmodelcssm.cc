@@ -18,7 +18,6 @@
 #include "util/error.h"
 
 #include "mtx/mtx.h"
-#include "mtx/num.h"
 
 #include <cmath>
 
