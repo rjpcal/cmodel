@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Tue Oct 30 11:38:46 2001
+// written: Tue Oct 30 11:39:20 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -53,11 +53,11 @@ CModelExemplar::CModelExemplar(const Mtx& objParams,
   itsAttWtsCache(DIM_OBJ_PARAMS,1)
 {
   if (itsNumStoredExemplars <= 0)
-    throw ErrorWithMsg("must have at least one stored exemplar");
+    throw Util::Error("must have at least one stored exemplar");
 
   if (itsTraining1.mrows() != itsTraining2.mrows()) {
-    throw ErrorWithMsg("the two categories must have the "
-                       "same number of training exemplars");
+    throw Util::Error("the two categories must have the "
+                      "same number of training exemplars");
   }
 }
 
@@ -90,8 +90,8 @@ DOTRACE("CModelExemplar::handleRequest");
       if (category == 1)
         return getStoredExemplars(CAT2);
 
-      throw ErrorWithMsg("unknown category while processing request"
-                         "'getStoredExemplars'");
+      throw Util::Error("unknown category while processing request"
+                        "'getStoredExemplars'");
     }
 
   return Classifier::handleRequest(action, allModelParams, extraArgs);

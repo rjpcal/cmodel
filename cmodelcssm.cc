@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Fri May 11 16:29:53 2001
+// written: Tue Oct 30 11:40:01 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,10 +24,10 @@
 #include "util/trace.h"
 
 CModelCssm::CModelCssm(const Mtx& objParams,
-							  TransferFunction transferFunc,
-							  int numStoredExemplars) :
+                       TransferFunction transferFunc,
+                       int numStoredExemplars) :
   CModelExemplar(objParams,
-					  numStoredExemplars, transferFunc),
+                 numStoredExemplars, transferFunc),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
   itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
   itsCachedRawWts1(numStoredExemplars, numTrainingExemplars()),
@@ -42,7 +42,7 @@ void CModelCssm::loadModelParams(Slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
 
-  int nex = numStoredExemplars(); 
+  int nex = numStoredExemplars();
 
   Mtx allScaledWeights = Mtx(modelParams);
 
@@ -66,10 +66,10 @@ DOTRACE("CModelCssm::loadModelParams");
   if (do2) scaledWeights2.apply(abs);
 
   for (int r = 0; r < scaledWeights1.mrows(); ++r)
-	 {
-		if (do1) { Slice row1 = scaledWeights1.row(r); row1 /= row1.sum(); }
-		if (do2) { Slice row2 = scaledWeights2.row(r); row2 /= row2.sum(); }
-	 }
+    {
+      if (do1) { Slice row1 = scaledWeights1.row(r); row1 /= row1.sum(); }
+      if (do2) { Slice row2 = scaledWeights2.row(r); row2 /= row2.sum(); }
+    }
 
   if (do1) itsStored1.assign_MMmul(scaledWeights1, training1());
   if (do2) itsStored2.assign_MMmul(scaledWeights2, training2());
@@ -78,17 +78,17 @@ DOTRACE("CModelCssm::loadModelParams");
 const Mtx& CModelCssm::getStoredExemplars(Category cat)
 {
   if (CAT1 == cat)
-	 {
-		return itsStored1;
-	 }
+    {
+      return itsStored1;
+    }
 
   else if (CAT2 == cat)
-	 {
-		return itsStored2;
-	 }
+    {
+      return itsStored2;
+    }
 
   else
-	 throw ErrorWithMsg("unknown category enumerator in findStoredExemplar");
+    throw Util::Error("unknown category enumerator in findStoredExemplar");
 
   return Mtx::emptyMtx(); // can't happen, but placate the compiler
 }
