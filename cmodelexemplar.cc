@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Fri Mar  9 14:34:20 2001
+// written: Fri Mar  9 14:49:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -95,6 +95,16 @@ CModelExemplar::~CModelExemplar()
 {
 }
 
+// Count the category training exemplars
+int CModelExemplar::countCategory(const Rat& params, int category) {
+  int n = 0;
+  for (int i = 0; i < params.mrows(); ++i)
+	 {
+		if (int(params.at(i,0)) == category)
+		  ++n;
+	 }
+  return n;
+}
 
 void CModelExemplar::doDiffEvidence(const double* attWeights,
 												const double* storedExemplar1,

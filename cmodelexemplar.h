@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar  9 14:32:15 2001
+// written: Fri Mar  9 14:49:39 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -27,6 +27,9 @@ public:
 
 protected:
   int numStoredExemplars() const { return itsNumStoredExemplars; }
+
+  // Count the category training exemplars
+  static int countCategory(const Rat& params, int category);
 
 private:
   const Rat& itsObjParams;

@@ -33,9 +33,6 @@ private:
 
   const double* itsScaledWeights;
 
-  // Count the category training exemplars
-  int countCategory(const Rat& params, int category);
-
   // Scales the weights in place; weights is an input/output argument
   void scaleWeights(double* weights, int numRawWeights);
 
