@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 15:58:33 2002
+// written: Fri Feb 15 16:04:08 2002
 // $Id$
 //
 //
@@ -416,7 +416,6 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
 
 mxArray* annealHelper(mxArray* old_astate_mx,
                       const Mtx& valueScalingRange,
-//                       const Mtx& deltas,
                       const Mtx& bounds,
                       const bool canUseMatrix,
                       const fstring& func_name,
@@ -450,8 +449,8 @@ DOTRACE("annealHelper");
 
   int nvisits = 0;
 
-  Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
-  Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
+  Mtx minUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
+  Mtx maxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
 
   const Mtx temps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW);
   const Mtx astate_x(mxGetField(astate_mx, 0, "x"), Mtx::BORROW);
@@ -520,6 +519,17 @@ DOTRACE("annealHelper");
           }
         }
     }
+
+  // Update the deltas
+  {
+    Mtx currentDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER);
+
+    for (int i = 0; i < currentDeltas.nelems(); ++i)
+      {
+        currentDeltas.at(i) =
+          0.75 * (maxUsedParams.at(i) - minUsedParams.at(i));
+      }
+  }
 
   return astate_mx;
 }
