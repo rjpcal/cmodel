@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 14:52:50 2001
+// written: Tue Mar 27 14:56:57 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -124,11 +124,6 @@ DOTRACE("makeClassifier");
 			 recentNumStored = numStoredExemplars;
 
           recentModel->reset(
-              new CModelCssm(objParams, observedIncidence,
-                             CModelExemplar::EXP_DECAY, numStoredExemplars));
-
-
-			 recentModel->reset(
               new CModelCssm(objParams, observedIncidence,
                              CModelExemplar::EXP_DECAY, numStoredExemplars));
 
