@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 13:56:21 2002
+// written: Fri Feb 15 13:59:47 2002
 // $Id$
 //
 //
@@ -408,7 +408,7 @@ mxArray* annealVisitParameters(mxArray* bestModel_mx,
 //
 //---------------------------------------------------------------------
 
-mxArray* annealHelper(mxArray* astate_mx,
+mxArray* annealHelper(mxArray* old_astate_mx,
                       mxArray* bestModel_mx,
                       const Mtx& valueScalingRange,
                       const Mtx& deltas,
@@ -433,7 +433,11 @@ DOTRACE("annealHelper");
    }
 #endif
 
+  mxArray* astate_mx = mxDuplicateArray(old_astate_mx);
+
   int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
+  ++astate_c;
+  mxSetField(astate_mx, 0, "c", mxCreateScalarDouble(astate_c));
 
   const bool astate_talk =
     (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
@@ -467,7 +471,7 @@ DOTRACE("annealHelper");
 
   mxSetFieldByNumber(output, 0,
                      mxAddField(output, "new_astate"),
-                     mxDuplicateArray(astate_mx));
+                     astate_mx);
 
   return output;
 }
