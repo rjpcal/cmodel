@@ -27,10 +27,7 @@ CModelCssm::CModelCssm(const Mtx& objParams,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
-  itsScaledWeights(0,0)
-//    itsScaledWeights1(0,0),
-//    itsScaledWeights2(0,0)
+  itsStored2(numStoredExemplars, DIM_OBJ_PARAMS)
 {
 DOTRACE("CModelCssm::CModelCssm");
 }
@@ -41,44 +38,36 @@ void CModelCssm::loadModelParams(Slice& modelParams)
 {
 DOTRACE("CModelCssm::loadModelParams");
 
-//    int nwts = numStoredExemplars() * numTrainingExemplars();
+  int nex = numStoredExemplars(); 
 
-  itsScaledWeights = Mtx(modelParams);
-//    itsScaledWeights1 = Mtx(modelParams.leftmost(nwts));
-//    itsScaledWeights2 = Mtx(modelParams.rightmost(nwts));
+  Mtx allScaledWeights = Mtx(modelParams);
 
-  itsScaledWeights.reshape(2*numStoredExemplars(),
-  									numTrainingExemplars());
-//    itsScaledWeights1.reshape(numStoredExemplars(),
-//  									 numTrainingExemplars());
-//    itsScaledWeights2.reshape(numStoredExemplars(),
-//  									 numTrainingExemplars());
+  allScaledWeights.reshape(2*nex, numTrainingExemplars());
+
+  Mtx scaledWeights1 = allScaledWeights.rows(0,nex);
+  Mtx scaledWeights2 = allScaledWeights.rows(nex,nex);
+
 
   //
   // Rescale the stored exemplar weights so that they sum to 1.
   //
 
-  itsScaledWeights.apply(abs);
-//    itsScaledWeights1.apply(abs);
-//    itsScaledWeights2.apply(abs);
+  scaledWeights1.apply(abs);
+  scaledWeights2.apply(abs);
 
-  for (int r = 0; r < itsScaledWeights.mrows(); ++r)
-//    for (int r = 0; r < itsScaledWeights1.mrows(); ++r)
+  for (int r = 0; r < scaledWeights1.mrows(); ++r)
 	 {
-		Slice row = itsScaledWeights.row(r);
-		row /= row.sum();
-//  		Slice row1 = itsScaledWeights1.row(r);
-//  		row1 /= row1.sum();
+  		Slice row1 = scaledWeights1.row(r);
+  		row1 /= row1.sum();
 
-//  		Slice row2 = itsScaledWeights2.row(r);
-//  		row2 /= row2.sum();
+  		Slice row2 = scaledWeights2.row(r);
+  		row2 /= row2.sum();
 	 }
 
   {for (int n = 0; n < itsStored1.mrows(); ++n)
 	 {
 		Slice result1(itsStored1.row(n));
-  		training1().leftMultAndAssign(itsScaledWeights.row(n),
-//  		training1().leftMultAndAssign(itsScaledWeights1.row(n),
+  		training1().leftMultAndAssign(scaledWeights1.row(n),
 												result1);
 	 }
   }
@@ -86,8 +75,7 @@ DOTRACE("CModelCssm::loadModelParams");
   {for (int n = 0; n < itsStored2.mrows(); ++n)
 	 {
 		Slice result2(itsStored2.row(n));
-  		training2().leftMultAndAssign(itsScaledWeights.row(n+numStoredExemplars()),
-//  		training2().leftMultAndAssign(itsScaledWeights2.row(n),
+  		training2().leftMultAndAssign(scaledWeights2.row(n),
 												result2);
 	 }
   }
