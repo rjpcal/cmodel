@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Fri Mar 16 17:55:59 2001
+// written: Wed Mar 21 14:07:35 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -229,6 +229,8 @@ DOTRACE("Mclassifier");
   catch (...) {
 	 mexErrMsgTxt("an unknown C++ exception occurred.");
   }
+
+  return (mxArray*) 0; // can't happen, but placate compiler
 }
 
 
