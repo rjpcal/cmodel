@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Aug  1 10:09:16 2002
+// written: Tue Sep 28 12:55:46 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -28,13 +28,14 @@
 
 #include "mtx/mtx.h"
 
-#include "mx/mexfcn.h"
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
 
 #include "util/error.h"
 #include "util/pointers.h"
 #include "util/strings.h"
+
+#include <mex.h>
 
 #include "util/trace.h"
 
@@ -203,7 +204,8 @@ namespace
   const int NARGOUT = 1;
 }
 
-void classifier(int nlhs, mxArray* plhs[], int nrhs, mxArray* prhs[])
+void classifier(int nlhs, mxArray* plhs[],
+                int nrhs, const mxArray* prhs[])
 {
 DOTRACE("<classifier_mex.cc>::classifier");
 
@@ -239,21 +241,26 @@ DOTRACE("<classifier_mex.cc>::classifier");
 
 namespace
 {
-  void terminateModule() { delete mexPkg; }
+  void terminateModule()
+  {
+    delete mexPkg;
+    mexPkg = 0;
+  }
 }
 
 extern "C"
-mex_information mexLibrary()
+void mexFunction(int nlhs, mxArray* plhs[],
+                 int nrhs, const mxArray* prhs[])
 {
-  DOTRACE("mexLibrary");
+DOTRACE("mexFunction");
 
   if (mexPkg == 0)
     {
-      mexPkg = new MyMexPkg(terminateModule);
-      mexPkg->addFcn(MexFcn(MEXFUNCNAME, classifier, NARGIN, NARGOUT));
+      mexPkg = new MyMexPkg(&terminateModule);
+      mexPkg->addFcn(MEXFUNCNAME, &classifier, NARGIN, NARGOUT);
     }
 
-  return mexPkg->mexInfo();
+  mexPkg->invokeFcn(nlhs, plhs, nrhs, prhs);
 }
 
 static const char vcid_classifier_mex_cc[] = "$Header$";
