@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Mar 16 17:48:37 2001
+// written: Wed Mar 21 13:58:44 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -52,7 +52,7 @@ private:
 
   const TransferFunction itsTransferFunc;
 
-  virtual void computeDiffEv(Slice& modelParams);
+  virtual void computeDiffEv(Slice& modelParams, Mtx& diffEvOut);
   virtual double computeSigmaNoise(double rawSigma) const;
 
   virtual void loadModelParams(Slice& modelParams);
