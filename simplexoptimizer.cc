@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Mon Jul  9 13:49:27 2001
+// written: Tue Oct 30 11:44:25 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -24,7 +24,7 @@
 
 namespace
 {
-  SimplexOptimizer::PrintType extractPrinttype(const fixed_string& printtype)
+  SimplexOptimizer::PrintType extractPrinttype(const fstring& printtype)
   {
     if      (printtype == "notify")   return SimplexOptimizer::NOTIFY;
     else if (printtype == "none")     return SimplexOptimizer::NONE;
@@ -39,7 +39,7 @@ namespace
 
 SimplexOptimizer::SimplexOptimizer(MultivarFunction& objective,
                                    const Mtx& x_in,
-                                   const fixed_string& printtype,
+                                   const fstring& printtype,
                                    const int nparams,
                                    const int maxfun,
                                    const int maxiter,
@@ -83,7 +83,7 @@ void SimplexOptimizer::printIter()
     {
       std::cerr << setw(6) << itsIterCount
                 << setw(13) << funcCount()
-                << setw(17) << setprecision(6) << itsFvals.at(0,0)
+                << setw(17) << setprecision(6) << double(itsFvals.at(0,0))
                 << "         " << iterTypeString(itsCurIter) << '\n';
     }
 }
@@ -167,7 +167,7 @@ DOTRACE("SimplexOptimizer::doOneIter");
 
   if (rflPt.betterThan(simplexAt(0)))
     {
-      DOTRACE("rflPt.betterThan(simplexAt(0))");
+    DOTRACE("rflPt.betterThan(simplexAt(0))");
 
       // Calculate the expansion point
       FuncPoint expPt = evaluate(xbar + direction*2.0);
@@ -179,7 +179,7 @@ DOTRACE("SimplexOptimizer::doOneIter");
     }
   else
     {
-      DOTRACE("!addReflection");
+    DOTRACE("!addReflection");
 
       if (rflPt.betterThan(simplexAt(itsNparams-1)))
         { putInSimplex(rflPt, itsNparams); itsCurIter = REFLECT; }
