@@ -408,21 +408,33 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
   return VisitResult(nevals, bestModel_mx, costs.at(s));
 }
 
+class AnnealingRun
+{
+public:
+  mxArray* go(mxArray* old_astate_mx,
+	      const Mtx& valueScalingRange,
+	      const Mtx& bounds,
+	      const bool canUseMatrix,
+	      const fstring& func_name,
+	      int nvararg,
+	      mxArray** pvararg);
+};
+
 //---------------------------------------------------------------------
 //
 // annealHelper()
 //
 //---------------------------------------------------------------------
 
-mxArray* annealHelper(mxArray* old_astate_mx,
-                      const Mtx& valueScalingRange,
-                      const Mtx& bounds,
-                      const bool canUseMatrix,
-                      const fstring& func_name,
-                      int nvararg,
-                      mxArray** pvararg)
+mxArray* AnnealingRun::go(mxArray* old_astate_mx,
+			  const Mtx& valueScalingRange,
+			  const Mtx& bounds,
+			  const bool canUseMatrix,
+			  const fstring& func_name,
+			  int nvararg,
+			  mxArray** pvararg)
 {
-DOTRACE("annealHelper");
+DOTRACE("AnnealingRun::go");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
  if (nvararg > 0 && int(mxGetScalar(pvararg[0])) == -1)
@@ -498,7 +510,7 @@ DOTRACE("annealHelper");
             if (minUsedParams.nelems() != bestModel.nelems()
                 || maxUsedParams.nelems() != bestModel.nelems())
               {
-                mexErrMsgTxt("size mismatch in annealHelper()");
+                mexErrMsgTxt("size mismatch in AnnealingRun::go()");
               }
 
             for (int i = 0; i < bestModel.nelems(); ++i)
@@ -571,7 +583,9 @@ DOTRACE("mlxAnnealVisitParameters");
 
   try
     {
-      plhs[0] = annealHelper
+      AnnealingRun ar;
+
+      plhs[0] = ar.go
         (prhs[0], // astate
          Mtx(prhs[1], Mtx::BORROW), // valueScalingRange
          Mtx(prhs[2], Mtx::BORROW), // bounds
