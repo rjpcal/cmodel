@@ -1,11 +1,28 @@
-/*
- * MATLAB Compiler: 2.1
- * Date: Sun Apr  1 19:52:50 2001
- * Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
- * "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
- * "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
- * "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "doSimplex" 
- */
+///////////////////////////////////////////////////////////////////////
+//
+// doSimplex.cc
+//
+// Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
+//
+// created: Wed Apr 18 06:20:45 2001
+// written: Wed Apr 18 06:30:38 2001
+// $Id$
+//
+//
+// MATLAB Compiler: 2.1
+// Date: Sun Apr  1 19:52:50 2001
+//
+// Arguments: "-B" "macro_default" "-O" "all" "-O"
+// "fold_scalar_mxarrays:on" "-O" "fold_non_scalar_mxarrays:on" "-O"
+// "optimize_integer_for_loops:on" "-O" "array_indexing:on" "-O"
+// "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C" "-t" "-T"
+// "link:mexlibrary" "libmatlbmx.mlib" "-h" "doSimplex"
+//
+///////////////////////////////////////////////////////////////////////
+
+#ifndef DOSIMPLEX_CC_DEFINED
+#define DOSIMPLEX_CC_DEFINED
+
 #include "doSimplex.h"
 
 #include "error.h"
@@ -140,301 +157,10 @@ int extractMaxIters(const mxArray* arr, int numModelParams)
   return int(mxGetScalar(arr));
 }
 
-static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
-                                'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
-                                'l', 'e', ':', ' ', 'd', 'o', 'S', 'i', 'm',
-                                'p', 'l', 'e', 'x', ' ', 'L', 'i', 'n', 'e',
-                                ':', ' ', '1', ' ', 'C', 'o', 'l', 'u', 'm',
-                                'n', ':', ' ', '1', ' ', 'T', 'h', 'e', ' ',
-                                'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
-                                '"', 'd', 'o', 'S', 'i', 'm', 'p', 'l', 'e',
-                                'x', '"', ' ', 'w', 'a', 's', ' ', 'c', 'a',
-                                'l', 'l', 'e', 'd', ' ', 'w', 'i', 't', 'h',
-                                ' ', 'm', 'o', 'r', 'e', ' ', 't', 'h', 'a',
-                                'n', ' ', 't', 'h', 'e', ' ', 'd', 'e', 'c',
-                                'l', 'a', 'r', 'e', 'd', ' ', 'n', 'u', 'm',
-                                'b', 'e', 'r', ' ', 'o', 'f', ' ', 'o', 'u',
-                                't', 'p', 'u', 't', 's', ' ', '(', '4', ')',
-                                '.' };
-static mxArray * _mxarray0_;
-
-static mxChar _array3_[21] = { '2', '0', '0', '*', 'n', 'u', 'm',
-                               'b', 'e', 'r', 'o', 'f', 'v', 'a',
-                               'r', 'i', 'a', 'b', 'l', 'e', 's' };
-static mxArray * _mxarray2_;
-static mxArray * _mxarray4_;
-
-static mxChar _array6_[65] = { 'O', 'p', 't', 'i', 'o', 'n', ' ', 0x0027, 'M',
-                               'a', 'x', 'F', 'u', 'n', 'E', 'v', 'a', 'l', 's',
-                               0x0027, ' ', 'm', 'u', 's', 't', ' ', 'b', 'e',
-                               ' ', 'a', 'n', ' ', 'i', 'n', 't', 'e', 'g', 'e',
-                               'r', ' ', 'v', 'a', 'l', 'u', 'e', ' ', 'i', 'f',
-                               ' ', 'n', 'o', 't', ' ', 't', 'h', 'e', ' ', 'd',
-                               'e', 'f', 'a', 'u', 'l', 't', '.' };
-static mxArray * _mxarray5_;
-
-static mxChar _array8_[61] = { 'O', 'p', 't', 'i', 'o', 'n', ' ', 0x0027,
-                               'M', 'a', 'x', 'I', 't', 'e', 'r', 0x0027,
-                               ' ', 'm', 'u', 's', 't', ' ', 'b', 'e', ' ',
-                               'a', 'n', ' ', 'i', 'n', 't', 'e', 'g', 'e',
-                               'r', ' ', 'v', 'a', 'l', 'u', 'e', ' ', 'i',
-                               'f', ' ', 'n', 'o', 't', ' ', 't', 'h', 'e',
-                               ' ', 'd', 'e', 'f', 'a', 'u', 'l', 't', '.' };
-static mxArray * _mxarray7_;
-
-static mxChar _array10_[6] = { 'n', 'o', 't', 'i', 'f', 'y' };
-static mxArray * _mxarray9_;
-static mxArray * _mxarray11_;
-
-static mxChar _array15_[4] = { 'n', 'o', 'n', 'e' };
-static mxArray * _mxarray14_;
-
-static mxChar _array17_[3] = { 'o', 'f', 'f' };
-static mxArray * _mxarray16_;
-
-static mxArray * _array13_[2] = { NULL /*_mxarray14_*/, NULL /*_mxarray16_*/ };
-static mxArray * _mxarray12_;
-static mxArray * _mxarray18_;
-
-static mxChar _array20_[4] = { 'i', 't', 'e', 'r' };
-static mxArray * _mxarray19_;
-static mxArray * _mxarray21_;
-
-static mxChar _array23_[5] = { 'f', 'i', 'n', 'a', 'l' };
-static mxArray * _mxarray22_;
-static mxArray * _mxarray24_;
-
-static mxChar _array26_[7] = { 's', 'i', 'm', 'p', 'l', 'e', 'x' };
-static mxArray * _mxarray25_;
-static mxArray * _mxarray27_;
-
-static mxChar _array29_[54] = { ' ', 'I', 't', 'e', 'r', 'a', 't', 'i', 'o',
-                                'n', ' ', ' ', ' ', 'F', 'u', 'n', 'c', '-',
-                                'c', 'o', 'u', 'n', 't', ' ', ' ', ' ', ' ',
-                                ' ', 'm', 'i', 'n', ' ', 'f', '(', 'x', ')',
-                                ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                                'P', 'r', 'o', 'c', 'e', 'd', 'u', 'r', 'e' };
-static mxArray * _mxarray28_;
-static mxArray * _mxarray30_;
-static mxArray * _mxarray31_;
-static mxArray * _mxarray32_;
-static mxArray * _mxarray33_;
-
-static mxChar _array35_[7] = { 'i', 'n', 'i', 't', 'i', 'a', 'l' };
-static mxArray * _mxarray34_;
-
-static mxChar _array37_[1] = { ' ' };
-static mxArray * _mxarray36_;
-
-static mxChar _array39_[39] = { ' ', '%', '5', '.', '0', 'f', ' ', ' ',
-                                ' ', ' ', ' ', ' ', ' ', ' ', '%', '5',
-                                '.', '0', 'f', ' ', ' ', ' ', ' ', ' ',
-                                '%', '1', '2', '.', '6', 'g', ' ', ' ',
-                                ' ', ' ', ' ', ' ', ' ', ' ', ' ' };
-static mxArray * _mxarray38_;
-
-static mxChar _array43_[6] = { 'f', 'o', 'r', 'm', 'a', 't' };
-static mxArray * _mxarray42_;
-
-static mxChar _array45_[13] = { 'f', 'o', 'r', 'm', 'a', 't', 's',
-                                'p', 'a', 'c', 'i', 'n', 'g' };
-static mxArray * _mxarray44_;
-
-static mxArray * _array41_[2] = { NULL /*_mxarray42_*/, NULL /*_mxarray44_*/ };
-static mxArray * _mxarray40_;
-
-static mxChar _array47_[7] = { 'c', 'o', 'm', 'p', 'a', 'c', 't' };
-static mxArray * _mxarray46_;
-
-static mxChar _array49_[5] = { 's', 'h', 'o', 'r', 't' };
-static mxArray * _mxarray48_;
-
-static mxChar _array51_[1] = { 'e' };
-static mxArray * _mxarray50_;
-static mxArray * _mxarray52_;
-
-static mxChar _array54_[6] = { 'e', 'x', 'p', 'a', 'n', 'd' };
-static mxArray * _mxarray53_;
-
-static mxChar _array56_[7] = { 'r', 'e', 'f', 'l', 'e', 'c', 't' };
-static mxArray * _mxarray55_;
-
-static mxChar _array58_[16] = { 'c', 'o', 'n', 't', 'r', 'a', 'c', 't',
-                                ' ', 'o', 'u', 't', 's', 'i', 'd', 'e' };
-static mxArray * _mxarray57_;
-
-static mxChar _array60_[6] = { 's', 'h', 'r', 'i', 'n', 'k' };
-static mxArray * _mxarray59_;
-
-static mxChar _array62_[15] = { 'c', 'o', 'n', 't', 'r', 'a', 'c', 't',
-                                ' ', 'i', 'n', 's', 'i', 'd', 'e' };
-static mxArray * _mxarray61_;
-
-static mxChar _array64_[33] = { 'N', 'e', 'l', 'd', 'e', 'r', '-', 'M', 'e',
-                                'a', 'd', ' ', 's', 'i', 'm', 'p', 'l', 'e',
-                                'x', ' ', 'd', 'i', 'r', 'e', 'c', 't', ' ',
-                                's', 'e', 'a', 'r', 'c', 'h' };
-static mxArray * _mxarray63_;
-
-static mxChar _array66_[65] = { 'E', 'x', 'i', 't', 'i', 'n', 'g', ':', ' ',
-                                'M', 'a', 'x', 'i', 'm', 'u', 'm', ' ', 'n',
-                                'u', 'm', 'b', 'e', 'r', ' ', 'o', 'f', ' ',
-                                'f', 'u', 'n', 'c', 't', 'i', 'o', 'n', ' ',
-                                'e', 'v', 'a', 'l', 'u', 'a', 't', 'i', 'o',
-                                'n', 's', ' ', 'h', 'a', 's', ' ', 'b', 'e',
-                                'e', 'n', ' ', 'e', 'x', 'c', 'e', 'e', 'd',
-                                'e', 'd' };
-static mxArray * _mxarray65_;
-
-static mxChar _array68_[39] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                                ' ', '-', ' ', 'i', 'n', 'c', 'r', 'e',
-                                'a', 's', 'e', ' ', 'M', 'a', 'x', 'F',
-                                'u', 'n', 'E', 'v', 'a', 'l', 's', ' ',
-                                'o', 'p', 't', 'i', 'o', 'n', '.' };
-static mxArray * _mxarray67_;
-
-static mxChar _array70_[38] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                                ' ', 'C', 'u', 'r', 'r', 'e', 'n', 't',
-                                ' ', 'f', 'u', 'n', 'c', 't', 'i', 'o',
-                                'n', ' ', 'v', 'a', 'l', 'u', 'e', ':',
-                                ' ', '%', 'f', ' ', 0x005c, 'n' };
-static mxArray * _mxarray69_;
-
-static mxChar _array72_[55] = { 'E', 'x', 'i', 't', 'i', 'n', 'g', ':',
-                                ' ', 'M', 'a', 'x', 'i', 'm', 'u', 'm',
-                                ' ', 'n', 'u', 'm', 'b', 'e', 'r', ' ',
-                                'o', 'f', ' ', 'i', 't', 'e', 'r', 'a',
-                                't', 'i', 'o', 'n', 's', ' ', 'h', 'a',
-                                's', ' ', 'b', 'e', 'e', 'n', ' ', 'e',
-                                'x', 'c', 'e', 'e', 'd', 'e', 'd' };
-static mxArray * _mxarray71_;
-
-static mxChar _array74_[35] = { ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ', ' ',
-                                '-', ' ', 'i', 'n', 'c', 'r', 'e', 'a', 's',
-                                'e', ' ', 'M', 'a', 'x', 'I', 't', 'e', 'r',
-                                ' ', 'o', 'p', 't', 'i', 'o', 'n', '.' };
-static mxArray * _mxarray73_;
-
-static mxChar _array76_[192] = { 0x005c, 'n', 'O', 'p', 't', 'i', 'm', 'i',
-                                 'z', 'a', 't', 'i', 'o', 'n', ' ', 't', 'e',
-                                 'r', 'm', 'i', 'n', 'a', 't', 'e', 'd', ' ',
-                                 's', 'u', 'c', 'c', 'e', 's', 's', 'f', 'u',
-                                 'l', 'l', 'y', ':', 0x005c, 'n', ' ', 't',
-                                 'h', 'e', ' ', 'c', 'u', 'r', 'r', 'e', 'n',
-                                 't', ' ', 'x', ' ', 's', 'a', 't', 'i', 's',
-                                 'f', 'i', 'e', 's', ' ', 't', 'h', 'e', ' ',
-                                 't', 'e', 'r', 'm', 'i', 'n', 'a', 't', 'i',
-                                 'o', 'n', ' ', 'c', 'r', 'i', 't', 'e', 'r',
-                                 'i', 'a', ' ', 'u', 's', 'i', 'n', 'g', ' ',
-                                 'O', 'P', 'T', 'I', 'O', 'N', 'S', '.', 'T',
-                                 'o', 'l', 'X', ' ', 'o', 'f', ' ', '%', 'e',
-                                 ' ', 0x005c, 'n', ' ', 'a', 'n', 'd', ' ',
-                                 'F', '(', 'X', ')', ' ', 's', 'a', 't', 'i',
-                                 's', 'f', 'i', 'e', 's', ' ', 't', 'h', 'e',
-                                 ' ', 'c', 'o', 'n', 'v', 'e', 'r', 'g', 'e',
-                                 'n', 'c', 'e', ' ', 'c', 'r', 'i', 't', 'e',
-                                 'r', 'i', 'a', ' ', 'u', 's', 'i', 'n', 'g',
-                                 ' ', 'O', 'P', 'T', 'I', 'O', 'N', 'S', '.',
-                                 'T', 'o', 'l', 'F', 'u', 'n', ' ', 'o', 'f',
-                                 ' ', '%', 'e', ' ', 0x005c, 'n' };
-static mxArray * _mxarray75_;
-
 void InitializeModule_doSimplex(void) {
-    _mxarray0_ = mclInitializeString(136, _array1_);
-    _mxarray2_ = mclInitializeString(21, _array3_);
-    _mxarray4_ = mclInitializeDouble(200.0);
-    _mxarray5_ = mclInitializeString(65, _array6_);
-    _mxarray7_ = mclInitializeString(61, _array8_);
-    _mxarray9_ = mclInitializeString(6, _array10_);
-    _mxarray11_ = mclInitializeDouble(1.0);
-    _mxarray14_ = mclInitializeString(4, _array15_);
-    _array13_[0] = _mxarray14_;
-    _mxarray16_ = mclInitializeString(3, _array17_);
-    _array13_[1] = _mxarray16_;
-    _mxarray12_ = mclInitializeCellVector(1, 2, _array13_);
-    _mxarray18_ = mclInitializeDouble(0.0);
-    _mxarray19_ = mclInitializeString(4, _array20_);
-    _mxarray21_ = mclInitializeDouble(3.0);
-    _mxarray22_ = mclInitializeString(5, _array23_);
-    _mxarray24_ = mclInitializeDouble(2.0);
-    _mxarray25_ = mclInitializeString(7, _array26_);
-    _mxarray27_ = mclInitializeDouble(4.0);
-    _mxarray28_ = mclInitializeString(54, _array29_);
-    _mxarray30_ = mclInitializeDouble(.5);
-    _mxarray31_ = mclInitializeDouble(.05);
-    _mxarray32_ = mclInitializeDouble(.00025);
-    _mxarray33_ = mclInitializeDoubleVector(0, 0, (double *)NULL);
-    _mxarray34_ = mclInitializeString(7, _array35_);
-    _mxarray36_ = mclInitializeString(1, _array37_);
-    _mxarray38_ = mclInitializeString(39, _array39_);
-    _mxarray42_ = mclInitializeString(6, _array43_);
-    _array41_[0] = _mxarray42_;
-    _mxarray44_ = mclInitializeString(13, _array45_);
-    _array41_[1] = _mxarray44_;
-    _mxarray40_ = mclInitializeCellVector(1, 2, _array41_);
-    _mxarray46_ = mclInitializeString(7, _array47_);
-    _mxarray48_ = mclInitializeString(5, _array49_);
-    _mxarray50_ = mclInitializeString(1, _array51_);
-    _mxarray52_ = mclInitializeCharVector(0, 0, (mxChar *)NULL);
-    _mxarray53_ = mclInitializeString(6, _array54_);
-    _mxarray55_ = mclInitializeString(7, _array56_);
-    _mxarray57_ = mclInitializeString(16, _array58_);
-    _mxarray59_ = mclInitializeString(6, _array60_);
-    _mxarray61_ = mclInitializeString(15, _array62_);
-    _mxarray63_ = mclInitializeString(33, _array64_);
-    _mxarray65_ = mclInitializeString(65, _array66_);
-    _mxarray67_ = mclInitializeString(39, _array68_);
-    _mxarray69_ = mclInitializeString(38, _array70_);
-    _mxarray71_ = mclInitializeString(55, _array72_);
-    _mxarray73_ = mclInitializeString(35, _array74_);
-    _mxarray75_ = mclInitializeString(192, _array76_);
 }
 
 void TerminateModule_doSimplex(void) {
-    mxDestroyArray(_mxarray75_);
-    mxDestroyArray(_mxarray73_);
-    mxDestroyArray(_mxarray71_);
-    mxDestroyArray(_mxarray69_);
-    mxDestroyArray(_mxarray67_);
-    mxDestroyArray(_mxarray65_);
-    mxDestroyArray(_mxarray63_);
-    mxDestroyArray(_mxarray61_);
-    mxDestroyArray(_mxarray59_);
-    mxDestroyArray(_mxarray57_);
-    mxDestroyArray(_mxarray55_);
-    mxDestroyArray(_mxarray53_);
-    mxDestroyArray(_mxarray52_);
-    mxDestroyArray(_mxarray50_);
-    mxDestroyArray(_mxarray48_);
-    mxDestroyArray(_mxarray46_);
-    mxDestroyArray(_mxarray40_);
-    mxDestroyArray(_mxarray44_);
-    mxDestroyArray(_mxarray42_);
-    mxDestroyArray(_mxarray38_);
-    mxDestroyArray(_mxarray36_);
-    mxDestroyArray(_mxarray34_);
-    mxDestroyArray(_mxarray33_);
-    mxDestroyArray(_mxarray32_);
-    mxDestroyArray(_mxarray31_);
-    mxDestroyArray(_mxarray30_);
-    mxDestroyArray(_mxarray28_);
-    mxDestroyArray(_mxarray27_);
-    mxDestroyArray(_mxarray25_);
-    mxDestroyArray(_mxarray24_);
-    mxDestroyArray(_mxarray22_);
-    mxDestroyArray(_mxarray21_);
-    mxDestroyArray(_mxarray19_);
-    mxDestroyArray(_mxarray18_);
-    mxDestroyArray(_mxarray12_);
-    mxDestroyArray(_mxarray16_);
-    mxDestroyArray(_mxarray14_);
-    mxDestroyArray(_mxarray11_);
-    mxDestroyArray(_mxarray9_);
-    mxDestroyArray(_mxarray7_);
-    mxDestroyArray(_mxarray5_);
-    mxDestroyArray(_mxarray4_);
-    mxDestroyArray(_mxarray2_);
-    mxDestroyArray(_mxarray0_);
 }
 
 static mxArray * MdoSimplex(mxArray * * fval,
@@ -565,7 +291,9 @@ void mlxDoSimplex(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[]) {
     mxArray * mplhs[4];
     int i;
     if (nlhs > 4) {
-        mlfError(_mxarray0_);
+		mexErrMsgTxt("Run-time Error: File: doSimplex Line: 1 Column: 1 "
+						 "The function \"doSimplex\" was called with more "
+						 "than the declared number of outputs (4).");
     }
     for (i = 0; i < 4; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -1102,3 +830,6 @@ DOTRACE("MdoSimplex");
 
   return (mxArray*) 0; // can't happen, but placate compiler
 }
+
+static const char vcid_doSimplex_cc[] = "$Header$";
+#endif // !DOSIMPLEX_CC_DEFINED
