@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 12:10:09 2002
+// written: Fri Feb 15 13:56:21 2002
 // $Id$
 //
 //
@@ -420,6 +420,19 @@ mxArray* annealHelper(mxArray* astate_mx,
 {
 DOTRACE("annealHelper");
 
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+ if (nvararg > 0 && int(mxGetScalar(pvararg[0])) = -1)
+   {
+     Util::Prof::printAllProfData(std::cerr);
+     return mxCreateScalarDouble(-1.0);
+   }
+ if (nvararg > 0 && int(mxGetScalar(pvararg[0])) = -2)
+   {
+     Util::Prof::resetAllProfData();
+     return mxCreateScalarDouble(-2.0);
+   }
+#endif
+
   int astate_c = int(mxGetScalar(mxGetField(astate_mx, 0, "c")));
 
   const bool astate_talk =
@@ -442,15 +455,21 @@ DOTRACE("annealHelper");
                 energy.column(k_onebased-1).leftmost(astate_c-1).min());
     }
 
-  return annealVisitParameters(bestModel_mx,
-                               valueScalingRange,
-                               deltas,
-                               bounds,
-                               canUseMatrix,
-                               func_name,
-                               temp,
-                               nvararg,
-                               pvararg);
+  mxArray* output = annealVisitParameters(bestModel_mx,
+                                          valueScalingRange,
+                                          deltas,
+                                          bounds,
+                                          canUseMatrix,
+                                          func_name,
+                                          temp,
+                                          nvararg,
+                                          pvararg);
+
+  mxSetFieldByNumber(output, 0,
+                     mxAddField(output, "new_astate"),
+                     mxDuplicateArray(astate_mx));
+
+  return output;
 }
 
 /*
@@ -490,37 +509,16 @@ DOTRACE("mlxAnnealVisitParameters");
 
   try
     {
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-      if (nvararg > 0)
-        {
-          const int debug_flag = int(mxGetScalar(pvararg[0]));
-
-          switch (debug_flag)
-            {
-            case -1:
-              Util::Prof::printAllProfData(std::cerr);
-              break;
-            case -2:
-              Util::Prof::resetAllProfData();
-              break;
-            }
-
-          plhs[0] = mxCreateScalarDouble(debug_flag);
-        }
-#endif
-      else
-        {
-          plhs[0] = annealHelper
-            (prhs[0], // astate
-             prhs[1], // bestModel
-             Mtx(prhs[2], Mtx::BORROW), // valueScalingRange
-             Mtx(prhs[3], Mtx::BORROW), // deltas
-             Mtx(prhs[4], Mtx::BORROW), // bounds
-             (mxGetScalar(prhs[5]) != 0.0), // canUseMatrix
-             MxWrapper::extractString(prhs[6]), // func_name
-             nvararg,
-             pvararg);
-        }
+      plhs[0] = annealHelper
+        (prhs[0], // astate
+         prhs[1], // bestModel
+         Mtx(prhs[2], Mtx::BORROW), // valueScalingRange
+         Mtx(prhs[3], Mtx::BORROW), // deltas
+         Mtx(prhs[4], Mtx::BORROW), // bounds
+         (mxGetScalar(prhs[5]) != 0.0), // canUseMatrix
+         MxWrapper::extractString(prhs[6]), // func_name
+         nvararg,
+         pvararg);
     }
   catch (Util::Error& err)
     {
