@@ -8,6 +8,7 @@
  */
 #include "doSimplex.h"
 
+#include "error.h"
 #include "mtx.h"
 #include "strings.h"
 
@@ -669,6 +670,9 @@ private:
 
 	 const Mtx x;
 	 const double f;
+
+	 bool betterThan (const FuncPoint& other)
+	   { return (f < other.f); }
   };
 
   FuncPoint evaluate(const Mtx& x)
@@ -687,14 +691,23 @@ private:
 	 putInSimplex(evaluate(params), simplexPoint);
   }
 
+  FuncPoint simplexAt(int simplexPoint)
+  {
+	 return FuncPoint(itsSimplex.column(simplexPoint),
+							itsFvals.at(0, simplexPoint));
+  }
+
+#if 0
   void fullSort()
   {
+	 DOTRACE("fullSort");
 	 // sort so itsSimplex.column(0) has the lowest function value 
 	 Mtx index = itsFvals.row(0).getSortOrder();
 
 	 itsFvals.row(0).reorder(index);
   	 itsSimplex.reorderColumns(index);
   }
+#endif
 
   void minimalSort()
   {
@@ -758,22 +771,51 @@ private:
 		mexPrintf("\n Iteration   Func-count     min f(x)         Procedure\n");
   }
 
-  void printIter(const fixed_string& how)
+  enum IterType { INITIAL, EXPAND, REFLECT, CONTRACT_OUTSIDE, CONTRACT_INSIDE, SHRINK };
+
+  const char* iterTypeString(IterType how)
+  {
+	 switch (how)
+		{
+		case INITIAL:
+		  return "initial";
+		  break;
+		case EXPAND:
+		  return "expand";
+		  break;
+		case REFLECT:
+		  return "reflect";
+		  break;
+		case CONTRACT_OUTSIDE:
+		  return "contract outside";
+		  break;
+		case CONTRACT_INSIDE:
+		  return "contract inside";
+		  break;
+		case SHRINK:
+		  return "shrink";
+		  break;
+		default:
+		  return "unknown";
+		  break;
+		}
+  }
+
+  void printIter(IterType how)
   {
 	 if (itsPrnt == ITER)
 		{
 		  mexPrintf(" %5d        %5d     %12.6g         ",
 						itsIterCount, funcCount(), double(itsFvals.at(0,0)));
-		  mexPrintf(how.c_str());
-		  mexPrintf("\n");
+		  mexPrintf("%s\n", iterTypeString(how));
 		}
   }
 
-  void printSimplex(const fixed_string& how)
+  void printSimplex(IterType how)
   {
 	 if (itsPrnt == SIMPLEX)
 		{
-		  mexPrintf("\n%s\n", how.c_str());
+		  mexPrintf("\n%s\n", iterTypeString(how));
 		  itsSimplex.print("simplex");
 		  itsFvals.print("fvals");
 		  mexPrintf("funcEvals: %d\n", funcCount());
@@ -830,7 +872,7 @@ public:
 
 	 buildInitialSimplex();
 
-	 fullSort();
+	 minimalSort();
   }
 
   virtual ~SimplexOptimizer() {}
@@ -857,8 +899,8 @@ public:
 int SimplexOptimizer::optimize()
 {
   printHeader();
-  printIter("initial");
-  printSimplex("initial");
+  printIter(INITIAL);
+  printSimplex(INITIAL);
 
   // Iterate until the diameter of the simplex is less than itsTolx AND
   // the function values differ from the min by less than itsTolf, or
@@ -891,20 +933,10 @@ void SimplexOptimizer::doOneIter()
 {
 DOTRACE("SimplexOptimizer::doOneIter");
 
-  // HOME
+  IterType how = INITIAL;
 
-  fixed_string how = "";
-
-  // xbar = average of the itsNparams (NOT itsNparams+1) best points
-
-  Mtx xbar(itsNparams,1);
-  const Mtx simplex_1_n(itsSimplex.columns(0,itsNparams));
-
-  const double numparams_inv = 1.0/itsNparams;
-  MtxIter xbar_itr = xbar.columnIter(0);
-
-  for (int r = 0; r < itsNparams; ++r, ++xbar_itr)
-	 *xbar_itr = simplex_1_n.row(r).sum() * numparams_inv;
+  // compute average of the itsNparams (NOT itsNparams+1) best points
+  Mtx xbar(itsSimplex.columns(0,itsNparams).meanColumn());
 
 
   // Calculate the reflection point
@@ -912,54 +944,59 @@ DOTRACE("SimplexOptimizer::doOneIter");
 									  itsSimplex.columns(itsNparams,1) * RHO);
 
 
-  if (rflPt.f < itsFvals.at(0,0))
+//    if (rflPt.f < itsFvals.at(0,0))
+  if (rflPt.betterThan(simplexAt(0)))
 	 {
-		DOTRACE("rflPt.f < itsFvals(:,1)");
+		DOTRACE("rflPt.betterThan(simplexAt(0))");
 
 		// Calculate the expansion point
 		FuncPoint expPt =
-		  evaluate((xbar * (1 + RHO*CHI)) -
+		  evaluate((xbar * (1.0 + RHO*CHI)) -
 					  (itsSimplex.columns(itsNparams,1) * (RHO*CHI)));
 
-		if (expPt.f < rflPt.f)
+//  		if (expPt.f < rflPt.f)
+		if (expPt.betterThan(rflPt))
 		  {
 			 putInSimplex(expPt, itsNparams);
-			 how = "expand";
+			 how = EXPAND;
 		  }
 		else
 		  {
 			 putInSimplex(rflPt, itsNparams);
-			 how = "reflect";
+			 how = REFLECT;
 		  }
 	 }
   else
 	 {
 		DOTRACE("rflPt.f >= itsFvals(:,1)");
 
-		if (rflPt.f < itsFvals.at(0,itsNparams-1))
+//  		if (rflPt.f < itsFvals.at(0,itsNparams-1))
+		if (rflPt.betterThan(simplexAt(itsNparams-1)))
 		  {
 			 putInSimplex(rflPt, itsNparams);
-			 how = "reflect";
+			 how = REFLECT;
 		  }
 		else
 		  {
 			 // Perform contraction
 
-			 if (rflPt.f < itsFvals.at(0,itsNparams))
+//  			 if (rflPt.f < itsFvals.at(0,itsNparams))
+			 if (rflPt.betterThan(simplexAt(itsNparams)))
 				{
 				  // Perform an outside contraction
 				  FuncPoint ictPt =
 					 evaluate(xbar*(1.0 + PSI*RHO) -
-								 (itsSimplex.columns(itsNparams,1) *(PSI*RHO)));
+								 (itsSimplex.columns(itsNparams,1) * (PSI*RHO)));
 
-				  if (ictPt.f <= rflPt.f)
+//  				  if (ictPt.f <= rflPt.f)
+				  if (ictPt.betterThan(rflPt))
 					 {
 						putInSimplex(ictPt, itsNparams);
-						how = "contract outside";
+						how = CONTRACT_OUTSIDE;
 					 }
 				  else
 					 {
-						how = "shrink";
+						how = SHRINK;
 					 }
 				}
 			 else
@@ -969,18 +1006,19 @@ DOTRACE("SimplexOptimizer::doOneIter");
 					 evaluate(xbar*(1.0-PSI) +
 								 (itsSimplex.columns(itsNparams,1)* PSI));
 
-				  if (octPt.f < itsFvals.at(0,itsNparams))
+//  				  if (octPt.f < itsFvals.at(0,itsNparams))
+				  if (octPt.betterThan(simplexAt(itsNparams)))
 					 {
 						putInSimplex(octPt, itsNparams);
-						how = "contract inside";
+						how = CONTRACT_INSIDE;
 					 }
 				  else
 					 {
-						how = "shrink";
+						how = SHRINK;
 					 }
 				}
 
-			 if (how == "shrink")
+			 if (SHRINK == how)
 				{
 				  for (int j = 1; j < itsNparams+1; ++j)
 					 {
@@ -1051,40 +1089,51 @@ DOTRACE("MdoSimplex");
 	 }
 #endif
 
-  // numModelParams = prod(size(x));
-  const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
+  try {
 
-  // Convert to inline function as needed.
-  // XXX Since this requires "object-oriented" programming, we can't keep this
-  // and still use the MATLAB compiler
-  // %funfcn = fcnchk(funfcn,length(varargin));
+	 // numModelParams = prod(size(x));
+	 const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
 
-  FuncEvaluator objective(funfcn_mx, varargin);
+	 // Convert to inline function as needed.
+	 // XXX Since this requires "object-oriented" programming, we can't keep this
+	 // and still use the MATLAB compiler
+	 // %funfcn = fcnchk(funfcn,length(varargin));
 
-  SimplexOptimizer opt(objective,
-							  Mtx(x_in),
-							  Mtx::extractString(printtype_mx),
-							  mxGetScalar(tolx_mx),
-							  mxGetScalar(tolf_mx),
-							  numModelParams,
-							  extractMaxIters(maxfun_mx, numModelParams),
-							  extractMaxIters(maxiter_mx, numModelParams)
-							  );
+	 FuncEvaluator objective(funfcn_mx, varargin);
 
-  int exitFlag = opt.optimize();
+	 SimplexOptimizer opt(objective,
+								 Mtx(x_in),
+								 Mtx::extractString(printtype_mx),
+								 mxGetScalar(tolx_mx),
+								 mxGetScalar(tolf_mx),
+								 numModelParams,
+								 extractMaxIters(maxfun_mx, numModelParams),
+								 extractMaxIters(maxiter_mx, numModelParams)
+								 );
 
-  *fval = mxCreateScalarDouble(opt.bestFval());
-  *exitflag_mx = mxCreateScalarDouble(exitFlag);
+	 int exitFlag = opt.optimize();
 
-  mlfIndexAssign(output, ".iterations",
-					  mxCreateScalarDouble(opt.iterCount()));
+	 *fval = mxCreateScalarDouble(opt.bestFval());
+	 *exitflag_mx = mxCreateScalarDouble(exitFlag);
 
-  mlfIndexAssign(output, ".funcCount",
-					  mxCreateScalarDouble(opt.funcCount()));
+	 mlfIndexAssign(output, ".iterations",
+						 mxCreateScalarDouble(opt.iterCount()));
 
-  mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
+	 mlfIndexAssign(output, ".funcCount",
+						 mxCreateScalarDouble(opt.funcCount()));
 
-  mclSetCurrentLocalFunctionTable(save_local_function_table_);
+	 mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
 
-  return opt.bestParams().makeMxArray();
+	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+	 return opt.bestParams().makeMxArray();
+  }
+  catch (ErrorWithMsg& err) {
+	 mexErrMsgTxt(err.msg_cstr());
+  }
+  catch (...) {
+	 mexErrMsgTxt("an unknown C++ exception occurred.");
+  }
+
+  return (mxArray*) 0; // can't happen, but placate compiler
 }
