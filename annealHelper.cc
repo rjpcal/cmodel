@@ -4,7 +4,7 @@
  * Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
  * "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
  * "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
- * "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "annealVisitParameters" 
+ * "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "annealVisitParameters"
  */
 #include "annealVisitParameters.h"
 
@@ -60,34 +60,34 @@ void TerminateModule_annealVisitParameters(void) {
 }
 
 mxArray* MannealVisitParameters(int nargout_,
-										  mxArray* bestModel,
-										  mxArray* valueScalingRange,
-										  mxArray* deltas,
-										  mxArray* bounds,
-										  mxArray* canUseMatrix,
-										  mxArray* FUN,
-										  mxArray* temp,
-										  mxArray* varargin);
+                                mxArray* bestModel,
+                                mxArray* valueScalingRange,
+                                mxArray* deltas,
+                                mxArray* bounds,
+                                mxArray* canUseMatrix,
+                                mxArray* FUN,
+                                mxArray* temp,
+                                mxArray* varargin);
 
 Mtx makeTestModels(int x_zerobased,
-						 const Mtx& bestModel,
-						 const Mtx& valueScalingRange,
-						 const Mtx& deltas,
-						 const Mtx& bounds);
+                   const Mtx& bestModel,
+                   const Mtx& valueScalingRange,
+                   const Mtx& deltas,
+                   const Mtx& bounds);
 
 mxArray* doFuncEvals(bool canUseMatrix,
-							const Mtx& models,
-							mxArray* func,
-							mxArray* varargin);
+                     const Mtx& models,
+                     mxArray* func,
+                     mxArray* varargin);
 
 int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 
 
 mxArray* makePDF(mxArray* temp,
-					  mxArray* costs);
+                 mxArray* costs);
 
 mxArray* eprob(mxArray* temp,
-					mxArray* costs);
+               mxArray* costs);
 
 static mexFunctionTableEntry local_function_table_[5]
   = { { "makeTestModels",
@@ -175,9 +175,9 @@ DOTRACE("mlxAnnealVisitParameters");
     int i;
     if (nlhs > 1) {
         mexErrMsgTxt("Run-time Error: File: annealVisitParameters Line: 1 "
-							"Column: 1 The function \"annealVisitParameters\" was "
-							"called with more than the declared number of outputs "
-							"(1).");
+                     "Column: 1 The function \"annealVisitParameters\" was "
+                     "called with more than the declared number of outputs "
+                     "(1).");
     }
     for (i = 0; i < 1; ++i) {
         mplhs[i] = mclGetUninitializedArray();
@@ -223,7 +223,7 @@ DOTRACE("mlxAnnealVisitParameters");
       mprhs[5],
       mprhs[6]);
     plhs[0] = mplhs[0];
-	 mxDestroyArray(mprhs[7]);
+    mxDestroyArray(mprhs[7]);
 }
 
 /*
@@ -243,149 +243,149 @@ DOTRACE("mlxAnnealVisitParameters");
  */
 
 mxArray* MannealVisitParameters(int nargout_,
-										  mxArray* bestModel_mx,
-										  mxArray* valueScalingRange_mx,
-										  mxArray* deltas_mx,
-										  mxArray* bounds_mx,
-										  mxArray* canUseMatrix_mx,
-										  mxArray* FUN_mx,
-										  mxArray* temp_mx,
-										  mxArray* varargin_mx)
+                                mxArray* bestModel_mx,
+                                mxArray* valueScalingRange_mx,
+                                mxArray* deltas_mx,
+                                mxArray* bounds_mx,
+                                mxArray* canUseMatrix_mx,
+                                mxArray* FUN_mx,
+                                mxArray* temp_mx,
+                                mxArray* varargin_mx)
 {
 DOTRACE("MannealVisitParameters");
 
-  try { 
+  try {
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-	 if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1) {
-		Util::Prof::printAllProfData(cerr);
-		return mxCreateScalarDouble(-1.0);
-	 }
+    if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1) {
+      Util::Prof::printAllProfData(cerr);
+      return mxCreateScalarDouble(-1.0);
+    }
 
-	 if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2) {
-		Util::Prof::resetAllProfData();
-		return mxCreateScalarDouble(-2.0);
-	 }
+    if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -2) {
+      Util::Prof::resetAllProfData();
+      return mxCreateScalarDouble(-2.0);
+    }
 #endif
 
-	 mexLocalFunctionTable save_local_function_table_ =
-		mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+    mexLocalFunctionTable save_local_function_table_ =
+      mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
-	 mxArray* costs_mx = mclGetUninitializedArray();
-	 mxArray* x_mx = mclGetUninitializedArray();
+    mxArray* costs_mx = mclGetUninitializedArray();
+    mxArray* x_mx = mclGetUninitializedArray();
 
-	 validateInput(bestModel_mx);
-	 mclCopyArray(&bestModel_mx);
+    validateInput(bestModel_mx);
+    mclCopyArray(&bestModel_mx);
 
-	 Mtx bestModel(bestModel_mx, Mtx::REFER);
+    Mtx bestModel(bestModel_mx, Mtx::REFER);
 
-	 validateInput(valueScalingRange_mx);
-	 mclCopyArray(&valueScalingRange_mx);
+    validateInput(valueScalingRange_mx);
+    mclCopyArray(&valueScalingRange_mx);
 
-	 validateInput(deltas_mx);
-	 mclCopyArray(&deltas_mx);
+    validateInput(deltas_mx);
+    mclCopyArray(&deltas_mx);
 
-	 validateInput(bounds_mx);
-	 mclCopyArray(&bounds_mx);
+    validateInput(bounds_mx);
+    mclCopyArray(&bounds_mx);
 
-	 validateInput(canUseMatrix_mx);
-	 const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
+    validateInput(canUseMatrix_mx);
+    const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
 
-	 validateInput(FUN_mx);
-	 mclCopyArray(&FUN_mx);
+    validateInput(FUN_mx);
+    mclCopyArray(&FUN_mx);
 
-	 validateInput(temp_mx);
-	 mclCopyArray(&temp_mx);
+    validateInput(temp_mx);
+    mclCopyArray(&temp_mx);
 
-	 validateInput(varargin_mx);
-	 mclCopyArray(&varargin_mx);
+    validateInput(varargin_mx);
+    mclCopyArray(&varargin_mx);
 
-	 int nevals = 0;
-	 int s_zerobased = 0;
+    int nevals = 0;
+    int s_zerobased = 0;
 
   // for x = find(deltas' ~= 0)
-	 {
-		mclForLoopIterator viter__;
-		for (mclForStart(
-							  &viter__,
-							  mlfFind(
-										 NULL,
-										 NULL,
-										 mclNe(mlfCtranspose(deltas_mx), _mxarray20_)),
-							  NULL,
-							  NULL);
-			  mclForNext(&viter__, &x_mx);
-			  ) {
+    {
+      mclForLoopIterator viter__;
+      for (mclForStart(
+                       &viter__,
+                       mlfFind(
+                               NULL,
+                               NULL,
+                               mclNe(mlfCtranspose(deltas_mx), _mxarray20_)),
+                       NULL,
+                       NULL);
+           mclForNext(&viter__, &x_mx);
+           ) {
 
-		  int x_zerobased = int(mxGetScalar(x_mx)) - 1;
+        int x_zerobased = int(mxGetScalar(x_mx)) - 1;
 
-		  // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
-		  // deltas, bounds);
-		  const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
-		  const Mtx deltas(deltas_mx, Mtx::BORROW);
-		  const Mtx bounds(bounds_mx, Mtx::BORROW);
-		  Mtx modelmatrix = makeTestModels(x_zerobased,
-													  bestModel,
-													  valueScalingRange,
-													  deltas,
-													  bounds);
+        // modelmatrix = makeTestModels(x, bestModel, valueScalingRange, ...
+        // deltas, bounds);
+        const Mtx valueScalingRange(valueScalingRange_mx, Mtx::BORROW);
+        const Mtx deltas(deltas_mx, Mtx::BORROW);
+        const Mtx bounds(bounds_mx, Mtx::BORROW);
+        Mtx modelmatrix = makeTestModels(x_zerobased,
+                                         bestModel,
+                                         valueScalingRange,
+                                         deltas,
+                                         bounds);
 
-		  // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
-		  mlfAssign(&costs_mx,
-						doFuncEvals(canUseMatrix,
-										modelmatrix,
-										FUN_mx,
-										mlfIndexRef(varargin_mx,
-														"{?}",
-														mlfCreateColonIndex())
-										));
+        // costs = doFuncEvals(canUseMatrix, modelmatrix, FUN, varargin{:});
+        mlfAssign(&costs_mx,
+                  doFuncEvals(canUseMatrix,
+                              modelmatrix,
+                              FUN_mx,
+                              mlfIndexRef(varargin_mx,
+                                          "{?}",
+                                          mlfCreateColonIndex())
+                              ));
 
-		  // S.nevals = S.nevals + length(costs);
-		  nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
-						  mxGetM(costs_mx) : mxGetN(costs_mx) );
+        // S.nevals = S.nevals + length(costs);
+        nevals += ( mxGetM(costs_mx) > mxGetN(costs_mx) ?
+                    mxGetM(costs_mx) : mxGetN(costs_mx) );
 
-		  // Sample from probability distribution
-		  // s = sampleFromPdf(temp, costs);
-		  s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
+        // Sample from probability distribution
+        // s = sampleFromPdf(temp, costs);
+        s_zerobased = sampleFromPdf_zerobased(temp_mx, costs_mx);
 
-		  // bestModel(x, 1) = modelmatrix(x, s);
-		  bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
-		}
+        // bestModel(x, 1) = modelmatrix(x, s);
+        bestModel.at(x_zerobased, 0) = modelmatrix.at(x_zerobased, s_zerobased);
+      }
 
-		mclDestroyForLoopIterator(viter__);
-	 }
+      mclDestroyForLoopIterator(viter__);
+    }
 
-	 const char* fieldNames[] = { "nevals", "newModel", "cost" };
-	 mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
+    const char* fieldNames[] = { "nevals", "newModel", "cost" };
+    mxArray* output = mxCreateStructMatrix(1,1,3,fieldNames);
 
-	 // S.nevals = 0;
-	 mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
+    // S.nevals = 0;
+    mxSetField(output, 0, "nevals", mxCreateScalarDouble(nevals));
 
-	 // S.newModel = bestModel;
-	 mxSetField(output, 0, "newModel", bestModel_mx);
+    // S.newModel = bestModel;
+    mxSetField(output, 0, "newModel", bestModel_mx);
 
-	 // S.cost = costs(s);
-	 mxSetField(output, 0, "cost",
-					mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
+    // S.cost = costs(s);
+    mxSetField(output, 0, "cost",
+               mxCreateScalarDouble(mxGetPr(costs_mx)[s_zerobased]));
 
-	 mxDestroyArray(x_mx);
-	 mxDestroyArray(costs_mx);
-	 mxDestroyArray(varargin_mx);
-	 mxDestroyArray(temp_mx);
-	 mxDestroyArray(FUN_mx);
-	 mxDestroyArray(bounds_mx);
-	 mxDestroyArray(deltas_mx);
-	 mxDestroyArray(valueScalingRange_mx);
+    mxDestroyArray(x_mx);
+    mxDestroyArray(costs_mx);
+    mxDestroyArray(varargin_mx);
+    mxDestroyArray(temp_mx);
+    mxDestroyArray(FUN_mx);
+    mxDestroyArray(bounds_mx);
+    mxDestroyArray(deltas_mx);
+    mxDestroyArray(valueScalingRange_mx);
 
-	 mclSetCurrentLocalFunctionTable(save_local_function_table_);
+    mclSetCurrentLocalFunctionTable(save_local_function_table_);
 
-	 return output;
+    return output;
   }
   catch (ErrorWithMsg& err) {
-	 mexErrMsgTxt(err.msg_cstr());
+    mexErrMsgTxt(err.msg_cstr());
   }
   catch (...) {
-	 mexErrMsgTxt("an unknown C++ exception occurred.");
+    mexErrMsgTxt("an unknown C++ exception occurred.");
   }
 
   return (mxArray*) 0; // can't happen, but placate compiler
@@ -403,10 +403,10 @@ DOTRACE("MannealVisitParameters");
  * function models = makeTestModels(x, bestModel, valueScalingRange, deltas, bounds)
  */
 Mtx makeTestModels(int x_zerobased,
-						 const Mtx& bestModel,
-						 const Mtx& valueScalingRange,
-						 const Mtx& deltas,
-						 const Mtx& bounds)
+                   const Mtx& bestModel,
+                   const Mtx& valueScalingRange,
+                   const Mtx& deltas,
+                   const Mtx& bounds)
 {
 DOTRACE("makeTestModels");
 
@@ -419,11 +419,11 @@ DOTRACE("makeTestModels");
 
   int num_testmodels = 0;
   {for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
-	 {
-		double value = current_x_val + (*iter) * delta_x;
-		if ( (value > lowerbound_x) && (value < upperbound_x) )
-		  ++num_testmodels;
-	 }
+    {
+      double value = current_x_val + (*iter) * delta_x;
+      if ( (value > lowerbound_x) && (value < upperbound_x) )
+        ++num_testmodels;
+    }
   }
 
   Mtx newModels(bestModel.mrows(), num_testmodels);
@@ -431,18 +431,18 @@ DOTRACE("makeTestModels");
   const Slice bestModelCol = bestModel.column(0);
 
   for (int i = 0; i < num_testmodels; ++i)
-	 {
-		newModels.column(i) = bestModelCol;
-	 }
+    {
+      newModels.column(i) = bestModelCol;
+    }
 
   {
-	 int col = 0;
-	 for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
-	 {
-		double value = current_x_val + (*iter) * delta_x;
-		if ( (value > lowerbound_x) && (value < upperbound_x) )
-		  newModels.at(x_zerobased, col++) = value;
-	 }
+    int col = 0;
+    for (MtxConstIter iter = valueScalingRange.rowIter(0); iter.hasMore(); ++iter)
+    {
+      double value = current_x_val + (*iter) * delta_x;
+      if ( (value > lowerbound_x) && (value < upperbound_x) )
+        newModels.at(x_zerobased, col++) = value;
+    }
   }
 
   return newModels;
@@ -461,9 +461,9 @@ DOTRACE("makeTestModels");
  */
 
 mxArray* doFuncEvals(bool canUseMatrix,
-							const Mtx& models,
-							mxArray* func,
-							mxArray* varargin_mx)
+                     const Mtx& models,
+                     mxArray* func,
+                     mxArray* varargin_mx)
 {
 DOTRACE("doFuncEvals");
 
@@ -476,89 +476,89 @@ DOTRACE("doFuncEvals");
   mclCopyArray(&varargin_mx);
 
   if (canUseMatrix)
-	 {
-		DOTRACE("eval w/ matrix");
-		// costs = feval(func, models, varargin{:});
+    {
+      DOTRACE("eval w/ matrix");
+      // costs = feval(func, models, varargin{:});
 #if 0
-		mlfAssign(&costs_mx,
-					 mlfFeval(mclValueVarargout(),
-								 func,
-								 models_mx,
-								 mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
-								 NULL));
+      mlfAssign(&costs_mx,
+                mlfFeval(mclValueVarargout(),
+                         func,
+                         models_mx,
+                         mlfIndexRef(varargin_mx, "{?}", mlfCreateColonIndex()),
+                         NULL));
 
 #else
 
-		mxArray* plhs[1] = { 0 };
+      mxArray* plhs[1] = { 0 };
 
-		const int MAX_NRHS = 32;
-		mxArray* prhs[MAX_NRHS];
+      const int MAX_NRHS = 32;
+      mxArray* prhs[MAX_NRHS];
 
-		prhs[0] = mxDuplicateArray(models_mx);
+      prhs[0] = mxDuplicateArray(models_mx);
 
-	   int nrhs = 1;
+      int nrhs = 1;
 
-		const int nvararg = mxGetNumberOfElements(varargin_mx);
+      const int nvararg = mxGetNumberOfElements(varargin_mx);
 
-		for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
-		  {
-			 DebugEvalNL(i);
-			 prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
-		  }
+      for (int i = 0; i < nvararg && nrhs < MAX_NRHS; ++i)
+        {
+          DebugEvalNL(i);
+          prhs[nrhs++] = mxDuplicateArray(mxGetCell(varargin_mx, i));
+        }
 
-  		fixed_string cmd_name = MxWrapper::extractString(func);
+        fixed_string cmd_name = MxWrapper::extractString(func);
 
-  		int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
+        int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
-		if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
+      if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in doFuncEvals");
 
-		mlfAssign(&costs_mx, plhs[0]);
+      mlfAssign(&costs_mx, plhs[0]);
 #endif
-	 }
+    }
   else
-	 {
-		DOTRACE("eval w/o matrix");
-		// NM = size(models, 2);
-		mlfAssign(&NM, mlfSize(mclValueVarargout(), models_mx, _mxarray22_));
+    {
+      DOTRACE("eval w/o matrix");
+      // NM = size(models, 2);
+      mlfAssign(&NM, mlfSize(mclValueVarargout(), models_mx, _mxarray22_));
 
-		// costs = zeros(NM, 1);
-		mlfAssign(&costs_mx, mlfZeros(NM, _mxarray21_, NULL));
+      // costs = zeros(NM, 1);
+      mlfAssign(&costs_mx, mlfZeros(NM, _mxarray21_, NULL));
 
-		// for e = 1:NM
-		{
-		  int v_ = mclForIntStart(1);
-		  int e_ = mclForIntEnd(NM);
-		  if (v_ > e_)
-			 {
-				mlfAssign(&e, _mxarray23_);
-			 }
-		  else
-			 {
-				//costs(e) = feval(func, models(:,e), varargin{:});
-				for (; ; ) {
-				  mclIntArrayAssign1(
-											&costs_mx,
-											mlfFeval(
-														mclValueVarargout(),
-														func,
-														mclArrayRef2(
-																		 models_mx,
-																		 mlfCreateColonIndex(),
-																		 mlfScalar(v_)),
-														mlfIndexRef(
-																		varargin_mx,
-																		"{?}",
-																		mlfCreateColonIndex()),
-														NULL),
-											v_);
-				  if (v_ == e_) {
-					 break;
-				  }
-				  ++v_;
-				}
-				mlfAssign(&e, mlfScalar(v_));
-			 }
-		}
+      // for e = 1:NM
+      {
+        int v_ = mclForIntStart(1);
+        int e_ = mclForIntEnd(NM);
+        if (v_ > e_)
+          {
+            mlfAssign(&e, _mxarray23_);
+          }
+        else
+          {
+            //costs(e) = feval(func, models(:,e), varargin{:});
+            for (; ; ) {
+              mclIntArrayAssign1(
+                                 &costs_mx,
+                                 mlfFeval(
+                                          mclValueVarargout(),
+                                          func,
+                                          mclArrayRef2(
+                                                       models_mx,
+                                                       mlfCreateColonIndex(),
+                                                       mlfScalar(v_)),
+                                          mlfIndexRef(
+                                                      varargin_mx,
+                                                      "{?}",
+                                                      mlfCreateColonIndex()),
+                                          NULL),
+                                 v_);
+              if (v_ == e_) {
+                break;
+              }
+              ++v_;
+            }
+            mlfAssign(&e, mlfScalar(v_));
+          }
+      }
   }
 
   mclValidateOutput(costs_mx, 1, 1, "costs", "annealVisitParameters/doFuncEvals");
@@ -589,7 +589,7 @@ int sampleFromPdf_zerobased(mxArray* temp_mx, mxArray* costs_mx)
 DOTRACE("sampleFromPdf_zerobased");
 
   mexLocalFunctionTable save_local_function_table_ =
-	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* s_mx = mclGetUninitializedArray();
   mxArray* cutoff = mclGetUninitializedArray();
@@ -605,9 +605,9 @@ DOTRACE("sampleFromPdf_zerobased");
 
   // s = find(cumsum(dist) >= cutoff);
   mlfAssign(&s_mx,
-				mlfFind(NULL,
-						  NULL,
-						  mclGe(mlfCumsum(dist, NULL), cutoff)));
+            mlfFind(NULL,
+                    NULL,
+                    mclGe(mlfCumsum(dist, NULL), cutoff)));
 
   // s = s(1);
   int s_zerobased = int(mxGetPr(s_mx)[0]) - 1;
@@ -640,7 +640,7 @@ mxArray* makePDF(mxArray* temp_mx, mxArray* costs_mx)
 DOTRACE("makePDF");
 
   mexLocalFunctionTable save_local_function_table_ =
-	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* pdf = mclGetUninitializedArray();
   mxArray* ans = mclGetUninitializedArray();
@@ -658,28 +658,28 @@ DOTRACE("makePDF");
 
   // if isempty(bad)
   if (mlfTobool(mlfIsempty(bad)))
-	 {
-		mlfAssign(&pdf, eprob(temp_mx, costs_mx));
-	 }
+    {
+      mlfAssign(&pdf, eprob(temp_mx, costs_mx));
+    }
   else
-	 {
-		// good = find(~isnan(costs));
-		mlfAssign(&good, mlfFind(NULL, NULL, mclNot(mlfIsnan(costs_mx))));
+    {
+      // good = find(~isnan(costs));
+      mlfAssign(&good, mlfFind(NULL, NULL, mclNot(mlfIsnan(costs_mx))));
 
-		// w = costs(good);
-		mlfAssign(&w, mclArrayRef1(costs_mx, good));
+      // w = costs(good);
+      mlfAssign(&w, mclArrayRef1(costs_mx, good));
 
-		mlfAssign(&pdf, eprob(temp_mx, w));
+      mlfAssign(&pdf, eprob(temp_mx, w));
 
-		// pdf(good) = pdf;
-		mclArrayAssign1(&pdf, pdf, good);
+      // pdf(good) = pdf;
+      mclArrayAssign1(&pdf, pdf, good);
 
-		// pdf(bad) = 0;
-		mclArrayAssign1(&pdf, _mxarray20_, bad);
+      // pdf(bad) = 0;
+      mclArrayAssign1(&pdf, _mxarray20_, bad);
 
-		cerr << "Warning: the cost function generated a NaN "
-			  << "for one or more models.";
-	 }
+      cerr << "Warning: the cost function generated a NaN "
+           << "for one or more models.";
+    }
 
   mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
 
@@ -711,7 +711,7 @@ mxArray* eprob(mxArray* temp_mx, mxArray* costs_mx)
 DOTRACE("eprob");
 
   mexLocalFunctionTable save_local_function_table_ =
-	 mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
+    mclSetCurrentLocalFunctionTable(&_local_function_table_annealVisitParameters);
 
   mxArray* pdf = mclGetUninitializedArray();
   mxArray* scale = mclGetUninitializedArray();
@@ -735,27 +735,27 @@ DOTRACE("eprob");
 
   // if mpdf>toobig
   if (mclGtBool(mpdf, toobig))
-	 {
-		// scale = mpdf/toobig;
-		mlfAssign(&scale, mclMrdivide(mpdf, toobig));
+    {
+      // scale = mpdf/toobig;
+      mlfAssign(&scale, mclMrdivide(mpdf, toobig));
 
-		// pdf = exp(-pdf/scale);
-		mlfAssign(&pdf, mlfExp(mclMrdivide(mclUminus(pdf), scale)));
+      // pdf = exp(-pdf/scale);
+      mlfAssign(&pdf, mlfExp(mclMrdivide(mclUminus(pdf), scale)));
 
-		// pdf = pdf/max(pdf);
-		mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+      // pdf = pdf/max(pdf);
+      mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
 
-		// pdf = pdf.^scale;
-		mlfAssign(&pdf, mlfPower(pdf, scale));
-	 }
+      // pdf = pdf.^scale;
+      mlfAssign(&pdf, mlfPower(pdf, scale));
+    }
   else
-	 {
-		// pdf = exp(-pdf);
-		mlfAssign(&pdf, mlfExp(mclUminus(pdf)));
+    {
+      // pdf = exp(-pdf);
+      mlfAssign(&pdf, mlfExp(mclUminus(pdf)));
 
-		// pdf = pdf/max(pdf);
-		mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
-	 }
+      // pdf = pdf/max(pdf);
+      mlfAssign(&pdf, mclMrdivide(pdf, mlfMax(NULL, pdf, NULL, NULL)));
+    }
 
   // pdf = pdf/sum(pdf);
   mlfAssign(&pdf, mclMrdivide(pdf, mlfSum(pdf, NULL)));
