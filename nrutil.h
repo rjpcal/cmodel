@@ -3,7 +3,6 @@
 // nrutil.h
 //
 // created: Thu Apr 19 17:31:40 2001
-// written: Thu Apr 19 17:33:15 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -61,7 +60,7 @@ inline double** matrix(long nrl, long nrh, long ncl, long nch)
   m[nrl] -= ncl;
 
   for (i=nrl+1;i<=nrh;++i)
-	 m[i]=m[i-1]+ncol;
+         m[i]=m[i-1]+ncol;
 
   return m;
 }

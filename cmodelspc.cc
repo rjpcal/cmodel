@@ -2,10 +2,9 @@
 //
 // cmodelspc.cc
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Thu Aug  1 11:07:53 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

@@ -2,10 +2,9 @@
 //
 // simplexoptimizer.h
 //
-// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Tue Sep 28 14:27:37 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

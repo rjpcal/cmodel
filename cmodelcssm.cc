@@ -2,10 +2,9 @@
 //
 // cmodelcssm.cc
 //
-// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Thu Aug  1 11:13:09 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

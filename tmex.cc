@@ -2,10 +2,9 @@
 //
 // tmex.cc
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Tue Feb 26 09:27:44 2002
-// written: Tue Sep 28 13:50:43 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

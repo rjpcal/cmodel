@@ -2,10 +2,9 @@
 //
 // cmodelrxm.cc
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Wed Jul 31 14:47:40 2002
-// written: Wed Jul 31 14:47:40 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -26,8 +25,8 @@
 #include "util/trace.h"
 
 CModelRxm::CModelRxm(const Mtx& objParams,
-		     TransferFunction transferFunc,
-		     int numStoredExemplars) :
+                     TransferFunction transferFunc,
+                     int numStoredExemplars) :
   CModelExemplar(objParams, numStoredExemplars, transferFunc),
   itsStored1(numStoredExemplars, DIM_OBJ_PARAMS),
   itsStored2(numStoredExemplars, DIM_OBJ_PARAMS),
@@ -95,27 +94,27 @@ DOTRACE("CModelRxm::fillModelParamsBounds");
     {
       // first category lower bound
       bounds.sub(row_range_n(start1+row, DIM_OBJ_PARAMS),
-		 col_range_n(0, 1))
-	=
-	itsHiLo1.sub(row_range_n(0,1));
+                 col_range_n(0, 1))
+        =
+        itsHiLo1.sub(row_range_n(0,1));
 
       // first category upper bound
       bounds.sub(row_range_n(start1+row, DIM_OBJ_PARAMS),
-		 col_range_n(1, 1))
-	=
-	itsHiLo1.sub(row_range_n(1,1));
+                 col_range_n(1, 1))
+        =
+        itsHiLo1.sub(row_range_n(1,1));
 
       // second category lower bound
       bounds.sub(row_range_n(start2+row, DIM_OBJ_PARAMS),
-		 col_range_n(0, 1))
-	=
-	itsHiLo2.sub(row_range_n(0,1));
+                 col_range_n(0, 1))
+        =
+        itsHiLo2.sub(row_range_n(0,1));
 
       // second category upper bound
       bounds.sub(row_range_n(start2+row, DIM_OBJ_PARAMS),
-		 col_range_n(1, 1))
-	=
-	itsHiLo2.sub(row_range_n(1,1));
+                 col_range_n(1, 1))
+        =
+        itsHiLo2.sub(row_range_n(1,1));
     }
 
   return startRow + n*2;

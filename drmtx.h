@@ -2,10 +2,9 @@
 //
 // drmtx.h
 //
-// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Tue Apr 17 11:21:42 2001
-// written: Tue Sep 28 14:27:13 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

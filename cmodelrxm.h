@@ -2,10 +2,9 @@
 //
 // cmodelrxm.h
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Wed Jul 31 14:47:13 2002
-// written: Tue Sep 28 14:26:58 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

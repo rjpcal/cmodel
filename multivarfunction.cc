@@ -2,10 +2,9 @@
 //
 // multivarfunction.cc
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Tue Feb 19 09:15:55 2002
-// written: Wed Jul 31 15:09:06 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

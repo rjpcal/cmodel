@@ -2,10 +2,9 @@
 //
 // doSimplex.cc
 //
-// Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2001-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Tue Sep 28 13:44:25 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////

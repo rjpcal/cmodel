@@ -2,10 +2,9 @@
 //
 // annealingoptimizer.cc
 //
-// Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
+// Copyright (c) 2002-2004 Rob Peters <rjpeters at klab dot caltech dot edu>
 //
 // created: Tue Feb 19 09:59:58 2002
-// written: Tue Sep 28 13:08:01 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
