@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar  8 10:51:19 2001
+// written: Thu Mar  8 10:57:29 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -60,6 +60,12 @@ private:
     for (int i = 0; i < numAllExemplars; ++i)
       mu[i] = 0.0;
   }
+
+  // Scales the weights in place; weights is an input/output argument
+  static void scaleWeights(double* weights,
+									int numRawWeights,
+									int numStoredExemplars,
+									int numTrainingExemplars);
 
   void computeSimilarity(const double* attWeights,
 								 const double* storedExemplar1,
