@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 19:28:27 2002
+// written: Mon Feb 18 19:45:00 2002
 // $Id$
 //
 //
@@ -36,6 +36,7 @@
 #include "util/strings.h"
 
 #include <iostream>
+#include <iomanip>
 #include <libmatlbm.h>
 
 #include "util/trace.h"
@@ -139,8 +140,8 @@ DOTRACE("makePDF");
   for (int i = 0; i < costs.nelems(); ++i)
     if (isnan(costs.at(i)))
       {
-        mexErrMsgTxt("Warning: the cost function generated a NaN "
-                     "for one or more models.");
+        throw Util::Error("Warning: the cost function generated a NaN "
+                          "for one or more models.");
       }
 
   // Scales cost vector and calculates exponential probability distribution.
@@ -200,7 +201,7 @@ DOTRACE("sampleFromPdf");
 
   if (s < 0)
     {
-      mexErrMsgTxt("snafu in sampleFromPdf");
+      throw Util::Error("snafu in sampleFromPdf");
     }
 
   return s;
@@ -262,7 +263,8 @@ private:
 
     itsPrhs[0] = 0;
 
-    if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
+    if (err != 0)
+      throw Util::Error("mexCallMATLAB failed in evaluateParallel");
 
     Mtx costs(costs_mx, Mtx::COPY);
 
@@ -295,7 +297,8 @@ private:
 
         itsPrhs[0] = 0;
 
-        if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
+        if (err != 0)
+          throw Util::Error("mexCallMATLAB failed in evaluateSerial");
 
         result.at(e) = mxGetScalar(cost_mx);
 
@@ -380,13 +383,13 @@ public:
   {
     if (bounds.ncols() != 2)
       {
-        mexErrMsgTxt("'bounds' must have two columns (lo and hi bound)");
+        throw Util::Error("'bounds' must have two columns (lo and hi bound)");
       }
 
     for (int r = 0; r < bounds.mrows(); ++r)
       {
         if (bounds.at(r,0) > bounds.at(r,1))
-          mexErrMsgTxt("invalid 'bounds' (lo value was greater than hi)");
+          throw Util::Error("invalid 'bounds' (lo value was greater than hi)");
       }
   }
 
@@ -567,12 +570,17 @@ public:
 
     if (itsOpts.talking)
       {
-        mexPrintf("\nStarting cost %7.2f", startingCost);
-        mexPrintf("\n\nBeginning run #%02d. Critical temperature at %3.2f.\n",
-                  itsRunNum+1, pow(10.0, *criticalTemp));
-        mexPrintf("------------------------------------------------\n\n");
-        mexPrintf("f-Calls\t\tTemperature\tMinimum f-Value\n");
-        mexPrintf("------------------------------------------------\n");
+        std::cerr << "\nStarting cost "
+                  << std::setw(7) << std::fixed << std::setprecision(2)
+                  << startingCost;
+        std::cerr << "\n\nBeginning run #" << itsRunNum+1 << ". ";
+        std::cerr << "Critical temperature at "
+                  << std::setw(3) << std::fixed << std::setprecision(2)
+                  << pow(10.0, *criticalTemp) << ".\n";
+
+        std::cerr << "------------------------------------------------\n\n";
+        std::cerr << "f-Calls\t\tTemperature\tMinimum f-Value\n";
+        std::cerr << "------------------------------------------------\n";
       }
 
     return Mtx(startingModels.column(startingPos));
@@ -582,11 +590,13 @@ public:
   {
     if (!itsOpts.talking) return;
 
-    mexPrintf("\nparams: ");
+    std::cerr << "\nparams: ";
     for (int i = 0; i < model.nelems(); ++i)
-      mexPrintf("%f ", model.at(i));
-    mexPrintf("\ncost: %7.4f", cost);
-    mexPrintf("\n");
+      std::cerr << std::fixed << std::setprecision(6) << model.at(i) << " ";
+    std::cerr << "\ncost: "
+              << std::setw(7) << std::fixed << std::setprecision(4)
+              << cost
+              << "\n";
   }
 
   void runSimplex()
@@ -668,8 +678,8 @@ double AnnealingOptimizer::visitParameters(Mtx& bestModel, const double temp)
 
   if (s < 0)
     {
-      mexErrMsgTxt("didn't run any annealing iterations because "
-                   "there were no non-zero deltas");
+      throw Util::Error("didn't run any annealing iterations because "
+                        "there were no non-zero deltas");
     }
 
   itsNumFunEvals.at(itsRunNum) += nevals;
@@ -786,16 +796,16 @@ DOTRACE("mlxAnnealHelper");
 
   if (nlhs > 1)
     {
-      mexErrMsgTxt("Error: annealHelper was called with more "
-                   "than the declared number of outputs (1).");
+      throw Util::Error("Error: annealHelper was called with more "
+                        "than the declared number of outputs (1).");
     }
 
   const int NDECLARED = 2;
 
   if (nrhs < NDECLARED)
     {
-      mexErrMsgTxt("Error: annealHelper was called with fewer "
-                   "than the declared number of inputs (7).");
+      throw Util::Error("Error: annealHelper was called with fewer "
+                        "than the declared number of inputs (7).");
     }
 
   mlfEnterNewContext(0, NDECLARED, prhs[0], prhs[1]);
