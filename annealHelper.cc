@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Tue Sep 28 13:17:40 2004
+// written: Tue Sep 28 13:19:06 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -19,8 +19,6 @@
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
 
-#include "util/error.h"
-
 #include "util/trace.h"
 
 void annealHelper(int nlhs, mxArray* plhs[],
@@ -33,34 +31,18 @@ DOTRACE("annealHelper");
   int nvararg = nrhs - NDECLARED;
   const mxArray** pvararg = prhs + NDECLARED;
 
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-  if (nvararg > 0 && Mx::hasField(pvararg[0], "debugFlag"))
-    {
-      int debugFlag = Mx::getIntField(pvararg[0], "debugFlag");
+  AnnealOpts opts(prhs[0]);
 
-      if (debugFlag == -1)       Util::Prof::printAllProfData(std::cerr);
-      else if (debugFlag == -2)  Util::Prof::resetAllProfData();
+  MatlabFunction objective(Mx::getString(prhs[1]), // funcName
+                           nvararg,
+                           pvararg,
+                           opts.canUseMatrix);
 
-      plhs[0] = mxCreateScalarDouble(debugFlag);
-    }
-  else
-    {
-#endif
-      AnnealOpts opts(prhs[0]);
+  AnnealingOptimizer ar(objective, opts);
 
-      MatlabFunction objective(Mx::getString(prhs[1]), // funcName
-                               nvararg,
-                               pvararg,
-                               opts.canUseMatrix);
+  ar.optimize();
 
-      AnnealingOptimizer ar(objective, opts);
-
-      ar.optimize();
-
-      plhs[0] = ar.getOutput();
-#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-    }
-#endif
+  plhs[0] = ar.getOutput();
 }
 
 namespace
