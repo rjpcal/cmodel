@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Feb 26 09:44:29 2002
+// written: Tue Feb 26 09:54:04 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,7 +18,6 @@
 #endif
 
 #include "classifier.h"
-
 #include "cmodelcssm.h"
 #include "cmodelcuevalidity.h"
 #include "cmodelgcm.h"
@@ -35,9 +34,6 @@
 #include "util/error.h"
 #include "util/pointers.h"
 #include "util/strings.h"
-
-#include <iostream>
-#include <libmatlb.h>
 
 #include "util/trace.h"
 
@@ -71,7 +67,7 @@ namespace
 
 shared_ptr<Classifier> makeClassifier(const fstring& whichType,
                                       const Mtx& objParams,
-                                      mxArray* extraArgs_mx)
+                                      const mxArray* extraArgs_mx)
 {
   DOTRACE("makeClassifier");
   if (whichType == "cssm")
@@ -155,14 +151,27 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
   return shared_ptr<Classifier>(0);
 }
 
-static mxArray* Mclassifier(const Mtx& modelParams,
-                            const fstring& modelName,
-                            const fstring& actionRequest,
-                            mxArray* extraArgs_mx)
-{
-  DOTRACE("Mclassifier");
 
-  const Mtx objParams(Mx::getField(extraArgs_mx, "objParams"));
+///////////////////////////////////////////////////////////////////////
+//
+// classifier()
+//
+///////////////////////////////////////////////////////////////////////
+
+namespace
+{
+  const int NARGIN = 4;
+  const int NARGOUT = 1;
+}
+
+void classifier(int nlhs, mxArray* plhs[], int nrhs, mxArray* prhs[])
+{
+  const Mtx      modelParams   (prhs[0], Mtx::COPY);
+  const fstring  modelName     (Mx::getString(prhs[1]));
+  const fstring  actionRequest (Mx::getString(prhs[2]));
+  const mxArray* extraArgs_mx  (prhs[3]);
+
+  const Mtx      objParams     (Mx::getField(extraArgs_mx, "objParams"));
 
   shared_ptr<Classifier> model =
     makeClassifier(modelName, objParams, extraArgs_mx);
@@ -177,45 +186,13 @@ static mxArray* Mclassifier(const Mtx& modelParams,
       mexWarnMsgTxt(msg.c_str());
     }
 
-  return res.result.release();
+  plhs[0] = res.result.release();
 }
-
 
 
 ///////////////////////////////////////////////////////////////////////
 //
-// The function "mlxClassifier" contains the feval interface for the
-// "classifier" function. The feval function calls the implementation
-// version of classifier through this function. This function
-// processes any input arguments and passes them to the implementation
-// version of the function, appearing above.
-//
-///////////////////////////////////////////////////////////////////////
-
-namespace
-{
-  const int NARGIN = 4;
-  const int NARGOUT = 1;
-}
-
-extern "C"
-void mlxClassifier(int nlhs, mxArray * plhs[], int nrhs, mxArray * prhs[])
-{
-  plhs[0] = Mclassifier(Mtx(prhs[0], Mtx::COPY), // model params
-                        Mx::getString(prhs[1]), // model name
-                        Mx::getString(prhs[2]), // action request
-                        prhs[3]); // extra args struct
-}
-
-
-
-
-///////////////////////////////////////////////////////////////////////
-//
-// The function "mexLibrary" is a Compiler-generated mex wrapper,
-// which (apparently, since I can't find any docs for this API)
-// returns information about the functions provided in the containing
-// MEX file.
+// mexLibrary()
 //
 ///////////////////////////////////////////////////////////////////////
 
@@ -232,7 +209,7 @@ mex_information mexLibrary()
   if (mexPkg == 0)
     {
       mexPkg = new MyMexPkg(terminateModule);
-      mexPkg->addFcn(MexFcn(MEXFUNCNAME, mlxClassifier, NARGIN, NARGOUT));
+      mexPkg->addFcn(MexFcn(MEXFUNCNAME, classifier, NARGIN, NARGOUT));
     }
 
   return mexPkg->mexInfo();
