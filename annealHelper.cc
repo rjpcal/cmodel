@@ -420,7 +420,11 @@ public:
                mxArray** pvararg_)
     :
     astate_mx(mxDuplicateArray(old_astate_mx)),
-    run_num(int(mxGetScalar(mxGetField(astate_mx, 0, "k")))-1),
+    itsRunNum(int(mxGetScalar(mxGetField(astate_mx, 0, "k")))-1),
+    itsTalking(mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0),
+    itsNvisits(0),
+    itsNumFunEvals(mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER),
+    itsEnergy(mxGetField(astate_mx, 0, "energy"), Mtx::REFER),
     valueScalingRange(valueScalingRange_),
     bounds(bounds_),
     canUseMatrix(canUseMatrix_),
@@ -433,7 +437,11 @@ public:
 
 private:
   mxArray* const astate_mx;
-  const int run_num;
+  const int itsRunNum;
+  const bool itsTalking;
+  int itsNvisits;
+  Mtx itsNumFunEvals;
+  Mtx itsEnergy;
   Mtx valueScalingRange;
   Mtx bounds;
   const bool canUseMatrix;
@@ -465,14 +473,6 @@ DOTRACE("AnnealingRun::go");
    }
 #endif
 
-  Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
-  Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
-
-  const bool astate_talk =
-    (mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0);
-
-  int nvisits = 0;
-
   Mtx minUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
   Mtx maxUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY);
 
@@ -488,14 +488,14 @@ DOTRACE("AnnealingRun::go");
 
       for (int repeat = 0; repeat < temp_repeats; ++repeat)
         {
-          ++nvisits;
+          ++itsNvisits;
 
-          if (astate_talk && (nvisits % 10 == 0))
+          if (itsTalking && (itsNvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                        int(numFunEvals.at(run_num)),
+                        int(itsNumFunEvals.at(itsRunNum)),
                         temp,
-                        energy.column(run_num).leftmost(nvisits-1).min());
+                        itsEnergy.column(itsRunNum).leftmost(itsNvisits-1).min());
             }
 
           VisitResult vresult =
@@ -511,9 +511,9 @@ DOTRACE("AnnealingRun::go");
 
           mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
-          numFunEvals.at(run_num) += vresult.nevals;
+          itsNumFunEvals.at(itsRunNum) += vresult.nevals;
 
-          energy.at(nvisits-1,run_num) = vresult.cost;
+          itsEnergy.at(itsNvisits-1,itsRunNum) = vresult.cost;
 
           const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
@@ -539,7 +539,7 @@ DOTRACE("AnnealingRun::go");
           {
             Mtx modelHist(mxGetField(astate_mx, 0, "model"), Mtx::REFER);
 
-            modelHist.column(nvisits-1) = bestModel;
+            modelHist.column(itsNvisits-1) = bestModel;
           }
         }
     }
