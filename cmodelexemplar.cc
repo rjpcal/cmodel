@@ -32,13 +32,9 @@ double minkDist(const ConstSlice& wts,
 			wt = wts.begin(),
 			wend = wts.end();
 		 wt != wend;
-		 ++wt)
+		 ++wt, ++x1, ++x2)
 	 {
 		wt_sum += (*wt) * pow( abs( *x1 - *x2), r);
-
-		++wt;
-		++x1;
-		++x2;
 	 }
   return pow(wt_sum, r_inv);
 }
