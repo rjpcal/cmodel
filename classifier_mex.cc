@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Wed Mar 28 13:08:37 2001
+// written: Sat Mar 31 08:34:06 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -32,7 +32,6 @@
 #include "util/pointers.h"
 
 #include "trace.h"
-#define LOCAL_DEBUG
 
 #include <fstream.h>
 #include "libmatlb.h"
@@ -80,13 +79,19 @@ namespace Local {
 shared_ptr<Classifier> makeClassifier(const fixed_string& whichType,
 												  const Mtx& objParams,
 												  const Mtx& observedIncidence,
-												  mxArray* optArgs_mx)
+												  mxArray* extraArgs_mx)
 {
 DOTRACE("makeClassifier");
   if (whichType == "cssm")
 	 {
 
-		int numStoredExemplars = optArgs_mx ? int(mxGetScalar(optArgs_mx)) : 0;
+		int numStoredExemplars = 0;
+		if (extraArgs_mx && mxIsStruct(extraArgs_mx))
+		  {
+			 mxArray* ns_mx = mxGetField(extraArgs_mx, 0, "numStoredExemplars");
+			 if (ns_mx)
+				numStoredExemplars = int(mxGetScalar(ns_mx));
+		  }
 
 		if ( (numStoredExemplars == recentNumStored) &&
 			  (objParams == *recentObjParams) &&
@@ -158,7 +163,7 @@ static mxArray* Mclassifier(int /* nargout_ */,
 									 mxArray* actionRequest_mx,
 									 mxArray* objParams_mx,
 									 mxArray* observedIncidence_mx,
-									 mxArray* optArgs_mx)
+									 mxArray* extraArgs_mx)
 {
 DOTRACE("Mclassifier");
 
@@ -168,18 +173,25 @@ DOTRACE("Mclassifier");
 
 	 fixed_string actionRequest = Local::getString(actionRequest_mx);
 
-
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
-	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -1) {
-		ofstream ofs("profdata.out");
-		Util::Prof::printAllProfData(ofs);
-		return mxCreateScalarDouble(-1.0);
-	 }
+	 if (extraArgs_mx && mxIsStruct(extraArgs_mx))
+		{
+		  mxArray* debugFlag = mxGetField(extraArgs_mx, 0, "debugFlag");
 
-	 if (optArgs_mx && mxGetScalar(optArgs_mx) == -2) {
-		Util::Prof::resetAllProfData();
-		return mxCreateScalarDouble(-2.0);
-	 }
+		  if (debugFlag)
+			 {
+				if (mxGetScalar(debugFlag) == -1) {
+				  ofstream ofs("profdata.out");
+				  Util::Prof::printAllProfData(ofs);
+				  return mxCreateScalarDouble(-1.0);
+				}
+
+				if (mxGetScalar(debugFlag) == -2) {
+				  Util::Prof::resetAllProfData();
+				  return mxCreateScalarDouble(-2.0);
+				}
+			 }
+		}
 #endif
 
 	 //---------------------------------------------------------------------
@@ -206,7 +218,7 @@ DOTRACE("Mclassifier");
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
 																  observedIncidence,
-																  optArgs_mx);
+																  extraArgs_mx);
 
 	 int multiplier = 1;
 	 // check for minus sign
@@ -292,25 +304,24 @@ mxArray* mlfClassifier(mxArray* modelParams_mx,
 							  mxArray* actionRequest_mx,
 							  mxArray* objParams_mx,
 							  mxArray* observedIncidence_mx,
-							  mxArray* optArgs_mx)
+							  mxArray* extraArgs_mx)
 {
 DOTRACE("mlfClassifier");
 
   int nargout = 1;
 
   mlfEnterNewContext(0, CLASSIFIER_NARGIN,
-							modelParams_mx, modelName_mx, actionRequest_mx,
-							objParams_mx, observedIncidence_mx, optArgs_mx);
+                     modelParams_mx, modelName_mx, actionRequest_mx,
+                     objParams_mx, observedIncidence_mx, extraArgs_mx);
 
   mxArray* result = Mclassifier(nargout,
-										  modelParams_mx, modelName_mx, actionRequest_mx,
-										  objParams_mx,
-										  observedIncidence_mx, optArgs_mx);
+                                modelParams_mx, modelName_mx, actionRequest_mx,
+                                objParams_mx,
+                                observedIncidence_mx, extraArgs_mx);
 
   mlfRestorePreviousContext(0, CLASSIFIER_NARGIN,
-									 modelParams_mx, modelName_mx, actionRequest_mx, 
-									 objParams_mx, observedIncidence_mx,
-									 optArgs_mx);
+                            modelParams_mx, modelName_mx, actionRequest_mx, 
+                            objParams_mx, observedIncidence_mx, extraArgs_mx);
 
   return mlfReturnValue(result);
 }
@@ -380,9 +391,9 @@ mex_information mexLibrary() {
 
   static mexFunctionTableEntry function_table[1] = {
 #ifndef LOCAL_DEBUG
-	 { "classifier", mlxClassifier, 5, 1, &_local_function_table_classifier }
+	 { "classifier", mlxClassifier, 6, 1, &_local_function_table_classifier }
 #else
-	 { "dclassifier", mlxClassifier, 5, 1, &_local_function_table_classifier }	 
+	 { "dclassifier", mlxClassifier, 6, 1, &_local_function_table_classifier }	 
 #endif
   };
 
