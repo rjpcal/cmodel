@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 14:58:41 2002
+// written: Fri Feb 15 15:20:58 2002
 // $Id$
 //
 //
@@ -466,23 +466,44 @@ DOTRACE("annealHelper");
                 energy.column(k_onebased-1).leftmost(astate_c-1).min());
     }
 
-  mxArray* bestModel_mx = mxGetField(astate_mx, 0, "bestModel");
-
-  VisitResult vresult = annealVisitParameters(bestModel_mx,
-                                              valueScalingRange,
-                                              deltas,
-                                              bounds,
-                                              canUseMatrix,
-                                              func_name,
-                                              temp,
-                                              nvararg,
-                                              pvararg);
+  VisitResult vresult =
+    annealVisitParameters(mxGetField(astate_mx, 0, "bestModel"),
+                          valueScalingRange,
+                          deltas,
+                          bounds,
+                          canUseMatrix,
+                          func_name,
+                          temp,
+                          nvararg,
+                          pvararg);
 
   mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
   numFunEvals.at(k_onebased-1) = numFunEvals.at(k_onebased-1) + vresult.nevals;
 
   energy.at(astate_c-1,k_onebased-1) = vresult.cost;
+
+  // Update the used parameter ranges
+  {
+    Mtx minUsedParams(mxGetField(astate_mx, 0, "minUsedParams"), Mtx::REFER);
+    Mtx maxUsedParams(mxGetField(astate_mx, 0, "maxUsedParams"), Mtx::REFER);
+    const Mtx bestModel(mxGetField(astate_mx, 0, "bestModel"), Mtx::REFER);
+
+    if (minUsedParams.nelems() != bestModel.nelems()
+        || maxUsedParams.nelems() != bestModel.nelems())
+      {
+        mexErrMsgTxt("size mismatch in annealHelper()");
+      }
+
+    for (int i = 0; i < bestModel.nelems(); ++i)
+      {
+        minUsedParams.at(i) = std::min(double(minUsedParams.at(i)),
+                                       bestModel.at(i));
+
+        maxUsedParams.at(i) = std::max(double(maxUsedParams.at(i)),
+                                       bestModel.at(i));
+      }
+  }
 
   return astate_mx;
 }
