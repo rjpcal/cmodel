@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Feb 19 09:59:33 2002
-// written: Tue Sep 28 13:08:06 2004
+// written: Tue Sep 28 14:26:40 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,7 @@
 #ifndef ANNEALINGOPTIMIZER_H_DEFINED
 #define ANNEALINGOPTIMIZER_H_DEFINED
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
-#endif
 
 class MultivarFunction;
 

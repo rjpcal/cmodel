@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Wed Jul 31 15:09:10 2002
+// written: Tue Sep 28 14:27:37 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,13 +13,9 @@
 #ifndef SIMPLEXOPTIMIZER_H_DEFINED
 #define SIMPLEXOPTIMIZER_H_DEFINED
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
-#endif
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MULTIVARFUNCTION_H_DEFINED)
 #include "cmodel/multivarfunction.h"
-#endif
 
 class fstring;
 

@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:40:21 2001
-// written: Wed Jul 31 15:08:07 2002
+// written: Tue Sep 28 14:26:54 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,7 @@
 #ifndef CMODELGCM_H_DEFINED
 #define CMODELGCM_H_DEFINED
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CMODELEXEMPLAR_H_DEFINED)
 #include "cmodel/cmodelexemplar.h"
-#endif
 
 class CModelGcm : public CModelExemplar
 {

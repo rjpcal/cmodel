@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:12 2001
-// written: Wed Feb 20 18:12:02 2002
+// written: Tue Sep 28 14:27:33 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,14 +13,9 @@
 #ifndef MINKBINDER_H_DEFINED
 #define MINKBINDER_H_DEFINED
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(MTX_H_DEFINED)
 #include "mtx/mtx.h"
-#endif
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CMATH_DEFINED)
 #include <cmath>
-#define CMATH_DEFINED
-#endif
 
 //
 // This is just a functor that binds arguments to minkDist, so that

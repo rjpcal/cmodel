@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:00 2001
-// written: Wed Jul 31 15:06:39 2002
+// written: Tue Sep 28 14:26:49 2004
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -13,9 +13,7 @@
 #ifndef CMODELCUEVALIDITY_H_DEFINED
 #define CMODELCUEVALIDITY_H_DEFINED
 
-#if defined(NO_EXTERNAL_INCLUDE_GUARDS) || !defined(CLASSIFIER_H_DEFINED)
 #include "cmodel/classifier.h"
-#endif
 
 class CModelCueValidity : public Classifier
 {
