@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 18:33:43 2002
+// written: Thu Feb 14 18:49:15 2002
 // $Id$
 //
 //
@@ -127,9 +127,7 @@ mxArray* doFuncEvals(bool canUseMatrix,
 int sampleFromPdf_zerobased(mxArray* temp, mxArray* costs);
 
 
-mxArray* makePDF(mxArray* temp, mxArray* costs);
-
-mxArray* eprob(const Mtx& temp, const Mtx& costs);
+mxArray* makePDF(const Mtx& temp, const Mtx& costs);
 
 /*
  * The function "mlxAnnealVisitParameters" contains the feval interface for the
@@ -475,7 +473,8 @@ DOTRACE("sampleFromPdf_zerobased");
   mclCopyArray(&costs_mx);
 
   // dist = makePDF(temp, costs);
-  mlfAssign(&dist, makePDF(temp_mx, costs_mx));
+  mlfAssign(&dist,
+            makePDF(Mtx(temp_mx, Mtx::BORROW), Mtx(costs_mx, Mtx::BORROW)));
 
   // cutoff = rand;
   mlfAssign(&cutoff, mlfNRand(1, NULL));
@@ -505,71 +504,16 @@ DOTRACE("sampleFromPdf_zerobased");
 //
 //---------------------------------------------------------------------
 
-mxArray* makePDF(mxArray* temp_mx, mxArray* costs_mx)
+mxArray* makePDF(const Mtx& temp, const Mtx& costs)
 {
 DOTRACE("makePDF");
 
-  mxArray* pdf = mclGetUninitializedArray();
-  mxArray* ans = mclGetUninitializedArray();
-  mxArray* w = mclGetUninitializedArray();
-  mxArray* good = mclGetUninitializedArray();
-  mxArray* bad = mclGetUninitializedArray();
-  mclCopyArray(&temp_mx);
-  mclCopyArray(&costs_mx);
-
-  // Forms exponential probability distribution given a temperature and vector of
-  // costs.  Internal function for simulated annealing algorithm.
-
-  // bad = find(isnan(costs));
-  mlfAssign(&bad, mlfFind(NULL, NULL, mlfIsnan(costs_mx)));
-
-  // if isempty(bad)
-  if (mlfTobool(mlfIsempty(bad)))
-    {
-      mlfAssign(&pdf, eprob(Mtx(temp_mx, Mtx::BORROW),
-                            Mtx(costs_mx, Mtx::BORROW)));
-    }
-  else
-    {
-      // good = find(~isnan(costs));
-      mlfAssign(&good, mlfFind(NULL, NULL, mclNot(mlfIsnan(costs_mx))));
-
-      // w = costs(good);
-      mlfAssign(&w, mclArrayRef1(costs_mx, good));
-
-      mlfAssign(&pdf, eprob(Mtx(temp_mx, Mtx::BORROW), Mtx(w, Mtx::BORROW)));
-
-      // pdf(good) = pdf;
-      mclArrayAssign1(&pdf, pdf, good);
-
-      // pdf(bad) = 0;
-      mclArrayAssign1(&pdf, _mxarray20_, bad);
-
-      std::cerr << "Warning: the cost function generated a NaN "
-                << "for one or more models.";
-    }
-
-  mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
-
-  mxDestroyArray(bad);
-  mxDestroyArray(good);
-  mxDestroyArray(w);
-  mxDestroyArray(ans);
-  mxDestroyArray(costs_mx);
-  mxDestroyArray(temp_mx);
-
-  return pdf;
-}
-
-//---------------------------------------------------------------------
-//
-// eprob()
-//
-//---------------------------------------------------------------------
-
-mxArray* eprob(const Mtx& temp, const Mtx& costs)
-{
-DOTRACE("eprob");
+  for (int i = 0; i < costs.nelems(); ++i)
+    if (isnan(costs.at(i)))
+      {
+        mexErrMsgTxt("Warning: the cost function generated a NaN "
+                     "for one or more models.");
+      }
 
   // Scales cost vector and calculates exponential probability distribution.
   // The scaling is necessary to permit wide ranges in temperature.  Internal
