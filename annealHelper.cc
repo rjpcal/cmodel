@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 15:49:52 2002
+// written: Mon Feb 18 15:53:33 2002
 // $Id$
 //
 //
@@ -350,18 +350,6 @@ DOTRACE("sampleFromPdf");
   return s;
 }
 
-namespace
-{
-  struct VisitResult
-  {
-    VisitResult(int n, double c) :
-      nevals(n), cost(c) {}
-
-    int const nevals;
-    double const cost;
-  };
-}
-
 struct Astate
 {
   Astate(mxArray* arr, int numruns) :
@@ -448,7 +436,8 @@ public:
 
   mxArray* go();
 
-  VisitResult visitParameters(Mtx& bestModel, const double temp);
+  // Returns the cost at the best model that was found
+  double visitParameters(Mtx& bestModel, const double temp);
 
   Mtx doFuncEvals(const Mtx& models)
   {
@@ -625,7 +614,7 @@ public:
   }
 };
 
-VisitResult AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
+double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
 {
   int nevals = 0;
   int s = -1;
@@ -661,7 +650,9 @@ VisitResult AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
                    "there were no non-zero deltas");
     }
 
-  return VisitResult(nevals, costs.at(s));
+  itsNumFunEvals.at(itsRunNum) += nevals;
+
+  return costs.at(s);
 }
 
 //---------------------------------------------------------------------
@@ -710,11 +701,8 @@ DOTRACE("AnnealingRun::go");
                         itsEnergy.column(itsRunNum).leftmost(itsNvisits-1).min());
             }
 
-          VisitResult vresult = visitParameters(bestModel, temp);
-
-          itsNumFunEvals.at(itsRunNum) += vresult.nevals;
-
-          itsEnergy.at(itsNvisits-1,itsRunNum) = vresult.cost;
+          itsEnergy.at(itsNvisits-1,itsRunNum) =
+            visitParameters(bestModel, temp);
 
           updateUsedParams(bestModel);
 
