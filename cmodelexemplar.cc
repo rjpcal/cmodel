@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Thu Feb 14 11:58:09 2002
+// written: Tue Feb 19 14:55:39 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -120,7 +120,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
-  attWeights.apply(abs);
+  attWeights.apply(std::abs);
 
   const bool newAttWts = (itsAttWtsCache.column(0) != attWeights);
 

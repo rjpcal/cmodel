@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Tue Apr 10 09:47:56 2001
-// written: Tue Feb 19 14:04:54 2002
+// written: Tue Feb 19 14:55:16 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -23,7 +23,7 @@
 
 namespace
 {
-  void countCue(map<double, int>& counts, MtxConstIter src)
+  void countCue(std::map<double, int>& counts, MtxConstIter src)
   {
     while (src.hasMore())
       {
@@ -49,7 +49,7 @@ void CModelCueValidity::computeDiffEv(const Mtx& objects,
 DOTRACE("CModelCueValidity::computeDiffEv");
 
   Mtx attWeights(modelParams.leftmost(DIM_OBJ_PARAMS));
-  attWeights.apply(abs);
+  attWeights.apply(std::abs);
 
   double nTrainers = itsTraining1.mrows() + itsTraining2.mrows();
 
@@ -59,7 +59,7 @@ DOTRACE("CModelCueValidity::computeDiffEv");
     {
       const MtxConstIter objectsColumn = objects.columnIter(d);
 
-      map<double, int> t1counts, t2counts, allcounts;
+      std::map<double, int> t1counts, t2counts, allcounts;
       countCue(t1counts, itsTraining1.columnIter(d));
       countCue(t2counts, itsTraining2.columnIter(d));
       countCue(allcounts, objects.columnIter(d));

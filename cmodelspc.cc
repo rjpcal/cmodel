@@ -5,7 +5,7 @@
 // Copyright (c) 2002-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Feb  4 14:01:03 2002
-// written: Thu Feb 14 11:58:26 2002
+// written: Tue Feb 19 14:56:16 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -138,7 +138,7 @@ DOTRACE("CModelSPC::computeDiffEv");
 
   Slice attWeights = modelParams.leftmost(DIM_OBJ_PARAMS);
 
-  attWeights.apply(abs);
+  attWeights.apply(std::abs);
 
   Mtx storedExemplars = getStoredExemplars(modelParams,
                                            itsNumStoredExemplars,

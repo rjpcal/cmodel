@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Mon Jul  9 13:59:12 2001
-// written: Thu Feb 14 11:56:08 2002
+// written: Tue Feb 19 14:55:00 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -14,6 +14,8 @@
 #define MINKBINDER_H_DEFINED
 
 #include "mtx.h"
+
+#include <cmath>
 
 //
 // This is just a functor that binds arguments to minkDist, so that
@@ -40,7 +42,7 @@ public:
 
     for (; wt.hasMore(); ++wt, ++x1, ++x2)
       {
-        wt_sum += (*wt) * pow( abs( *x1 - *x2), itsR);
+        wt_sum += (*wt) * pow( std::abs( *x1 - *x2), itsR);
       }
     return pow(wt_sum, itsRinv);
   }

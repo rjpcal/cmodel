@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 16:25:38 2001
-// written: Thu Feb 14 11:57:58 2002
+// written: Tue Feb 19 14:56:01 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -62,8 +62,8 @@ DOTRACE("CModelCssm::loadModelParams");
   if (do1) itsCachedRawWts1 = scaledWeights1; itsCachedRawWts1.makeUnique();
   if (do2) itsCachedRawWts2 = scaledWeights2; itsCachedRawWts2.makeUnique();
 
-  if (do1) scaledWeights1.apply(abs);
-  if (do2) scaledWeights2.apply(abs);
+  if (do1) scaledWeights1.apply(std::abs);
+  if (do2) scaledWeights2.apply(std::abs);
 
   for (int r = 0; r < scaledWeights1.mrows(); ++r)
     {
