@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 15:41:13 2002
+// written: Mon Feb 18 15:49:52 2002
 // $Id$
 //
 //
@@ -354,11 +354,10 @@ namespace
 {
   struct VisitResult
   {
-    VisitResult(int n, mxArray* b, double c) :
-      nevals(n), newModel(b), cost(c) {}
+    VisitResult(int n, double c) :
+      nevals(n), cost(c) {}
 
     int const nevals;
-    mxArray* const newModel;
     double const cost;
   };
 }
@@ -449,8 +448,7 @@ public:
 
   mxArray* go();
 
-  VisitResult visitParameters(mxArray* bestModel_mx,
-                              const double temp);
+  VisitResult visitParameters(Mtx& bestModel, const double temp);
 
   Mtx doFuncEvals(const Mtx& models)
   {
@@ -479,7 +477,7 @@ public:
     return models;
   }
 
-  void createStartingModel()
+  Mtx createStartingModel()
   {
     DOTRACE("createStartingModel");
 
@@ -501,8 +499,7 @@ public:
     itsMinUsedParams = startingModel;
     itsMaxUsedParams = startingModel;
 
-    mxAddField(itsAstate_mx, "bestModel");
-    mxSetField(itsAstate_mx, 0, "bestModel", startingModel.makeMxArray());
+    return startingModel;
   }
 
   void printRunHeader(double startingCost)
@@ -628,14 +625,8 @@ public:
   }
 };
 
-VisitResult AnnealingRun::visitParameters(mxArray* bestModel_mx,
-                                          const double temp)
+VisitResult AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
 {
-
-  mclCopyArray(&bestModel_mx);
-
-  Mtx bestModel(bestModel_mx, Mtx::REFER);
-
   int nevals = 0;
   int s = -1;
 
@@ -670,7 +661,7 @@ VisitResult AnnealingRun::visitParameters(mxArray* bestModel_mx,
                    "there were no non-zero deltas");
     }
 
-  return VisitResult(nevals, bestModel_mx, costs.at(s));
+  return VisitResult(nevals, costs.at(s));
 }
 
 //---------------------------------------------------------------------
@@ -696,7 +687,7 @@ DOTRACE("AnnealingRun::go");
     }
 #endif
 
-  createStartingModel();
+  Mtx bestModel = createStartingModel();
 
   for (int temps_i = 0; temps_i < itsAstate.numTemps; ++temps_i)
     {
@@ -719,17 +710,11 @@ DOTRACE("AnnealingRun::go");
                         itsEnergy.column(itsRunNum).leftmost(itsNvisits-1).min());
             }
 
-          VisitResult vresult =
-            visitParameters(Mx::getField(itsAstate_mx, "bestModel"),
-                            temp);
-
-          mxSetField(itsAstate_mx, 0, "bestModel", vresult.newModel);
+          VisitResult vresult = visitParameters(bestModel, temp);
 
           itsNumFunEvals.at(itsRunNum) += vresult.nevals;
 
           itsEnergy.at(itsNvisits-1,itsRunNum) = vresult.cost;
-
-          const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
           updateUsedParams(bestModel);
 
