@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Thu Mar  8 16:49:09 2001
+// written: Fri Mar  9 14:59:57 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -54,11 +54,6 @@ protected:
 public:
   Classifier(const Rat& objParams, const Rat& observedIncidence);
   virtual ~Classifier();
-
-  static shared_ptr<Classifier> make(const fixed_string& whichType,
-												 const Rat& objParams,
-												 const Rat& observedIncidence,
-												 int numStoredExemplars);
 
   double currentLogL(Rat& modelParams);  
 
