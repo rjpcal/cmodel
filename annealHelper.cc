@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Fri Feb 15 15:53:41 2002
+// written: Fri Feb 15 15:58:33 2002
 // $Id$
 //
 //
@@ -416,7 +416,7 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
 
 mxArray* annealHelper(mxArray* old_astate_mx,
                       const Mtx& valueScalingRange,
-                      const Mtx& deltas,
+//                       const Mtx& deltas,
                       const Mtx& bounds,
                       const bool canUseMatrix,
                       const fstring& func_name,
@@ -455,6 +455,8 @@ DOTRACE("annealHelper");
 
   const Mtx temps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW);
   const Mtx astate_x(mxGetField(astate_mx, 0, "x"), Mtx::BORROW);
+
+  const Mtx deltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::BORROW);
 
   for (int temps_i = 0; temps_i < temps.nelems(); ++temps_i)
     {
@@ -542,7 +544,7 @@ DOTRACE("mlxAnnealVisitParameters");
                    "than the declared number of outputs (1).");
     }
 
-  const int NDECLARED = 6;
+  const int NDECLARED = 5;
 
   if (nrhs < NDECLARED)
     {
@@ -552,7 +554,7 @@ DOTRACE("mlxAnnealVisitParameters");
 
   mlfEnterNewContext(0, NDECLARED,
                      prhs[0], prhs[1], prhs[2],
-                     prhs[3], prhs[4], prhs[5]);
+                     prhs[3], prhs[4]);
 
   int nvararg = nrhs - NDECLARED;
   mxArray** pvararg = prhs + NDECLARED;
@@ -562,10 +564,9 @@ DOTRACE("mlxAnnealVisitParameters");
       plhs[0] = annealHelper
         (prhs[0], // astate
          Mtx(prhs[1], Mtx::BORROW), // valueScalingRange
-         Mtx(prhs[2], Mtx::BORROW), // deltas
-         Mtx(prhs[3], Mtx::BORROW), // bounds
-         (mxGetScalar(prhs[4]) != 0.0), // canUseMatrix
-         MxWrapper::extractString(prhs[5]), // func_name
+         Mtx(prhs[2], Mtx::BORROW), // bounds
+         (mxGetScalar(prhs[3]) != 0.0), // canUseMatrix
+         MxWrapper::extractString(prhs[4]), // func_name
          nvararg,
          pvararg);
     }
@@ -580,7 +581,7 @@ DOTRACE("mlxAnnealVisitParameters");
 
   mlfRestorePreviousContext(0, NDECLARED,
                             prhs[0], prhs[1], prhs[2],
-                            prhs[3], prhs[4], prhs[5]);
+                            prhs[3], prhs[4]);
 }
 
 static const char vcid_annealVisitParameters_cc[] = "$Header$";
