@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Thu Feb 14 11:57:09 2002
+// written: Mon Feb 18 19:12:04 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -48,7 +48,7 @@ public:
   { return itsIterCount; }
 
   virtual int funcCount()
-  { return itsObjective.evalCount(); }
+  { return itsObjective.evalCount() - itsInitialFevals; }
 
   virtual const char* algorithm()
   { return "Nelder-Mead simplex direct search"; }
@@ -59,6 +59,7 @@ private:
   const Mtx itsInitialParams;
   const int itsPrnt;
   const int itsNparams;
+  int itsInitialFevals;
   const int itsMaxFevals;
   const int itsMaxIters;
   const double itsTolx;

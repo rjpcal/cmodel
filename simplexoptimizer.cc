@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Thu Feb 14 13:20:00 2002
+// written: Mon Feb 18 19:11:30 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -50,6 +50,7 @@ SimplexOptimizer::SimplexOptimizer(MultivarFunction& objective,
   itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
   itsPrnt(extractPrinttype(printtype)),
   itsNparams(nparams),
+  itsInitialFevals(objective.evalCount()),
   itsMaxFevals(maxfun > 0 ? maxfun : 200*nparams),
   itsMaxIters(maxiter > 0 ? maxiter : 200*nparams),
   itsTolx(tolx),
@@ -124,6 +125,8 @@ DOTRACE("SimplexOptimizer::minimalSort");
 int SimplexOptimizer::optimize()
 {
 DOTRACE("SimplexOptimizer::optimize");
+
+  itsInitialFevals = itsObjective.evalCount();
 
   printHeader();
   itsCurIter = INITIAL;
