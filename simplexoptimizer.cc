@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Mon Feb 18 19:11:30 2002
+// written: Tue Feb 19 15:03:20 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -17,8 +17,8 @@
 
 #include "util/strings.h"
 
-#include <iostream.h>
-#include <iomanip.h>
+#include <iostream>
+#include <iomanip>
 
 #include "util/trace.h"
 
@@ -82,9 +82,10 @@ void SimplexOptimizer::printIter()
 {
   if (itsPrnt == ITER)
     {
-      std::cerr << setw(6) << itsIterCount
-                << setw(13) << funcCount()
-                << setw(17) << setprecision(6) << double(itsFvals.at(0,0))
+      std::cerr << std::setw(6) << itsIterCount
+                << std::setw(13) << funcCount()
+                << std::setw(17) << std::setprecision(6)
+		<< double(itsFvals.at(0,0))
                 << "         " << iterTypeString(itsCurIter) << '\n';
     }
 }
