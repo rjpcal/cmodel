@@ -123,7 +123,7 @@ mtx Classifier::forwardProbit(const mtx& diffEv,
 {
 DOTRACE("Classifier::forwardProbit");
 
-  const double divisor = (1.0 / Num::SQRT_2) * (1.0 / sigmaNoise);
+  const double divisor = (1.0 / M_SQRT2) * (1.0 / sigmaNoise);
 
   mtx_const_iter diffev = diffEv.column_iter(0);
 
