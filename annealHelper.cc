@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:18:20 2002
+// written: Mon Feb 18 16:24:17 2002
 // $Id$
 //
 //
@@ -402,7 +402,6 @@ struct Astate
 class AnnealingRun
 {
 private:
-  mxArray* const itsAstate_mx;
   Astate& itsAstate;
   const int itsRunNum;
   int itsNvisits;
@@ -414,14 +413,12 @@ private:
   mxArray** itsPvararg;
 
 public:
-  AnnealingRun(mxArray* old_astate_mx,
-               const fstring& funcName,
+  AnnealingRun(const fstring& funcName,
                int runNum,
                Astate& astate,
                int nvararg,
                mxArray** pvararg)
     :
-    itsAstate_mx(mxDuplicateArray(old_astate_mx)),
     itsAstate(astate),
     itsRunNum(runNum),
     itsNvisits(0),
@@ -433,7 +430,7 @@ public:
     itsPvararg(pvararg)
   {}
 
-  mxArray* go();
+  void go();
 
   // Returns the cost at the best model that was found
   double visitParameters(Mtx& bestModel, const double temp);
@@ -658,7 +655,7 @@ double AnnealingRun::visitParameters(Mtx& bestModel, const double temp)
 //
 //---------------------------------------------------------------------
 
-mxArray* AnnealingRun::go()
+void AnnealingRun::go()
 {
 DOTRACE("AnnealingRun::go");
 
@@ -714,8 +711,6 @@ DOTRACE("AnnealingRun::go");
   if (itsAstate.doNewton) runSimplex();
 
   itsAstate.startValues.column(0) = itsAstate.mhat.column(itsRunNum);
-
-  return itsAstate_mx;
 }
 
 ///////////////////////////////////////////////////////////////////////
@@ -735,18 +730,13 @@ public:
   {
     int numruns = int(mxGetScalar(Mx::getField(astate_mx, "numruns")));
 
-    // So we own a copy of astate_mx
-    astate_mx = mxDuplicateArray(astate_mx);
-
     Astate astate(astate_mx, numruns);
 
     for (int i = 0; i < numruns; ++i)
       {
-        AnnealingRun ar(astate_mx, func_name, i, astate, nvararg, pvararg);
+        AnnealingRun ar(func_name, i, astate, nvararg, pvararg);
 
-        mxDestroyArray(astate_mx);
-
-        astate_mx = ar.go();
+        ar.go();
       }
 
     const char* fieldnames[] =
@@ -765,8 +755,6 @@ public:
     mxSetField(output, 0, "model", astate.modelHist.makeMxArray());
     mxSetField(output, 0, "energy", astate.energy.makeMxArray());
     mxSetField(output, 0, "numFunEvals", astate.numFunEvals.makeMxArray());
-
-    mxDestroyArray(astate_mx);
 
     return output;
   }
