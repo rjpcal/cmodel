@@ -411,7 +411,7 @@ VisitResult annealVisitParameters(mxArray* bestModel_mx,
 class AnnealingRun
 {
 public:
-  AnnealingRun(mxArray* old_astate_mx_,
+  AnnealingRun(mxArray* old_astate_mx,
                const Mtx& valueScalingRange_,
                const Mtx& bounds_,
                const bool canUseMatrix_,
@@ -419,7 +419,8 @@ public:
                int nvararg_,
                mxArray** pvararg_)
     :
-    old_astate_mx(old_astate_mx_),
+    astate_mx(mxDuplicateArray(old_astate_mx)),
+    run_num(int(mxGetScalar(mxGetField(astate_mx, 0, "k")))-1),
     valueScalingRange(valueScalingRange_),
     bounds(bounds_),
     canUseMatrix(canUseMatrix_),
@@ -431,7 +432,8 @@ public:
   mxArray* go();
 
 private:
-  mxArray* old_astate_mx;
+  mxArray* const astate_mx;
+  const int run_num;
   Mtx valueScalingRange;
   Mtx bounds;
   const bool canUseMatrix;
@@ -463,10 +465,6 @@ DOTRACE("AnnealingRun::go");
    }
 #endif
 
-  mxArray* const astate_mx = mxDuplicateArray(old_astate_mx);
-
-  const int k_onebased = int(mxGetScalar(mxGetField(astate_mx, 0, "k")));
-
   Mtx numFunEvals (mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER);
   Mtx energy      (mxGetField(astate_mx, 0, "energy"), Mtx::REFER);
 
@@ -495,9 +493,9 @@ DOTRACE("AnnealingRun::go");
           if (astate_talk && (nvisits % 10 == 0))
             {
               mexPrintf("%7d\t\t%7.2f\t\t%7.2f\n",
-                        int(numFunEvals.at(k_onebased -1)),
+                        int(numFunEvals.at(run_num)),
                         temp,
-                        energy.column(k_onebased-1).leftmost(nvisits-1).min());
+                        energy.column(run_num).leftmost(nvisits-1).min());
             }
 
           VisitResult vresult =
@@ -513,9 +511,9 @@ DOTRACE("AnnealingRun::go");
 
           mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
-          numFunEvals.at(k_onebased-1) += vresult.nevals;
+          numFunEvals.at(run_num) += vresult.nevals;
 
-          energy.at(nvisits-1,k_onebased-1) = vresult.cost;
+          energy.at(nvisits-1,run_num) = vresult.cost;
 
           const Mtx bestModel(vresult.newModel, Mtx::REFER);
 
