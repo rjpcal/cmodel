@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Mon Apr  9 15:10:34 2001
+// written: Tue Apr 10 11:19:43 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -21,6 +21,7 @@
 #include "classifier_mex.h"
 
 #include "cmodelcssm.h"
+#include "cmodelcuevalidity.h"
 #include "cmodelgcm.h"
 #include "cmodelpbi.h"
 #include "cmodelwpsm.h"
@@ -160,6 +161,18 @@ DOTRACE("makeClassifier");
 	   return shared_ptr<Classifier>(
 		  new CModelWpsm(objParams, observedIncidence,
 							  CModelExemplar::LINEAR_DECAY));
+	 }
+  else if (whichType == "wcvm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelCueValidity(objParams, observedIncidence,
+										CModelCueValidity::NO_FREQ_WEIGHT));
+	 }
+  else if (whichType == "wfcvm")
+	 {
+	   return shared_ptr<Classifier>(
+		  new CModelCueValidity(objParams, observedIncidence,
+										CModelCueValidity::FREQ_WEIGHT));
 	 }
   else
 	 {
