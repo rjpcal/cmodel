@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Jun  6 16:36:56 2002
+// written: Tue Jul 30 13:08:55 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -246,6 +246,13 @@ DOTRACE("Classifier::handleRequest");
   //---------------------------------------------------------------------
 
   Mtx testObjects = extraArgs.getStructField("testObjects").getMtx();
+
+  if (testObjects.ncols() != DIM_OBJ_PARAMS)
+    {
+      throw Util::Error("wrong number of columns in 'testObjects' "
+                        "(should be equal to DIM_OBJ_PARAMS)");
+    }
+
   Mtx observedIncidence = extraArgs.getStructField("observedIncidence").getMtx();
 
   if ( action == "ll" || action == "llc" )
