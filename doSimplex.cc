@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Sun Apr  1 19:52:50 2001
-// written: Thu Feb 14 11:52:57 2002
+// written: Thu Feb 14 13:44:34 2002
 // $Id$
 //
 //
@@ -40,7 +40,8 @@
 #define LOCAL_PROF
 #include "util/trace.h"
 
-class MatlabFunction : public MultivarFunction {
+class MatlabFunction : public MultivarFunction
+{
   mxArray* itsFunfcn;
   mxArray* itsVarargin_ref;
 
@@ -108,22 +109,26 @@ namespace
 
 void InitializeModule_doSimplex(void)
 {
+  mexPrintf("loading doSimplex mex file\n");
+
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
-  cout = mexBuf;
-  cerr = mexBuf;
+  std::cout = mexBuf;
+  std::cerr = mexBuf;
 #else
-  coutOrigBuf = cout.rdbuf(mexBuf);
-  cerrOrigBuf = cerr.rdbuf(mexBuf);
+  coutOrigBuf = std::cout.rdbuf(mexBuf);
+  cerrOrigBuf = std::cerr.rdbuf(mexBuf);
 #endif
 }
 
 void TerminateModule_doSimplex(void)
 {
+  mexPrintf("unloading doSimplex mex file\n");
+
   Util::Prof::printAtExit(false);
 
-  cout.rdbuf(coutOrigBuf);
-  cerr.rdbuf(cerrOrigBuf);
+  std::cout.rdbuf(coutOrigBuf);
+  std::cerr.rdbuf(cerrOrigBuf);
 
   delete mexBuf;
 }
@@ -354,64 +359,70 @@ DOTRACE("MdoSimplex");
 
       if (debugFlag)
         {
-          if (mxGetScalar(debugFlag) == -1) {
-            Util::Prof::printAllProfData(cerr);
-            return mxCreateScalarDouble(-1.0);
-          }
+          if (mxGetScalar(debugFlag) == -1)
+            {
+              Util::Prof::printAllProfData(std::cerr);
+              return mxCreateScalarDouble(-1.0);
+            }
 
-          if (mxGetScalar(debugFlag) == -2) {
-            Util::Prof::resetAllProfData();
-            return mxCreateScalarDouble(-2.0);
-          }
+          if (mxGetScalar(debugFlag) == -2)
+            {
+              Util::Prof::resetAllProfData();
+              return mxCreateScalarDouble(-2.0);
+            }
         }
     }
 #endif
 
-  try {
+  try
+    {
+      // numModelParams = prod(size(x));
+      const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
 
-    // numModelParams = prod(size(x));
-    const int numModelParams = mxGetM(x_in) * mxGetN(x_in);
+      // Convert to inline function as needed.
 
-    // Convert to inline function as needed.
-    // XXX Since this requires "object-oriented" programming, we can't keep this
-    // and still use the MATLAB compiler
-    // %funfcn = fcnchk(funfcn,length(varargin));
+      // FIXME Since this requires "object-oriented" programming, we can't
+      // keep this and still use the MATLAB compiler
 
-    MatlabFunction objective(funfcn_mx, varargin);
+      // %funfcn = fcnchk(funfcn,length(varargin));
 
-    SimplexOptimizer opt(objective,
-                         Mtx(x_in),
-                         MxWrapper::extractString(printtype_mx),
-                         numModelParams,
-                         extractMaxIters(maxfun_mx, numModelParams),
-                         extractMaxIters(maxiter_mx, numModelParams),
-                         mxGetScalar(tolx_mx),
-                         mxGetScalar(tolf_mx)
-                         );
+      MatlabFunction objective(funfcn_mx, varargin);
 
-    int exitFlag = opt.optimize();
+      SimplexOptimizer opt(objective,
+                           Mtx(x_in),
+                           MxWrapper::extractString(printtype_mx),
+                           numModelParams,
+                           extractMaxIters(maxfun_mx, numModelParams),
+                           extractMaxIters(maxiter_mx, numModelParams),
+                           mxGetScalar(tolx_mx),
+                           mxGetScalar(tolf_mx)
+                           );
 
-    *fval = mxCreateScalarDouble(opt.bestFval());
-    *exitflag_mx = mxCreateScalarDouble(exitFlag);
+      int exitFlag = opt.optimize();
 
-    mlfIndexAssign(output, ".iterations",
-                   mxCreateScalarDouble(opt.iterCount()));
+      *fval = mxCreateScalarDouble(opt.bestFval());
+      *exitflag_mx = mxCreateScalarDouble(exitFlag);
 
-    mlfIndexAssign(output, ".funcCount",
-                   mxCreateScalarDouble(opt.funcCount()));
+      mlfIndexAssign(output, ".iterations",
+                     mxCreateScalarDouble(opt.iterCount()));
 
-    mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
+      mlfIndexAssign(output, ".funcCount",
+                     mxCreateScalarDouble(opt.funcCount()));
 
-    mclSetCurrentLocalFunctionTable(save_local_function_table_);
+      mlfIndexAssign(output, ".algorithm", mxCreateString(opt.algorithm()));
 
-    return opt.bestParams().makeMxArray();
-  }
-  catch (Util::Error& err) {
-    mexErrMsgTxt(err.msg_cstr());
-  }
-  catch (...) {
-    mexErrMsgTxt("an unknown C++ exception occurred.");
-  }
+      mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
+      return opt.bestParams().makeMxArray();
+    }
+  catch (Util::Error& err)
+    {
+      mexErrMsgTxt(err.msg_cstr());
+    }
+  catch (...)
+    {
+      mexErrMsgTxt("an unknown C++ exception occurred.");
+    }
 
   return (mxArray*) 0; // can't happen, but placate compiler
 }
