@@ -456,11 +456,7 @@ DOTRACE("Classifier::handleRequest");
 
       ar.optimize();
 
-      // FIXME this is also ugly
-      mxArray* output = ar.getOutput();
-      MxWrapper result(output);
-      mxDestroyArray(output);
-      return result;
+      return ar.getOutput2();
     }
 
   return RequestResult();
