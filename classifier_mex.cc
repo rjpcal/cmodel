@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Wed Jul 31 15:21:59 2002
+// written: Thu Aug  1 09:08:11 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -104,10 +104,12 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
           return mexPkg->recentCssm;
         }
     }
-  else if (whichType == "rxm")
+  else if (whichType == "rxm" || whichType == "rxme")
     {
       const CModelExemplar::TransferFunction tfunc =
-        CModelExemplar::LINEAR_DECAY;
+        whichType == "rxm"
+        ? CModelExemplar::LINEAR_DECAY
+        : CModelExemplar::EXP_DECAY;
 
       const int numStoredExemplars =
         Mx::getIntField(extraArgs_mx, "numStoredExemplars");
