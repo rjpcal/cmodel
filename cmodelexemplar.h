@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Fri Apr  6 11:24:30 2001
+// written: Fri Apr  6 16:44:00 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -50,6 +50,8 @@ private:
   const int itsNumStoredExemplars;
 
   const TransferFunction itsTransferFunc;
+
+  Mtx itsObjectsCache;
 
   Mtx itsStored1Cache;
   Mtx itsStored2Cache;
