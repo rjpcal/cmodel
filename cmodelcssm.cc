@@ -26,21 +26,23 @@ CModelCssm::CModelCssm(const Mtx& objParams,
 							  const Mtx& observedIncidence,
 							  int numStoredExemplars) :
   CModelExemplar(objParams, observedIncidence, numStoredExemplars),
-  itsScaledWeights(0)
+  itsScaledWeights()
 {
 DOTRACE("CModelCssm::CModelCssm");
 }
 
 CModelCssm::~CModelCssm() {}
 
-void CModelCssm::scaleWeights(double* weights, int numRawWeights)
+//  void CModelCssm::scaleWeights(double* weights, int numRawWeights)
+void CModelCssm::scaleWeights(Slice& weights)
 {
 DOTRACE("CModelCssm::scaleWeights");
 
   int mrows = numStoredExemplars()*2;
   int ncols = numTrainingExemplars();
 
-  if ( numRawWeights != (mrows*ncols) )
+//    if ( numRawWeights != (mrows*ncols) )
+  if ( weights.nelems() != (mrows*ncols) )
 	 throw ErrorWithMsg("weights must have "
 							  "2*numStoredExemplars*numTrainingExemplars elements");
 
@@ -48,11 +50,11 @@ DOTRACE("CModelCssm::scaleWeights");
 	 {
 		double sum_wt = 0.0;
 		{
-		  for (int ix = i; ix < numRawWeights; ix+=mrows)
+		  for (int ix = i; ix < weights.nelems(); ix+=mrows)
 			 sum_wt += abs(weights[ix]);
 		}
 		{
-		  for (int ix = i; ix < numRawWeights; ix+=mrows)
+		  for (int ix = i; ix < weights.nelems(); ix+=mrows)
 			 weights[ix] = abs(weights[ix]) / sum_wt;
 		}
 	 }
@@ -71,20 +73,19 @@ DOTRACE("CModelCssm::loadModelParams");
   // Rescale the stored exemplar weights so that they sum to 1.
   //
 
-  double* rawWeights = modelParams.data() + 6;
-  const int numRawWeights = modelParams.nelems() - 6;
+  Slice rawWeights = modelParams.asSlice().rightmost(modelParams.nelems()-6);
 
-  scaleWeights(rawWeights, numRawWeights);
+  scaleWeights(rawWeights);
 
   itsScaledWeights = rawWeights;
 }
 
-Slice CModelCssm::findStoredExemplar(Category cat, int n)
+ConstSlice CModelCssm::findStoredExemplar(Category cat, int n)
 {
   if (CAT1 == cat)
 	 {
 		Num::linearCombo(numTrainingExemplars(),
-							  itsScaledWeights+n,
+							  itsScaledWeights.data()+n,
 							  2*numStoredExemplars(),
 							  &training1()[0], DIM_OBJ_PARAMS,
 							  &itsStored1[0]);
@@ -95,7 +96,7 @@ Slice CModelCssm::findStoredExemplar(Category cat, int n)
   else if (CAT2 == cat)
 	 {
 		Num::linearCombo(numTrainingExemplars(),
-							  itsScaledWeights+n+numStoredExemplars(),
+							  itsScaledWeights.data()+n+numStoredExemplars(),
 							  2*numStoredExemplars(),
 							  &training2()[0], DIM_OBJ_PARAMS,
 							  &itsStored2[0]);

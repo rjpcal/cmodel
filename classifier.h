@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Mon Mar 12 12:32:04 2001
+// written: Mon Mar 12 16:29:27 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -18,7 +18,8 @@
 #endif
 
 class Mtx;
-class Slice;
+
+class ConstSlice;
 
 class Classifier {
 private:
@@ -59,7 +60,7 @@ protected:
   double& diffEvidence(int i) { return itsDiffEvidence[i]; }
   int numAllExemplars() const { return itsNumAllExemplars; }
 
-  Slice exemplar(int i) const;
+  ConstSlice exemplar(int i) const;
   int exemplarCategory(int i) const;
 
   static const int DIM_OBJ_PARAMS = 4;

@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:32:31 2001
-// written: Mon Mar 12 14:53:47 2001
+// written: Mon Mar 12 16:45:40 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -46,7 +46,7 @@ double minkDist(const double* w, int nelems,
 class MinkDist2Binder {
 public:
   MinkDist2Binder(const double* attWeights, int nelems,
-						const Slice& x2) :
+						const ConstSlice& x2) :
 	 itsAttWeights(attWeights),
 	 itsNelems(nelems),
 	 itsX2(x2)
@@ -71,7 +71,7 @@ public:
 private:
   const double* const itsAttWeights;
   int itsNelems;
-  Slice const itsX2;
+  ConstSlice const itsX2;
 };
 
 
@@ -124,8 +124,8 @@ int CModelExemplar::countCategory(const Mtx& params, int category) {
 }
 
 void CModelExemplar::doDiffEvidence(const double* attWeights,
-												const Slice& storedExemplar1,
-												const Slice& storedExemplar2,
+												const ConstSlice& storedExemplar1,
+												const ConstSlice& storedExemplar2,
 												double minkPower,
 												double minkPowerInv)
 {
@@ -157,8 +157,8 @@ DOTRACE("CModelExemplar::doDiffEvidence");
 
 
 void CModelExemplar::doDiffEvidence2(const double* attWeights,
-												 const Slice& storedExemplar1,
-												 const Slice& storedExemplar2)
+												 const ConstSlice& storedExemplar1,
+												 const ConstSlice& storedExemplar2)
 {
 DOTRACE("CModelExemplar::doDiffEvidence2");
 
@@ -170,7 +170,7 @@ DOTRACE("CModelExemplar::doDiffEvidence2");
 
   for (int y = 0; y < numAllExemplars(); ++y) {
 
-	 Slice ex(exemplar(y));
+	 ConstSlice ex(exemplar(y));
 
 	 // compute similarity of ex-y to stored-1-x
 	 const double sim1 = binder1.minkDist2(ex.begin());
@@ -219,8 +219,8 @@ DOTRACE("CModelExemplar::computeDiffEv");
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
-	 Slice stored1(findStoredExemplar(CAT1, x));
-	 Slice stored2(findStoredExemplar(CAT2, x));
+	 ConstSlice stored1(findStoredExemplar(CAT1, x));
+	 ConstSlice stored2(findStoredExemplar(CAT2, x));
 
 	 if (minkPower == 2.0) {
 		doDiffEvidence2(attWeights, stored1, stored2);

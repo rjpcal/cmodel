@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar  9 14:31:31 2001
-// written: Mon Mar 12 12:34:26 2001
+// written: Mon Mar 12 16:44:48 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,28 +35,28 @@ protected:
   // Count the category training exemplars
   static int countCategory(const Mtx& params, int category);
 
-  const fixed_block<Slice>& training1() const { return itsTraining1; }
-  const fixed_block<Slice>& training2() const { return itsTraining2; }
+  const fixed_block<ConstSlice>& training1() const { return itsTraining1; }
+  const fixed_block<ConstSlice>& training2() const { return itsTraining2; }
 
   int numTrainingExemplars() const { return itsNumTrainingExemplars; }
 
 private:
   const int itsNumTrainingExemplars;
 
-  fixed_block<Slice> itsTraining1;
-  fixed_block<Slice> itsTraining2;
+  fixed_block<ConstSlice> itsTraining1;
+  fixed_block<ConstSlice> itsTraining2;
 
   const int itsNumStoredExemplars;
 
   void doDiffEvidence(const double* attWeights,
-							 const Slice& storedExemplar1,
-							 const Slice& storedExemplar2,
+							 const ConstSlice& storedExemplar1,
+							 const ConstSlice& storedExemplar2,
 							 double minkPower,
 							 double minkPowerInv);
 
   void doDiffEvidence2(const double* attWeights,
-							  const Slice& storedExemplar1,
-							  const Slice& storedExemplar2);
+							  const ConstSlice& storedExemplar1,
+							  const ConstSlice& storedExemplar2);
 
   virtual void computeDiffEv(Mtx& modelParams);
   virtual double fetchSigmaNoise(const Mtx& modelParams) const;
@@ -65,7 +65,7 @@ private:
 
   // The result of this function is only valid until the next call to
   // the function
-  virtual Slice findStoredExemplar(Category cat, int n) = 0;
+  virtual ConstSlice findStoredExemplar(Category cat, int n) = 0;
 };
 
 static const char vcid_cmodelexemplar_h[] = "$Header$";

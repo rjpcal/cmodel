@@ -22,10 +22,12 @@ private:
   double itsStored1[DIM_OBJ_PARAMS];
   double itsStored2[DIM_OBJ_PARAMS];
 
-  const double* itsScaledWeights;
+//    const double* itsScaledWeights;
+
+  ConstSlice itsScaledWeights;
 
   // Scales the weights in place; weights is an input/output argument
-  void scaleWeights(double* weights, int numRawWeights);
+  void scaleWeights(Slice& weights);
 
 public:
   CModelCssm(const Mtx& objParams,
@@ -38,7 +40,7 @@ public:
 
   // The result of this function is only valid until the next call to
   // the function
-  virtual Slice findStoredExemplar(Category cat, int n);
+  virtual ConstSlice findStoredExemplar(Category cat, int n);
 };
 
 static const char vcid_cmodelcssm_h[] = "$Header$";
