@@ -16,10 +16,11 @@
 #include "cmodelexemplar.h"
 
 #include "error.h"
-#include "mtx.h"
-#include "trace.h"
-
 #include "minivec.h"
+#include "mtx.h"
+#include "num.h"
+
+#include "trace.h"
 
 #include <cmath>
 
@@ -175,7 +176,9 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 exemplars.push_back(exemplar(yy).begin());
   }
 
-  double dist1, dist2;
+  Mtx distrust(numAllExemplars(), 2);
+  const MtxIter distrust1 = distrust.colIter(0);
+  const MtxIter distrust2 = distrust.colIter(1);
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
 
@@ -184,21 +187,46 @@ DOTRACE("CModelExemplar::computeDiffEv");
 	 MinkowskiBinder binder2(attWts, stored2.rowIter(x),
 									 minkPower, minkPowerInv);
 
-	 for (int y = 0; y < numAllExemplars(); ++y) {
+	 {DOTRACE("minkowski");
+	 if (minkPower == 2.0) {
+		int y = 0;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+			  iter1.hasMore();
+			  ++y, ++iter1, ++iter2) {
 
-		if (minkPower == 2.0) {
-		  dist1 = binder1.minkDist2(exemplars[y]);
-		  dist2 = binder2.minkDist2(exemplars[y]);
+  		  *iter1 = binder1.minkDist2(exemplars[y]);
+  		  *iter2 = binder2.minkDist2(exemplars[y]);
+
 		}
-		else {
-		  dist1 = binder1.minkDist(exemplars[y]);
-		  dist2 = binder2.minkDist(exemplars[y]);
+	 }
+	 else {
+		int y = 0;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+			  iter1.hasMore();
+			  ++y, ++iter1, ++iter2) {
+
+  		  *iter1 = binder1.minkDist(exemplars[y]);
+  		  *iter2 = binder2.minkDist(exemplars[y]);
 		}
-		if (EXP_DECAY == itsTransferFunc) {
-		  diffEvidence(y) += exp(-dist1) - exp(-dist2);
+	 }
+	 }
+
+	 if (EXP_DECAY == itsTransferFunc) {
+		DOTRACE("exponential");
+		int y = 0;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+			  iter1.hasMore();
+			  ++y, ++iter1, ++iter2) {
+		  diffEvidence(y) += Num::fastexp7(-*iter1) - Num::fastexp7(-*iter2);
 		}
-		else if (LINEAR_DECAY == itsTransferFunc) {
-		  diffEvidence(y) += -dist1 + dist2;
+	 }
+	 else if (LINEAR_DECAY == itsTransferFunc) {
+		DOTRACE("linear");
+		int y = 0;
+		for (MtxIter iter1 = distrust1, iter2 = distrust2;
+			  iter1.hasMore();
+			  ++y, ++iter1, ++iter2) {
+			 diffEvidence(y) += -*iter1 + *iter2;
 		}
 	 }
   }
