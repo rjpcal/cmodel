@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Mar 27 07:29:46 2001
+// written: Tue Mar 27 14:41:57 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -115,9 +115,6 @@ DOTRACE("makeClassifier");
  recentIncidence->makeUnique();			 *recentIncidence = observedIncidence; recentIncidence->makeUnique();
 			 recentNumStored = numStoredExemplars;
 
-			 recentObjParams->print();
-			 recentIncidence->print();
-
           recentModel->reset(
               new CModelCssm(objParams, observedIncidence,
                              CModelExemplar::EXP_DECAY, numStoredExemplars));
@@ -127,8 +124,11 @@ DOTRACE("makeClassifier");
 		return *recentModel;
 #else
 		return shared_ptr<Classifier>(
-              new CModelCssm(objParams, observedIncidence,
-                             CModelExemplar::EXP_DECAY, numStoredExemplars));
+              new CModelCssm(objParams,
+									  observedIncidence,
+                             CModelExemplar::EXP_DECAY,
+//  									  numStoredExemplars));
+									  recentNumStored));
 #endif
 
 	 }
