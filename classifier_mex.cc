@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Thu Aug  1 09:08:11 2002
+// written: Thu Aug  1 09:57:33 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -68,7 +68,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
                                       const Mtx& objParams,
                                       const mxArray* extraArgs_mx)
 {
-  DOTRACE("makeClassifier");
+  DOTRACE("<classifier_mex.cc>::makeClassifier");
   if (whichType == "cssm" || whichType == "rxmlin")
     {
       const CModelExemplar::TransferFunction tfunc =
@@ -205,6 +205,8 @@ namespace
 
 void classifier(int nlhs, mxArray* plhs[], int nrhs, mxArray* prhs[])
 {
+DOTRACE("<classifier_mex.cc>::classifier");
+
   const Mtx      modelParams   (prhs[0], Mtx::COPY);
   const fstring  modelName     (Mx::getString(prhs[1]));
   const fstring  actionRequest (Mx::getString(prhs[2]));
