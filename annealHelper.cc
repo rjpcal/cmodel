@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 14:59:12 2002
+// written: Thu Feb 14 15:09:49 2002
 // $Id$
 //
 //
@@ -235,31 +235,11 @@ DOTRACE("MannealVisitParameters");
       mxArray* costs_mx = mclGetUninitializedArray();
       mxArray* x_mx = mclGetUninitializedArray();
 
-      validateInput(bestModel_mx);
       mclCopyArray(&bestModel_mx);
 
       Mtx bestModel(bestModel_mx, Mtx::REFER);
 
-      validateInput(valueScalingRange_mx);
-      mclCopyArray(&valueScalingRange_mx);
-
-      validateInput(deltas_mx);
-      mclCopyArray(&deltas_mx);
-
-      validateInput(bounds_mx);
-      mclCopyArray(&bounds_mx);
-
-      validateInput(canUseMatrix_mx);
       const bool canUseMatrix = (mxGetPr(canUseMatrix_mx)[0] != 0.0);
-
-      validateInput(FUN_mx);
-      mclCopyArray(&FUN_mx);
-
-      validateInput(temp_mx);
-      mclCopyArray(&temp_mx);
-
-      validateInput(varargin_mx);
-      mclCopyArray(&varargin_mx);
 
       int nevals = 0;
       int s_zerobased = 0;
@@ -331,12 +311,6 @@ DOTRACE("MannealVisitParameters");
 
       mxDestroyArray(x_mx);
       mxDestroyArray(costs_mx);
-      mxDestroyArray(varargin_mx);
-      mxDestroyArray(temp_mx);
-      mxDestroyArray(FUN_mx);
-      mxDestroyArray(bounds_mx);
-      mxDestroyArray(deltas_mx);
-      mxDestroyArray(valueScalingRange_mx);
 
       return output;
     }
