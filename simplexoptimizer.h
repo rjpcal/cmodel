@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:30 2001
-// written: Wed Apr 18 15:02:15 2001
+// written: Wed Apr 18 15:04:36 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -25,11 +25,11 @@ public:
   SimplexOptimizer(MultivarFunction& objective,
 						 const Mtx& x_in,
 						 const fixed_string& printtype,
-						 const double tolx,
-						 const double tolf,
 						 const int nparams,
-						 const int maxfun,
-						 const int maxiter);
+						 const int maxfun = 0, // default is 200*nparams
+						 const int maxiter = 0, // default is 200*nparams
+						 const double tolx = 1e-4,
+						 const double tolf = 1e-4);
 
   virtual ~SimplexOptimizer();
 
@@ -55,11 +55,11 @@ private:
 
   const Mtx itsInitialParams;
   const int itsPrnt;
-  const double itsTolx;
-  const double itsTolf;
   const int itsNparams;
   const int itsMaxFevals;
   const int itsMaxIters;
+  const double itsTolx;
+  const double itsTolf;
 
   Mtx itsSimplex;
   Mtx itsFvals;

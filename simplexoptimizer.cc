@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Wed Apr 18 14:52:57 2001
-// written: Wed Apr 18 15:01:04 2001
+// written: Wed Apr 18 15:05:18 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -40,11 +40,11 @@ namespace
 SimplexOptimizer::SimplexOptimizer(MultivarFunction& objective,
 											  const Mtx& x_in,
 											  const fixed_string& printtype,
-											  const double tolx,
-											  const double tolf,
 											  const int nparams,
 											  const int maxfun,
-											  const int maxiter) :
+											  const int maxiter,
+											  const double tolx,
+											  const double tolf) :
   itsObjective(objective),
 
   itsInitialParams(x_in.asColumn()), // Set up simplex near the initial guess
