@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Wed Mar 21 13:58:02 2001
+// written: Wed Mar 28 10:33:58 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -35,7 +35,8 @@ Classifier::Classifier(const Mtx& objParams,
   itsNumAllExemplars(objParams.mrows()),
   itsObservedIncidence(observedIncidence),
   itsDiffEvidence(itsNumAllExemplars,1),
-  itsPredictedProbability(new double[numAllExemplars()])
+  itsPredictedProbability(new double[numAllExemplars()]),
+  itsCachedLogL_1_2(0.0)
 {}
 
 Classifier::~Classifier()
@@ -75,36 +76,48 @@ DOTRACE("Classifier::forwardProbit");
 double Classifier::computeLogL(LogLType type)
 {
 DOTRACE("Classifier::computeLogL");
-  double ll = 0.0;
+
+  if (itsCachedLogL_1_2 == 0.0)
+	 {
+		for(int k = 0; k < itsNumAllExemplars; ++k) {
+		  double oi1 = itsObservedIncidence.at(k,0);
+		  double oi2 = itsObservedIncidence.at(k,1);
+
+		  // term 1
+		  itsCachedLogL_1_2 += Num::gammaln(1.0 + oi1 + oi2);
+
+		  // term 2
+		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi1);
+		  itsCachedLogL_1_2 -= Num::gammaln(1.0+oi2);
+		}
+	 }
+
+  double logL_3 = 0.0;
 
   const double LOG_10_MINUS_50 = -115.1293;
 
-  for(int k = 0; k < itsNumAllExemplars; ++k) {
-	 double oi1 = itsObservedIncidence.at(k,0);
-	 double oi2 = itsObservedIncidence.at(k,1);
+  MtxConstIter oi1iter = itsObservedIncidence.colIter(0);
+  MtxConstIter oi2iter = itsObservedIncidence.colIter(1);
 
-	 // term 1
-	 ll += Num::gammaln(1.0 + oi1 + oi2);
-
-	 // term 2
-	 ll -= Num::gammaln(1.0+oi1);
-	 ll -= Num::gammaln(1.0+oi2);
+  for(int k = 0; oi1iter.hasMore(); ++k, ++oi1iter, ++oi2iter) {
+	 double oi1 = *oi1iter;
+	 double oi2 = *oi2iter;
 
 	 // term3
 	 double pp_val = (type == FULL) ?
 		(oi1 / (oi1 + oi2)) :
 		itsPredictedProbability[k];
 
-	 if (pp_val < 1e-50) ll += oi1 * LOG_10_MINUS_50;
-	 else                ll += oi1 * log(pp_val);
+	 if (pp_val < 1e-50) logL_3 += oi1 * LOG_10_MINUS_50;
+	 else                logL_3 += oi1 * log(pp_val);
 
 	 pp_val = 1.0 - pp_val;
 
-	 if (pp_val < 1e-50) ll += oi2 * LOG_10_MINUS_50;
-	 else                ll += oi2 * log(pp_val);
+	 if (pp_val < 1e-50) logL_3 += oi2 * LOG_10_MINUS_50;
+	 else                logL_3 += oi2 * log(pp_val);
   }
 
-  return ll;
+  return itsCachedLogL_1_2 + logL_3;
 }
 
 double Classifier::currentLogL(Slice& modelParams)
