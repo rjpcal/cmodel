@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 16:51:17 2002
+// written: Mon Feb 18 16:56:52 2002
 // $Id$
 //
 //
@@ -365,8 +365,6 @@ struct AnnealOpts
     valueScalingRange(Mx::getField(arr, "valueScalingRange"), Mtx::COPY),
     bounds(Mx::getField(arr, "bounds"), Mtx::COPY),
     deltas(Mx::getField(arr, "deltas"), Mtx::COPY),
-    modelHist(numModelParams, int(tempRepeats.sum())),
-    mhat(numModelParams, numruns),
     energy(int(tempRepeats.sum()), numruns),
     startValues(Mx::getField(arr, "centers"), Mtx::COPY)
   {
@@ -385,8 +383,6 @@ struct AnnealOpts
   const Mtx valueScalingRange;
   const Mtx bounds;
   const Mtx deltas;
-  Mtx modelHist;
-  Mtx mhat;
   Mtx energy;
   Mtx startValues;
 };
@@ -405,6 +401,8 @@ private:
   Mtx itsDeltas;
   Mtx itsNumFunEvals;
   Mtx itsBestCosts;
+  Mtx itsModelHist; // FIXME does this really need to be a member variable?
+  Mtx itsMhat;
 
   const fstring itsFunFunName;
   const int itsNvararg;
@@ -421,6 +419,8 @@ public:
     itsDeltas(itsOpts.deltas),
     itsNumFunEvals(itsOpts.numRuns, 1),
     itsBestCosts(itsOpts.numRuns, 1),
+    itsModelHist(itsOpts.numModelParams, int(itsOpts.tempRepeats.sum())),
+    itsMhat(itsOpts.numModelParams, itsOpts.numRuns),
 
     itsFunFunName(funcName),
     itsNvararg(nvararg),
@@ -443,8 +443,8 @@ public:
     mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
     mxSetField(output, 0, "bestCost", itsBestCosts.makeMxArray());
-    mxSetField(output, 0, "mhat", itsOpts.mhat.makeMxArray());
-    mxSetField(output, 0, "model", itsOpts.modelHist.makeMxArray());
+    mxSetField(output, 0, "mhat", itsMhat.makeMxArray());
+    mxSetField(output, 0, "model", itsModelHist.makeMxArray());
     mxSetField(output, 0, "energy", itsOpts.energy.makeMxArray());
     mxSetField(output, 0, "numFunEvals", itsNumFunEvals.makeMxArray());
 
@@ -520,21 +520,6 @@ public:
     mexPrintf("\n");
   }
 
-  void updateBests()
-  {
-    // FIXME ought to use a smarter algorithm to keep track of the best cost
-
-    Mtx currentEnergy = itsOpts.energy.column(itsRunNum);
-
-    int best_pos = 0;
-    const double best_energy = currentEnergy.min(&best_pos);
-
-    itsBestCosts.at(itsRunNum) = best_energy;
-    itsOpts.mhat.column(itsRunNum) = itsOpts.modelHist.column(best_pos);
-
-    displayParams(itsOpts.mhat.column(itsRunNum), itsBestCosts.at(itsRunNum));
-  }
-
   void runSimplex()
   {
     mxArray* funfun_mx = 0;
@@ -543,7 +528,7 @@ public:
     MatlabFunction objective(funfun_mx, itsNvararg, itsPvararg);
 
     SimplexOptimizer opt(objective,
-                         Mtx(itsOpts.mhat.column(itsRunNum)),
+                         Mtx(itsMhat.column(itsRunNum)),
                          fstring("notify"),
                          itsOpts.numModelParams,
                          10000000, // maxFunEvals
@@ -576,7 +561,7 @@ public:
 
         if (inBounds)
           {
-            itsOpts.mhat.column(itsRunNum) = mstar;
+            itsMhat.column(itsRunNum) = mstar;
             itsBestCosts.at(itsRunNum) = Ostar;
             if (itsOpts.talking)
               mexPrintf("\nSimplex method lowered cost "
@@ -700,7 +685,7 @@ DOTRACE("AnnealingRun::oneRun");
                                              double(bestModel.at(i)));
             }
 
-          itsOpts.modelHist.column(nvisits-1) = bestModel;
+          itsModelHist.column(nvisits-1) = bestModel;
         }
     }
 
@@ -714,11 +699,24 @@ DOTRACE("AnnealingRun::oneRun");
       }
   }
 
-  updateBests();
+  // Update bests
+  {
+    // FIXME ought to use a smarter algorithm to keep track of the best cost
+
+    Mtx currentEnergy = itsOpts.energy.column(itsRunNum);
+
+    int best_pos = 0;
+    const double best_energy = currentEnergy.min(&best_pos);
+
+    itsBestCosts.at(itsRunNum) = best_energy;
+    itsMhat.column(itsRunNum) = itsModelHist.column(best_pos);
+
+    displayParams(itsMhat.column(itsRunNum), itsBestCosts.at(itsRunNum));
+  }
 
   if (itsOpts.doNewton) runSimplex();
 
-  itsOpts.startValues.column(0) = itsOpts.mhat.column(itsRunNum);
+  itsOpts.startValues.column(0) = itsMhat.column(itsRunNum);
 
   ++itsRunNum;
 }
