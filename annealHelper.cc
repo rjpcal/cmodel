@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 18:39:30 2002
+// written: Mon Feb 18 18:46:53 2002
 // $Id$
 //
 //
@@ -25,9 +25,9 @@
 
 #include "annealHelper.h"
 
-#include "matlabfunction.h"
 #include "mexbuf.h"
 #include "mtx.h"
+#include "multivarfunction.h"
 #include "mxwrapper.h"
 #include "rutil.h"
 #include "simplexoptimizer.h"
@@ -301,21 +301,19 @@ private:
     DOTRACE("doParallelFuncEvals");
 
     mxArray* costs_mx = 0;
-    mxArray* models_mx = 0; mlfAssign(&models_mx, models.makeMxArray());
 
-    // We don't need to call mxDuplicateArray, since models_mx is a bound
-    // variable due to the mlfAssign() above; that's also why we have to
-    // explicitly destroy it later on
-    itsPrhs[0] = models_mx;
+    // Due to the mlfAssign(), itsPrhs[0] becomes a bound array, which is why
+    // we have to explicitly destroy it at the end of the function
+    itsPrhs[0] = 0; mlfAssign(&itsPrhs[0], models.makeMxArray());
 
-    int result = mexCallMATLAB(1, &costs_mx, itsNvararg+1, itsPrhs,
-                               itsFuncName.c_str());
+    int err =
+      mexCallMATLAB(1, &costs_mx, itsNvararg+1, itsPrhs, itsFuncName.c_str());
 
-    if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
+    if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateParallel");
 
     Mtx costs(costs_mx, Mtx::COPY);
 
-    mxDestroyArray(models_mx);
+    mxDestroyArray(itsPrhs[0]); itsPrhs[0] = 0;
     mxDestroyArray(costs_mx);
 
     return costs;
@@ -340,10 +338,10 @@ private:
                                   mlfCreateColonIndex(),
                                   mlfScalar(e+1));
 
-        int result = mexCallMATLAB(1, plhs, itsNvararg+1, itsPrhs,
-                                   itsFuncName.c_str());
+        int err =
+          mexCallMATLAB(1, plhs, itsNvararg+1, itsPrhs, itsFuncName.c_str());
 
-        if (result != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
+        if (err != 0) mexErrMsgTxt("mexCallMATLAB failed in evaluateSerial");
 
         costs.at(e) = mxGetScalar(plhs[0]);
 
