@@ -167,11 +167,11 @@ DOTRACE("Classifier::computeLogL");
           double oi2 = observedIncidence.at(k,1);
 
           // term 1
-          itsCachedLogL_1_2 += Num::gammaln(1.0 + oi1 + oi2);
+          itsCachedLogL_1_2 += dash::gammaln(1.0 + oi1 + oi2);
 
           // term 2
-          itsCachedLogL_1_2 -= Num::gammaln(1.0+oi1);
-          itsCachedLogL_1_2 -= Num::gammaln(1.0+oi2);
+          itsCachedLogL_1_2 -= dash::gammaln(1.0+oi1);
+          itsCachedLogL_1_2 -= dash::gammaln(1.0+oi2);
         }
 
       itsObservedIncidenceCache = observedIncidence;
