@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Tue Apr 10 14:40:15 2001
+// written: Tue Apr 10 15:01:34 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -249,9 +249,9 @@ DOTRACE("Mclassifier");
 
 	 if ( !res.requestHandled )
 		{
-		  ErrorWithMsg err("unknown model action: ");
-		  err.appendMsg(actionRequest.c_str());
-		  throw err;
+		  dynamic_string msg("unknown model action: ");
+		  msg.append(actionRequest.c_str());
+		  mexWarnMsgTxt(msg.c_str());
  		}
 
 	 //---------------------------------------------------------------------
