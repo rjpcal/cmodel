@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 14:37:08 2002
+// written: Mon Feb 18 14:41:28 2002
 // $Id$
 //
 //
@@ -25,17 +25,12 @@
 
 #include "annealHelper.h"
 
+#include "matlabfunction.h"
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "rutil.h"
-
-#define NEW_VERSION
-
-#ifdef NEW_VERSION
-#include "matlabfunction.h"
 #include "simplexoptimizer.h"
-#endif
 
 #include "util/error.h"
 #include "util/strings.h"
@@ -400,9 +395,7 @@ public:
     itsCanUseMatrix(mxGetScalar(Mx::getField(itsAstate_mx, "canUseMatrix"))
                     != 0.0),
     itsFunFunName(funcName),
-#ifdef NEW_VERSION
     itsDoNewton(mxGetScalar(Mx::getField(itsAstate_mx, "newton")) != 0.0),
-#endif
     itsNvararg(nvararg),
     itsPvararg(pvararg)
   {}
@@ -547,7 +540,6 @@ public:
     displayParams(mhat.column(itsRunNum), bestCost.at(itsRunNum));
   }
 
-#ifdef NEW_VERSION
   void runSimplex()
   {
     Mtx mhat(Mx::getField(itsAstate_mx, "mhat"), Mtx::REFER);
@@ -612,7 +604,6 @@ public:
 
     mxDestroyArray(funfun_mx);
   }
-#endif
 
 private:
   mxArray* const itsAstate_mx;
@@ -631,9 +622,7 @@ private:
   const Mtx itsBounds;
   const bool itsCanUseMatrix;
   fstring itsFunFunName;
-#ifdef NEW_VERSION
   const bool itsDoNewton;
-#endif
   int itsNvararg;
   mxArray** itsPvararg;
 };
@@ -750,9 +739,7 @@ DOTRACE("AnnealingRun::go");
 
   updateBests();
 
-#ifdef NEW_VERSION
   if (itsDoNewton) runSimplex();
-#endif
 
   return itsAstate_mx;
 }
