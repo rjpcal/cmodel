@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:48:36 2001
-// written: Mon Feb 25 13:54:31 2002
+// written: Thu Jun  6 16:37:13 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -64,6 +64,8 @@ public:
 
   static const int DIM_OBJ_PARAMS = 4;
 
+  const Mtx& objParams() const { return itsObjParams; }
+
 protected:
   int numAllExemplars() const { return itsNumAllExemplars; }
 
@@ -77,6 +79,7 @@ protected:
 
 
 private:
+  const Mtx itsObjParams; // col 0 --> categories, cols 1-4 --> objects
   const Mtx itsObjCategories;
   const Mtx itsObjects;
   int itsNumAllExemplars;

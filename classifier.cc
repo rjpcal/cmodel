@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Tue Mar  5 19:07:56 2002
+// written: Thu Jun  6 16:36:56 2002
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -54,6 +54,7 @@ public:
 ///////////////////////////////////////////////////////////////////////
 
 Classifier::Classifier(const Mtx& objParams) :
+  itsObjParams(objParams),
   itsObjCategories(objParams(col_range_n(0, 1))),
   itsObjects(objParams(col_range_n(1, DIM_OBJ_PARAMS))),
   itsNumAllExemplars(objParams.mrows()),
