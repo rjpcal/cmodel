@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Sat Feb 16 17:07:24 2002
+// written: Sat Feb 16 17:27:46 2002
 // $Id$
 //
 //
@@ -411,6 +411,30 @@ public:
     modelHist.column(itsNvisits-1) = bestModel;
   }
 
+  void updateBests()
+  {
+    // FIXME ought to use a smarter algorithm to keep track of the best cost
+
+    int best_pos = 0;
+    double best_energy = itsEnergy.at(0, itsRunNum);
+    for (int i = 1; i < itsEnergy.mrows(); ++i)
+      {
+        if (itsEnergy.at(i, itsRunNum) < best_energy)
+          {
+            best_pos = i;
+            best_energy = itsEnergy.at(i, itsRunNum);
+          }
+      }
+
+    Mtx bestCost(mxGetField(itsAstate_mx, 0, "bestCost"), Mtx::REFER);
+    Mtx mhat(mxGetField(itsAstate_mx, 0, "mhat"), Mtx::REFER);
+
+    const Mtx modelHist(mxGetField(itsAstate_mx, 0, "model"), Mtx::BORROW);
+
+    bestCost.at(itsRunNum) = best_energy;
+    mhat.column(itsRunNum) = modelHist.column(best_pos);
+  }
+
 private:
   mxArray* const itsAstate_mx;
   const int itsRunNum;
@@ -542,6 +566,8 @@ DOTRACE("AnnealingRun::go");
     }
 
   updateDeltas();
+
+  updateBests();
 
   return itsAstate_mx;
 }
