@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2001 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:49:21 2001
-// written: Wed Apr 18 14:41:13 2001
+// written: Thu Apr 26 11:51:01 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -185,8 +185,6 @@ static mxArray* Mclassifier(int /* nargout_ */,
 									 mxArray* modelParams_mx,
 									 mxArray* modelName_mx,
 									 mxArray* actionRequest_mx,
-									 mxArray* objParams_mx,
-									 mxArray* observedIncidence_mx,
 									 mxArray* extraArgs_mx)
 {
 DOTRACE("Mclassifier");
@@ -230,11 +228,12 @@ DOTRACE("Mclassifier");
 	 // This Mtx will copy the data leaving the original mxArray untouched
 	 Mtx allModelParams(modelParams_mx);
 
-	 validateInput(objParams_mx);
-	 const Mtx objParams(objParams_mx);
+	 const Mtx objParams(MxWrapper::extractStructField(extraArgs_mx,
+																		"objParams"));
 
-	 validateInput(observedIncidence_mx);
-	 const Mtx observedIncidence(observedIncidence_mx);
+	 const Mtx observedIncidence(
+        MxWrapper::extractStructField(extraArgs_mx,
+												  "observedIncidence"));
 
 	 shared_ptr<Classifier> model = makeClassifier(modelName,
 																  objParams,
@@ -288,8 +287,6 @@ extern "C"
 mxArray* mlfClassifier(mxArray* modelParams_mx,
 							  mxArray* modelName_mx,
 							  mxArray* actionRequest_mx,
-							  mxArray* objParams_mx,
-							  mxArray* observedIncidence_mx,
 							  mxArray* extraArgs_mx)
 {
 DOTRACE("mlfClassifier");
@@ -298,16 +295,15 @@ DOTRACE("mlfClassifier");
 
   mlfEnterNewContext(0, CLASSIFIER_NARGIN,
                      modelParams_mx, modelName_mx, actionRequest_mx,
-                     objParams_mx, observedIncidence_mx, extraArgs_mx);
+							extraArgs_mx);
 
   mxArray* result = Mclassifier(nargout,
                                 modelParams_mx, modelName_mx, actionRequest_mx,
-                                objParams_mx,
-                                observedIncidence_mx, extraArgs_mx);
+										  extraArgs_mx);
 
   mlfRestorePreviousContext(0, CLASSIFIER_NARGIN,
                             modelParams_mx, modelName_mx, actionRequest_mx, 
-                            objParams_mx, observedIncidence_mx, extraArgs_mx);
+									 extraArgs_mx);
 
   return mlfReturnValue(result);
 }
@@ -355,8 +351,7 @@ DOTRACE("mlxClassifier");
 	 mprhs[i] = NULL;
   }
 
-  mplhs[0] = mlfClassifier(mprhs[0], mprhs[1], mprhs[2],
-									mprhs[3], mprhs[4], mprhs[5]);
+  mplhs[0] = mlfClassifier(mprhs[0], mprhs[1], mprhs[2], mprhs[3]);
 
   plhs[0] = mplhs[0];
 }
