@@ -5,7 +5,7 @@
 // Copyright (c) 1998-2000 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Thu Mar  8 09:34:12 2001
-// written: Thu Mar  8 10:54:07 2001
+// written: Thu Mar  8 11:10:05 2001
 // $Id$
 //
 ///////////////////////////////////////////////////////////////////////
@@ -34,7 +34,6 @@
  */
 
 #include "classifier.h"
-#include "cssm_scaleWeights1.h"
 
 #include "rutil.h"
 
@@ -110,7 +109,7 @@ private:
   }
 };
 
-bool Num::filled = true;
+bool Num::filled = false;
 double Num::lookup[TABLE_SIZE] = { 0.0 };
 
 void Classifier::forwardProbit(double* diffEvidence,
@@ -247,6 +246,14 @@ DOTRACE("linearCombo");
     }
 }
 
+
+
+///////////////////////////////////////////////////////////////////////
+//
+// ModelCssm member definitions
+//
+///////////////////////////////////////////////////////////////////////
+
 ModelCssm::ModelCssm(const Rat& objParams_,
 							const Rat& observedIncidence_,
 							int numStoredExemplars_) :
@@ -294,6 +301,35 @@ int ModelCssm::countCategory(const Rat& params, int category) {
 		  ++n;
 	 }
   return n;
+}
+
+
+void ModelCssm::scaleWeights(double* weights,
+									  int numRawWeights,
+									  int numStoredExemplars,
+									  int numTrainingExemplars)
+{
+DOTRACE("ModelCssm::scaleWeights");
+
+  int mrows = numStoredExemplars*2;
+  int ncols = numTrainingExemplars;
+
+  if ( numRawWeights != (mrows*ncols) )
+	 mexErrMsgTxt("weights must have "
+					  "2*numStoredExemplars*numTrainingExemplars elements");
+
+  for (int i = 0; i < mrows; ++i)
+	 {
+		double sum_wt = 0.0;
+		{
+		  for (int ix = i; ix < numRawWeights; ix+=mrows)
+			 sum_wt += abs(weights[ix]);
+		}
+		{
+		  for (int ix = i; ix < numRawWeights; ix+=mrows)
+			 weights[ix] = abs(weights[ix]) / sum_wt;
+		}
+	 }
 }
 
 
@@ -400,8 +436,8 @@ DOTRACE("ModelCssm::loglikelihoodFor");
   double* rawWeights = modelParams.data() + 6;
   const int numRawWeights = modelParams.nelems() - 6;
 
-  cssm_scaleWeights(rawWeights, numRawWeights,
-                    numStoredExemplars, numTrainingExemplars);
+  scaleWeights(rawWeights, numRawWeights,
+					numStoredExemplars, numTrainingExemplars);
 
   const double* scaledWeights = rawWeights;
 
