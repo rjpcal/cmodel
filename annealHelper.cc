@@ -5,7 +5,7 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Mon Feb 18 17:30:58 2002
+// written: Mon Feb 18 17:36:13 2002
 // $Id$
 //
 //
@@ -480,8 +480,13 @@ public:
 
     mxArray* output = mxCreateStructMatrix(1, 1, 5, fieldnames);
 
-    mxSetField(output, 0, "bestCost", itsBestCosts.makeMxArray());
-    mxSetField(output, 0, "mhat", itsMhat.makeMxArray());
+    int best_pos = -1;
+    double best_cost = itsBestCosts.min(&best_pos);
+
+    Mtx mhat = itsMhat.column(best_pos);
+
+    mxSetField(output, 0, "bestCost", mxCreateScalarDouble(best_cost));
+    mxSetField(output, 0, "mhat", mhat.makeMxArray());
     mxSetField(output, 0, "model", itsModelHist.makeMxArray());
     mxSetField(output, 0, "energy", itsEnergy.makeMxArray());
     mxSetField(output, 0, "numFunEvals", itsNumFunEvals.makeMxArray());
