@@ -7,7 +7,11 @@
  * "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "doSimplex" 
  */
 #include "doSimplex.h"
+
+#include <fstream.h>
 #include "libmatlbm.h"
+
+#include "trace.h"
 
 static mxChar _array1_[136] = { 'R', 'u', 'n', '-', 't', 'i', 'm', 'e', ' ',
                                 'E', 'r', 'r', 'o', 'r', ':', ' ', 'F', 'i',
@@ -516,10 +520,35 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mxArray * tolf,
                             mxArray * maxfun,
                             mxArray * maxiter,
-                            mxArray * debugFlags,
+                            mxArray * debugFlags_mx,
                             mxArray * varargin) {
-    mexLocalFunctionTable save_local_function_table_ = mclSetCurrentLocalFunctionTable(
-                                                         &_local_function_table_doSimplex);
+
+// HOME
+
+    mexLocalFunctionTable save_local_function_table_ =
+		mclSetCurrentLocalFunctionTable(&_local_function_table_doSimplex);
+
+#if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
+	 if (debugFlags_mx && mxIsStruct(debugFlags_mx))
+		{
+		  mxArray* debugFlag = mxGetField(debugFlags_mx, 0, "debugFlag");
+
+		  if (debugFlag)
+			 {
+				if (mxGetScalar(debugFlag) == -1) {
+				  ofstream ofs("profdata.out");
+				  Util::Prof::printAllProfData(ofs);
+				  return mxCreateScalarDouble(-1.0);
+				}
+
+				if (mxGetScalar(debugFlag) == -2) {
+				  Util::Prof::resetAllProfData();
+				  return mxCreateScalarDouble(-2.0);
+				}
+			 }
+		}
+#endif
+
     mxArray * x = mclGetUninitializedArray();
     mxArray * convmsg1 = mclGetUninitializedArray();
     mxArray * msg = mclGetUninitializedArray();
@@ -555,6 +584,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxArray * prnt = mclGetUninitializedArray();
     mxArray * ans = mclGetUninitializedArray();
     mxArray * numModelParams = mclGetUninitializedArray();
+
     mclCopyArray(&funfcn);
     mclCopyInputArg(&x, x_in);
     mclCopyArray(&printtype);
@@ -562,225 +592,187 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mclCopyArray(&tolf);
     mclCopyArray(&maxfun);
     mclCopyArray(&maxiter);
-    mclCopyArray(&debugFlags);
+    mclCopyArray(&debugFlags_mx);
     mclCopyArray(&varargin);
-    /*
-     * doSimplex(funfcn,x,printtype,tolx,tolf,maxfun,maxiter,debugFlags,varargin)
-     * 
-     * %   Copyright 1984-2000 The MathWorks, Inc. 
-     * %   $Revision$  $Date$
-     * %   $Id$
-     * 
-     * 
-     * numModelParams = prod(size(x));
-     */
+
+    // doSimplex(funfcn,x,printtype,tolx,tolf,maxfun,maxiter,debugFlags,varargin)
+    // 
+    // %   Copyright 1984-2000 The MathWorks, Inc. 
+    // %   $Revision$  $Date$
+    // %   $Id$
+    // 
+    // 
+    // numModelParams = prod(size(x));
     mlfAssign(
       &numModelParams,
       mlfProd(mclVe(mlfSize(mclValueVarargout(), mclVa(x, "x"), NULL)), NULL));
-    /*
-     * 
-     * % In case the defaults were gathered from calling: optimset('simplex'):
-     * if ischar(maxfun)
-     */
+
+    // 
+    // % In case the defaults were gathered from calling: optimset('simplex'):
+    // if ischar(maxfun)
     if (mlfTobool(mclVe(mlfIschar(mclVa(maxfun, "maxfun"))))) {
-        /*
-         * if isequal(lower(maxfun),'200*numberofvariables')
-         */
+
+        // if isequal(lower(maxfun),'200*numberofvariables')
         if (mlfTobool(
               mclVe(
                 mlfIsequal(
                   mclVe(mlfLower(mclVa(maxfun, "maxfun"))),
                   _mxarray2_, NULL)))) {
-            /*
-             * maxfun = 200*numModelParams;
-             */
+
+            // maxfun = 200*numModelParams;
             mlfAssign(
               &maxfun,
               mclMtimes(_mxarray4_, mclVv(numModelParams, "numModelParams")));
-        /*
-         * else
-         */
+
+        // else
         } else {
-            /*
-             * error('Option ''MaxFunEvals'' must be an integer value if not the default.')
-             */
+
+            // error('Option ''MaxFunEvals'' must be an integer value if not the default.')
             mlfError(_mxarray5_);
-        /*
-         * end
-         */
+
+        // end
         }
-    /*
-     * end
-     */
+
+    // end
     }
-    /*
-     * if ischar(maxiter)
-     */
+
+    // if ischar(maxiter)
     if (mlfTobool(mclVe(mlfIschar(mclVa(maxiter, "maxiter"))))) {
-        /*
-         * if isequal(lower(maxiter),'200*numberofvariables')
-         */
+
+        // if isequal(lower(maxiter),'200*numberofvariables')
         if (mlfTobool(
               mclVe(
                 mlfIsequal(
                   mclVe(mlfLower(mclVa(maxiter, "maxiter"))),
                   _mxarray2_, NULL)))) {
-            /*
-             * maxiter = 200*numModelParams;
-             */
+
+            // maxiter = 200*numModelParams;
             mlfAssign(
               &maxiter,
               mclMtimes(_mxarray4_, mclVv(numModelParams, "numModelParams")));
-        /*
-         * else
-         */
+
+        // else
         } else {
-            /*
-             * error('Option ''MaxIter'' must be an integer value if not the default.')
-             */
+
+            // error('Option ''MaxIter'' must be an integer value if not the default.')
             mlfError(_mxarray7_);
-        /*
-         * end
-         */
+
+        // end
         }
-    /*
-     * end
-     */
+
+    // end
     }
-    /*
-     * 
-     * switch printtype
-     */
+
+    // 
+    // switch printtype
     {
         mxArray * v_ = mclInitialize(mclVa(printtype, "printtype"));
         if (mclSwitchCompare(v_, _mxarray9_)) {
-            /*
-             * case 'notify'
-             * prnt = 1;
-             */
+
+            // case 'notify'
+            // prnt = 1;
             mlfAssign(&prnt, _mxarray11_);
-        /*
-         * case {'none','off'}
-         */
+
+        // case {'none','off'}
         } else if (mclSwitchCompare(v_, _mxarray12_)) {
-            /*
-             * prnt = 0;
-             */
+
+            // prnt = 0;
             mlfAssign(&prnt, _mxarray18_);
-        /*
-         * case 'iter'
-         */
+
+        // case 'iter'
         } else if (mclSwitchCompare(v_, _mxarray19_)) {
-            /*
-             * prnt = 3;
-             */
+
+            // prnt = 3;
             mlfAssign(&prnt, _mxarray21_);
-        /*
-         * case 'final'
-         */
+
+        // case 'final'
         } else if (mclSwitchCompare(v_, _mxarray22_)) {
-            /*
-             * prnt = 2;
-             */
+
+            // prnt = 2;
             mlfAssign(&prnt, _mxarray24_);
-        /*
-         * case 'simplex'
-         */
+
+        // case 'simplex'
         } else if (mclSwitchCompare(v_, _mxarray25_)) {
-            /*
-             * prnt = 4;
-             */
+
+            // prnt = 4;
             mlfAssign(&prnt, _mxarray27_);
-        /*
-         * otherwise
-         */
+
+        // otherwise
         } else {
-            /*
-             * prnt = 1;
-             */
+
+            // prnt = 1;
             mlfAssign(&prnt, _mxarray11_);
-        /*
-         * end
-         */
+
+        // end
         }
         mxDestroyArray(v_);
     }
-    /*
-     * 
-     * header = ' Iteration   Func-count     min f(x)         Procedure';
-     */
+
+    // 
+    // header = ' Iteration   Func-count     min f(x)         Procedure';
     mlfAssign(&header, _mxarray28_);
-    /*
-     * 
-     * % Convert to inline function as needed.
-     * % XXX Since this requires "object-oriented" programming, we can't keep this
-     * % and still use the MATLAB compiler
-     * %funfcn = fcnchk(funfcn,length(varargin));
-     * 
-     * % Initialize parameters
-     * rho = 1; chi = 2; psi = 0.5; sigma = 0.5;
-     */
+
+    // 
+    // % Convert to inline function as needed.
+    // % XXX Since this requires "object-oriented" programming, we can't keep this
+    // % and still use the MATLAB compiler
+    // %funfcn = fcnchk(funfcn,length(varargin));
+    // 
+    // % Initialize parameters
+    // rho = 1; chi = 2; psi = 0.5; sigma = 0.5;
     mlfAssign(&rho, _mxarray11_);
     mlfAssign(&chi, _mxarray24_);
     mlfAssign(&psi, _mxarray30_);
     mlfAssign(&sigma, _mxarray30_);
-    /*
-     * onesn = ones(1,numModelParams);
-     */
+
+    // onesn = ones(1,numModelParams);
     mlfAssign(
       &onesn,
       mlfOnes(_mxarray11_, mclVv(numModelParams, "numModelParams"), NULL));
-    /*
-     * two2np1 = 2:numModelParams+1;
-     */
+
+    // two2np1 = 2:numModelParams+1;
     mlfAssign(
       &two2np1,
       mlfColon(
         _mxarray24_,
         mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_),
         NULL));
-    /*
-     * one2n = 1:numModelParams;
-     */
+
+    // one2n = 1:numModelParams;
     mlfAssign(
       &one2n,
       mlfColon(_mxarray11_, mclVv(numModelParams, "numModelParams"), NULL));
-    /*
-     * 
-     * % Set up a simplex near the initial guess.
-     * initialParams = x(:); % Force initialParams to be a column vector
-     */
+
+    // 
+    // % Set up a simplex near the initial guess.
+    // initialParams = x(:); % Force initialParams to be a column vector
     mlfAssign(
       &initialParams, mclArrayRef1(mclVsa(x, "x"), mlfCreateColonIndex()));
-    /*
-     * theSimplex = zeros(numModelParams,numModelParams+1);
-     */
+
+    // theSimplex = zeros(numModelParams,numModelParams+1);
     mlfAssign(
       &theSimplex,
       mlfZeros(
         mclVv(numModelParams, "numModelParams"),
         mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_),
         NULL));
-    /*
-     * funcVals = zeros(1,numModelParams+1);
-     */
+
+    // funcVals = zeros(1,numModelParams+1);
     mlfAssign(
       &funcVals,
       mlfZeros(
         _mxarray11_,
         mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_),
         NULL));
-    /*
-     * theSimplex(:,1) = initialParams;    % Place input guess in the simplex! (credit L.Pfeffer at Stanford)
-     */
+
+    // theSimplex(:,1) = initialParams;    % Place input guess in the simplex! (credit L.Pfeffer at Stanford)
     mclArrayAssign2(
       &theSimplex,
       mclVsv(initialParams, "initialParams"),
       mlfCreateColonIndex(),
       _mxarray11_);
-    /*
-     * funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
-     */
+
+    // funcVals(:,1) = feval(funfcn,initialParams,varargin{:}); 
     mclArrayAssign2(
       &funcVals,
       mlfFeval(
@@ -793,37 +785,33 @@ static mxArray * MdoSimplex(mxArray * * fval,
         NULL),
       mlfCreateColonIndex(),
       _mxarray11_);
-    /*
-     * 
-     * % Following improvement suggested by L.Pfeffer at Stanford
-     * usual_delta = 0.05;             % 5 percent deltas for non-zero terms
-     */
+
+    // 
+    // % Following improvement suggested by L.Pfeffer at Stanford
+    // usual_delta = 0.05;             % 5 percent deltas for non-zero terms
     mlfAssign(&usual_delta, _mxarray31_);
-    /*
-     * zero_term_delta = 0.00025;      % Even smaller delta for zero elements of x
-     */
+
+    // zero_term_delta = 0.00025;      % Even smaller delta for zero elements of x
     mlfAssign(&zero_term_delta, _mxarray32_);
-    /*
-     * for j = 1:numModelParams
-     */
+
+    // for j = 1:numModelParams
     {
         int v_ = mclForIntStart(1);
         int e_ = mclForIntEnd(mclVv(numModelParams, "numModelParams"));
         if (v_ > e_) {
             mlfAssign(&j, _mxarray33_);
         } else {
-            /*
-             * y = initialParams;
-             * if y(j) ~= 0
-             * y(j) = (1 + usual_delta)*y(j);
-             * else 
-             * y(j) = zero_term_delta;
-             * end  
-             * theSimplex(:,j+1) = y;
-             * f = feval(funfcn,y,varargin{:});
-             * funcVals(1,j+1) = f;
-             * end     
-             */
+
+            // y = initialParams;
+            // if y(j) ~= 0
+            // y(j) = (1 + usual_delta)*y(j);
+            // else 
+            // y(j) = zero_term_delta;
+            // end  
+            // theSimplex(:,j+1) = y;
+            // f = feval(funfcn,y,varargin{:});
+            // funcVals(1,j+1) = f;
+            // end     
             for (; ; ) {
                 mlfAssign(&y, mclVsv(initialParams, "initialParams"));
                 if (mclNeBool(
@@ -865,51 +853,42 @@ static mxArray * MdoSimplex(mxArray * * fval,
             mlfAssign(&j, mlfScalar(v_));
         }
     }
-    /*
-     * 
-     * % sort so theSimplex(1,:) has the lowest function value 
-     * [funcVals,j] = sort(funcVals);
-     */
+
+    // 
+    // % sort so theSimplex(1,:) has the lowest function value 
+    // [funcVals,j] = sort(funcVals);
     mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
-    /*
-     * theSimplex = theSimplex(:,j);
-     */
+
+    // theSimplex = theSimplex(:,j);
     mlfAssign(
       &theSimplex,
       mclArrayRef2(
         mclVsv(theSimplex, "theSimplex"),
         mlfCreateColonIndex(),
         mclVsv(j, "j")));
-    /*
-     * 
-     * how = 'initial';
-     */
+
+    // 
+    // how = 'initial';
     mlfAssign(&how, _mxarray34_);
-    /*
-     * itercount = 1;
-     */
+
+    // itercount = 1;
     mlfAssign(&itercount, _mxarray11_);
-    /*
-     * func_evals = numModelParams+1;
-     */
+
+    // func_evals = numModelParams+1;
     mlfAssign(
       &func_evals,
       mclPlus(mclVv(numModelParams, "numModelParams"), _mxarray11_));
-    /*
-     * if prnt == 3
-     */
+
+    // if prnt == 3
     if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
-        /*
-         * disp(' ')
-         */
+
+        // disp(' ')
         mlfDisp(_mxarray36_);
-        /*
-         * disp(header)
-         */
+
+        // disp(header)
         mlfDisp(mclVv(header, "header"));
-        /*
-         * disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
-         */
+
+        // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
         mlfDisp(
           mlfHorzcat(
             mclVe(
@@ -922,62 +901,49 @@ static mxArray * MdoSimplex(mxArray * * fval,
                 NULL)),
             mclVv(how, "how"),
             NULL));
-    /*
-     * elseif prnt == 4
-     */
+
+    // elseif prnt == 4
     } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
-        /*
-         * clc
-         */
+
+        // clc
         mlfClc();
-        /*
-         * formatsave = get(0,{'format','formatspacing'});
-         */
+
+        // formatsave = get(0,{'format','formatspacing'});
         mlfAssign(&formatsave, mlfNGet(1, _mxarray18_, _mxarray40_, NULL));
-        /*
-         * format compact
-         */
+
+        // format compact
         mlfFormat(_mxarray46_, NULL);
-        /*
-         * format short e
-         */
+
+        // format short e
         mlfFormat(_mxarray48_, _mxarray50_);
-        /*
-         * disp(' ')
-         */
+
+        // disp(' ')
         mlfDisp(_mxarray36_);
-        /*
-         * disp(how)
-         */
+
+        // disp(how)
         mlfDisp(mclVv(how, "how"));
-        /*
-         * theSimplex
-         */
+
+        // theSimplex
         mclPrintArray(mclVsv(theSimplex, "theSimplex"), "theSimplex");
-        /*
-         * funcVals
-         */
+
+        // funcVals
         mclPrintArray(mclVsv(funcVals, "funcVals"), "funcVals");
-        /*
-         * func_evals
-         */
+
+        // func_evals
         mclPrintArray(mclVsv(func_evals, "func_evals"), "func_evals");
-    /*
-     * end
-     */
+
+    // end
     }
-    /*
-     * exitflag = 1;
-     */
+
+    // exitflag = 1;
     mlfAssign(exitflag, _mxarray11_);
-    /*
-     * 
-     * % Main algorithm
-     * % Iterate until the diameter of the simplex is less than tolx
-     * %   AND the function values differ from the min by less than tolf,
-     * %   or the max function evaluations are exceeded. (Cannot use OR instead of AND.)
-     * while func_evals < maxfun & itercount < maxiter
-     */
+
+    // 
+    // % Main algorithm
+    // % Iterate until the diameter of the simplex is less than tolx
+    // %   AND the function values differ from the min by less than tolf,
+    // %   or the max function evaluations are exceeded. (Cannot use OR instead of AND.)
+    // while func_evals < maxfun & itercount < maxiter
     for (;;) {
         mxArray * a_ = mclInitialize(
                          mclLt(
@@ -995,9 +961,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
             mxDestroyArray(a_);
             break;
         }
-        /*
-         * if max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx & ...
-         */
+
+        // if max(max(abs(theSimplex(:,two2np1)-theSimplex(:,onesn)))) <= tolx & ...
         {
             mxArray * a_ = mclInitialize(
                              mclLe(
@@ -1049,29 +1014,25 @@ static mxArray * MdoSimplex(mxArray * * fval,
                              NULL)),
                          mclVa(tolf, "tolf"))))) {
                 mxDestroyArray(a_);
-                /*
-                 * max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
-                 * break
-                 */
+
+                // max(abs(funcVals(1)-funcVals(two2np1))) <= tolf
+                // break
                 break;
             } else {
                 mxDestroyArray(a_);
             }
-        /*
-         * end
-         */
+
+        // end
         }
-        /*
-         * how = '';
-         */
+
+        // how = '';
         mlfAssign(&how, _mxarray52_);
-        /*
-         * 
-         * % Compute the reflection point
-         * 
-         * % xbar = average of the numModelParams (NOT numModelParams+1) best points
-         * xbar = sum(theSimplex(:,one2n), 2)/numModelParams;
-         */
+
+        // 
+        // % Compute the reflection point
+        // 
+        // % xbar = average of the numModelParams (NOT numModelParams+1) best points
+        // xbar = sum(theSimplex(:,one2n), 2)/numModelParams;
         mlfAssign(
           &xbar,
           mclMrdivide(
@@ -1084,9 +1045,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                     mclVsv(one2n, "one2n"))),
                 _mxarray24_)),
             mclVv(numModelParams, "numModelParams")));
-        /*
-         * xr = (1 + rho)*xbar - rho*theSimplex(:,end);
-         */
+
+        // xr = (1 + rho)*xbar - rho*theSimplex(:,end);
         mlfAssign(
           &xr,
           mclMinus(
@@ -1102,9 +1062,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                     mclVv(theSimplex, "theSimplex"),
                     _mxarray24_,
                     _mxarray24_))))));
-        /*
-         * fxr = feval(funfcn,xr,varargin{:});
-         */
+
+        // fxr = feval(funfcn,xr,varargin{:});
         mlfAssign(
           &fxr,
           mlfFeval(
@@ -1115,15 +1074,13 @@ static mxArray * MdoSimplex(mxArray * * fval,
               mlfIndexRef(
                 mclVsa(varargin, "varargin"), "{?}", mlfCreateColonIndex())),
             NULL));
-        /*
-         * func_evals = func_evals+1;
-         */
+
+        // func_evals = func_evals+1;
         mlfAssign(
           &func_evals, mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-        /*
-         * 
-         * if fxr < funcVals(:,1)
-         */
+
+        // 
+        // if fxr < funcVals(:,1)
         if (mclLtBool(
               mclVv(fxr, "fxr"),
               mclVe(
@@ -1131,10 +1088,9 @@ static mxArray * MdoSimplex(mxArray * * fval,
                   mclVsv(funcVals, "funcVals"),
                   mlfCreateColonIndex(),
                   _mxarray11_)))) {
-            /*
-             * % Calculate the expansion point
-             * xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
-             */
+
+            // % Calculate the expansion point
+            // xe = (1 + rho*chi)*xbar - rho*chi*theSimplex(:,end);
             mlfAssign(
               &xe,
               mclMinus(
@@ -1153,9 +1109,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                         mclVv(theSimplex, "theSimplex"),
                         _mxarray24_,
                         _mxarray24_))))));
-            /*
-             * fxe = feval(funfcn,xe,varargin{:});
-             */
+
+            // fxe = feval(funfcn,xe,varargin{:});
             mlfAssign(
               &fxe,
               mlfFeval(
@@ -1168,75 +1123,63 @@ static mxArray * MdoSimplex(mxArray * * fval,
                     "{?}",
                     mlfCreateColonIndex())),
                 NULL));
-            /*
-             * func_evals = func_evals+1;
-             */
+
+            // func_evals = func_evals+1;
             mlfAssign(
               &func_evals,
               mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-            /*
-             * if fxe < fxr
-             */
+
+            // if fxe < fxr
             if (mclLtBool(mclVv(fxe, "fxe"), mclVv(fxr, "fxr"))) {
-                /*
-                 * theSimplex(:,end) = xe;
-                 */
+
+                // theSimplex(:,end) = xe;
                 mclArrayAssign2(
                   &theSimplex,
                   mclVsv(xe, "xe"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
-                /*
-                 * funcVals(:,end) = fxe;
-                 */
+
+                // funcVals(:,end) = fxe;
                 mclArrayAssign2(
                   &funcVals,
                   mclVsv(fxe, "fxe"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
-                /*
-                 * how = 'expand';
-                 */
+
+                // how = 'expand';
                 mlfAssign(&how, _mxarray53_);
-            /*
-             * else
-             */
+
+            // else
             } else {
-                /*
-                 * theSimplex(:,end) = xr; 
-                 */
+
+                // theSimplex(:,end) = xr; 
                 mclArrayAssign2(
                   &theSimplex,
                   mclVsv(xr, "xr"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
-                /*
-                 * funcVals(:,end) = fxr;
-                 */
+
+                // funcVals(:,end) = fxr;
                 mclArrayAssign2(
                   &funcVals,
                   mclVsv(fxr, "fxr"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
-                /*
-                 * how = 'reflect';
-                 */
+
+                // how = 'reflect';
                 mlfAssign(&how, _mxarray55_);
-            /*
-             * end
-             */
+
+            // end
             }
-        /*
-         * else % funcVals(:,1) <= fxr
-         */
+
+        // else % funcVals(:,1) <= fxr
         } else {
-            /*
-             * if fxr < funcVals(:,numModelParams)
-             */
+
+            // if fxr < funcVals(:,numModelParams)
             if (mclLtBool(
                   mclVv(fxr, "fxr"),
                   mclVe(
@@ -1244,36 +1187,31 @@ static mxArray * MdoSimplex(mxArray * * fval,
                       mclVsv(funcVals, "funcVals"),
                       mlfCreateColonIndex(),
                       mclVsv(numModelParams, "numModelParams"))))) {
-                /*
-                 * theSimplex(:,end) = xr; 
-                 */
+
+                // theSimplex(:,end) = xr; 
                 mclArrayAssign2(
                   &theSimplex,
                   mclVsv(xr, "xr"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(theSimplex, "theSimplex"), _mxarray24_, _mxarray24_));
-                /*
-                 * funcVals(:,end) = fxr;
-                 */
+
+                // funcVals(:,end) = fxr;
                 mclArrayAssign2(
                   &funcVals,
                   mclVsv(fxr, "fxr"),
                   mlfCreateColonIndex(),
                   mlfEnd(
                     mclVv(funcVals, "funcVals"), _mxarray24_, _mxarray24_));
-                /*
-                 * how = 'reflect';
-                 */
+
+                // how = 'reflect';
                 mlfAssign(&how, _mxarray55_);
-            /*
-             * else % fxr >= funcVals(:,numModelParams) 
-             */
+
+            // else % fxr >= funcVals(:,numModelParams) 
             } else {
-                /*
-                 * % Perform contraction
-                 * if fxr < funcVals(:,end)
-                 */
+
+                // % Perform contraction
+                // if fxr < funcVals(:,end)
                 if (mclLtBool(
                       mclVv(fxr, "fxr"),
                       mclVe(
@@ -1284,10 +1222,9 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mclVv(funcVals, "funcVals"),
                             _mxarray24_,
                             _mxarray24_))))) {
-                    /*
-                     * % Perform an outside contraction
-                     * xc = (1 + psi*rho)*xbar - psi*rho*theSimplex(:,end);
-                     */
+
+                    // % Perform an outside contraction
+                    // xc = (1 + psi*rho)*xbar - psi*rho*theSimplex(:,end);
                     mlfAssign(
                       &xc,
                       mclMinus(
@@ -1306,9 +1243,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                 mclVv(theSimplex, "theSimplex"),
                                 _mxarray24_,
                                 _mxarray24_))))));
-                    /*
-                     * fxc = feval(funfcn,xc,varargin{:});
-                     */
+
+                    // fxc = feval(funfcn,xc,varargin{:});
                     mlfAssign(
                       &fxc,
                       mlfFeval(
@@ -1321,20 +1257,17 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             "{?}",
                             mlfCreateColonIndex())),
                         NULL));
-                    /*
-                     * func_evals = func_evals+1;
-                     */
+
+                    // func_evals = func_evals+1;
                     mlfAssign(
                       &func_evals,
                       mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-                    /*
-                     * 
-                     * if fxc <= fxr
-                     */
+
+                    // 
+                    // if fxc <= fxr
                     if (mclLeBool(mclVv(fxc, "fxc"), mclVv(fxr, "fxr"))) {
-                        /*
-                         * theSimplex(:,end) = xc; 
-                         */
+
+                        // theSimplex(:,end) = xc; 
                         mclArrayAssign2(
                           &theSimplex,
                           mclVsv(xc, "xc"),
@@ -1343,9 +1276,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mclVv(theSimplex, "theSimplex"),
                             _mxarray24_,
                             _mxarray24_));
-                        /*
-                         * funcVals(:,end) = fxc;
-                         */
+
+                        // funcVals(:,end) = fxc;
                         mclArrayAssign2(
                           &funcVals,
                           mclVsv(fxc, "fxc"),
@@ -1354,31 +1286,25 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mclVv(funcVals, "funcVals"),
                             _mxarray24_,
                             _mxarray24_));
-                        /*
-                         * how = 'contract outside';
-                         */
+
+                        // how = 'contract outside';
                         mlfAssign(&how, _mxarray57_);
-                    /*
-                     * else
-                     */
+
+                    // else
                     } else {
-                        /*
-                         * % perform a shrink
-                         * how = 'shrink'; 
-                         */
+
+                        // % perform a shrink
+                        // how = 'shrink'; 
                         mlfAssign(&how, _mxarray59_);
-                    /*
-                     * end
-                     */
+
+                    // end
                     }
-                /*
-                 * else
-                 */
+
+                // else
                 } else {
-                    /*
-                     * % Perform an inside contraction
-                     * xcc = (1-psi)*xbar + psi*theSimplex(:,end);
-                     */
+
+                    // % Perform an inside contraction
+                    // xcc = (1-psi)*xbar + psi*theSimplex(:,end);
                     mlfAssign(
                       &xcc,
                       mclPlus(
@@ -1395,9 +1321,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                 mclVv(theSimplex, "theSimplex"),
                                 _mxarray24_,
                                 _mxarray24_))))));
-                    /*
-                     * fxcc = feval(funfcn,xcc,varargin{:});
-                     */
+
+                    // fxcc = feval(funfcn,xcc,varargin{:});
                     mlfAssign(
                       &fxcc,
                       mlfFeval(
@@ -1410,16 +1335,14 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             "{?}",
                             mlfCreateColonIndex())),
                         NULL));
-                    /*
-                     * func_evals = func_evals+1;
-                     */
+
+                    // func_evals = func_evals+1;
                     mlfAssign(
                       &func_evals,
                       mclPlus(mclVv(func_evals, "func_evals"), _mxarray11_));
-                    /*
-                     * 
-                     * if fxcc < funcVals(:,end)
-                     */
+
+                    // 
+                    // if fxcc < funcVals(:,end)
                     if (mclLtBool(
                           mclVv(fxcc, "fxcc"),
                           mclVe(
@@ -1430,9 +1353,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                 mclVv(funcVals, "funcVals"),
                                 _mxarray24_,
                                 _mxarray24_))))) {
-                        /*
-                         * theSimplex(:,end) = xcc;
-                         */
+
+                        // theSimplex(:,end) = xcc;
                         mclArrayAssign2(
                           &theSimplex,
                           mclVsv(xcc, "xcc"),
@@ -1441,9 +1363,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mclVv(theSimplex, "theSimplex"),
                             _mxarray24_,
                             _mxarray24_));
-                        /*
-                         * funcVals(:,end) = fxcc;
-                         */
+
+                        // funcVals(:,end) = fxcc;
                         mclArrayAssign2(
                           &funcVals,
                           mclVsv(fxcc, "fxcc"),
@@ -1452,43 +1373,35 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             mclVv(funcVals, "funcVals"),
                             _mxarray24_,
                             _mxarray24_));
-                        /*
-                         * how = 'contract inside';
-                         */
+
+                        // how = 'contract inside';
                         mlfAssign(&how, _mxarray61_);
-                    /*
-                     * else
-                     */
+
+                    // else
                     } else {
-                        /*
-                         * % perform a shrink
-                         * how = 'shrink';
-                         */
+
+                        // % perform a shrink
+                        // how = 'shrink';
                         mlfAssign(&how, _mxarray59_);
-                    /*
-                     * end
-                     */
+
+                    // end
                     }
-                /*
-                 * end
-                 */
+
+                // end
                 }
-                /*
-                 * if strcmp(how,'shrink')
-                 */
+
+                // if strcmp(how,'shrink')
                 if (mlfTobool(
                       mclVe(mlfStrcmp(mclVv(how, "how"), _mxarray59_)))) {
                     mclForLoopIterator viter__;
-                    /*
-                     * for j=two2np1
-                     */
+
+                    // for j=two2np1
                     for (mclForStart(
                            &viter__, mclVv(two2np1, "two2np1"), NULL, NULL);
                          mclForNext(&viter__, &j);
                          ) {
-                        /*
-                         * theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
-                         */
+
+                        // theSimplex(:,j)=theSimplex(:,1)+sigma*(theSimplex(:,j) - theSimplex(:,1));
                         mclArrayAssign2(
                           &theSimplex,
                           mclPlus(
@@ -1512,9 +1425,8 @@ static mxArray * MdoSimplex(mxArray * * fval,
                                     _mxarray11_))))),
                           mlfCreateColonIndex(),
                           mclVsv(j, "j"));
-                        /*
-                         * funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
-                         */
+
+                        // funcVals(:,j) = feval(funfcn,theSimplex(:,j),varargin{:});
                         mclArrayAssign2(
                           &funcVals,
                           mlfFeval(
@@ -1533,56 +1445,46 @@ static mxArray * MdoSimplex(mxArray * * fval,
                             NULL),
                           mlfCreateColonIndex(),
                           mclVsv(j, "j"));
-                    /*
-                     * end
-                     */
+
+                    // end
                     }
                     mclDestroyForLoopIterator(viter__);
-                    /*
-                     * func_evals = func_evals + numModelParams;
-                     */
+
+                    // func_evals = func_evals + numModelParams;
                     mlfAssign(
                       &func_evals,
                       mclPlus(
                         mclVv(func_evals, "func_evals"),
                         mclVv(numModelParams, "numModelParams")));
-                /*
-                 * end
-                 */
+
+                // end
                 }
-            /*
-             * end
-             */
+
+            // end
             }
-        /*
-         * end
-         */
+
+        // end
         }
-        /*
-         * [funcVals,j] = sort(funcVals);
-         */
+
+        // [funcVals,j] = sort(funcVals);
         mlfAssign(&funcVals, mlfSort(&j, mclVv(funcVals, "funcVals"), NULL));
-        /*
-         * theSimplex = theSimplex(:,j);
-         */
+
+        // theSimplex = theSimplex(:,j);
         mlfAssign(
           &theSimplex,
           mclArrayRef2(
             mclVsv(theSimplex, "theSimplex"),
             mlfCreateColonIndex(),
             mclVsv(j, "j")));
-        /*
-         * itercount = itercount + 1;
-         */
+
+        // itercount = itercount + 1;
         mlfAssign(
           &itercount, mclPlus(mclVv(itercount, "itercount"), _mxarray11_));
-        /*
-         * if prnt == 3
-         */
+
+        // if prnt == 3
         if (mclEqBool(mclVv(prnt, "prnt"), _mxarray21_)) {
-            /*
-             * disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
-             */
+
+            // disp([sprintf(' %5.0f        %5.0f     %12.6g         ', itercount, func_evals, funcVals(1)), how]) 
             mlfDisp(
               mlfHorzcat(
                 mclVe(
@@ -1595,56 +1497,45 @@ static mxArray * MdoSimplex(mxArray * * fval,
                     NULL)),
                 mclVv(how, "how"),
                 NULL));
-        /*
-         * elseif prnt == 4
-         */
+
+        // elseif prnt == 4
         } else if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
-            /*
-             * disp(' ')
-             */
+
+            // disp(' ')
             mlfDisp(_mxarray36_);
-            /*
-             * disp(how)
-             */
+
+            // disp(how)
             mlfDisp(mclVv(how, "how"));
-            /*
-             * theSimplex
-             */
+
+            // theSimplex
             mclPrintArray(mclVsv(theSimplex, "theSimplex"), "theSimplex");
-            /*
-             * funcVals
-             */
+
+            // funcVals
             mclPrintArray(mclVsv(funcVals, "funcVals"), "funcVals");
-            /*
-             * func_evals
-             */
+
+            // func_evals
             mclPrintArray(mclVsv(func_evals, "func_evals"), "func_evals");
-        /*
-         * end  
-         */
+
+        // end  
         }
-    /*
-     * end   % while
-     */
+
+    // end   % while
     }
-    /*
-     * 
-     * 
-     * x(:) = theSimplex(:,1);
-     */
+
+    // 
+    // 
+    // x(:) = theSimplex(:,1);
     mclArrayAssign1(
       &x,
       mclArrayRef2(
         mclVsv(theSimplex, "theSimplex"), mlfCreateColonIndex(), _mxarray11_),
       mlfCreateColonIndex());
-    /*
-     * if prnt == 4,
-     */
+
+    // if prnt == 4,
     if (mclEqBool(mclVv(prnt, "prnt"), _mxarray27_)) {
-        /*
-         * % reset format
-         * set(0,{'format','formatspacing'},formatsave);
-         */
+
+        // % reset format
+        // set(0,{'format','formatspacing'},formatsave);
         mclAssignAns(
           &ans,
           mlfNSet(
@@ -1653,113 +1544,87 @@ static mxArray * MdoSimplex(mxArray * * fval,
             _mxarray40_,
             mclVv(formatsave, "formatsave"),
             NULL));
-    /*
-     * end
-     */
+
+    // end
     }
-    /*
-     * output.iterations = itercount;
-     */
+
+    // output.iterations = itercount;
     mlfIndexAssign(output, ".iterations", mclVsv(itercount, "itercount"));
-    /*
-     * output.funcCount = func_evals;
-     */
+
+    // output.funcCount = func_evals;
     mlfIndexAssign(output, ".funcCount", mclVsv(func_evals, "func_evals"));
-    /*
-     * output.algorithm = 'Nelder-Mead simplex direct search';
-     */
+
+    // output.algorithm = 'Nelder-Mead simplex direct search';
     mlfIndexAssign(output, ".algorithm", _mxarray63_);
-    /*
-     * 
-     * fval = min(funcVals);
-     */
+
+    // 
+    // fval = min(funcVals);
     mlfAssign(fval, mlfMin(NULL, mclVv(funcVals, "funcVals"), NULL, NULL));
-    /*
-     * if func_evals >= maxfun 
-     */
+
+    // if func_evals >= maxfun 
     if (mclGeBool(mclVv(func_evals, "func_evals"), mclVa(maxfun, "maxfun"))) {
-        /*
-         * if prnt > 0
-         */
+
+        // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
-            /*
-             * disp(' ')
-             */
+
+            // disp(' ')
             mlfDisp(_mxarray36_);
-            /*
-             * disp('Exiting: Maximum number of function evaluations has been exceeded')
-             */
+
+            // disp('Exiting: Maximum number of function evaluations has been exceeded')
             mlfDisp(_mxarray65_);
-            /*
-             * disp('         - increase MaxFunEvals option.')
-             */
+
+            // disp('         - increase MaxFunEvals option.')
             mlfDisp(_mxarray67_);
-            /*
-             * msg = sprintf('         Current function value: %f \n', fval);
-             */
+
+            // msg = sprintf('         Current function value: %f \n', fval);
             mlfAssign(
               &msg, mlfSprintf(NULL, _mxarray69_, mclVv(*fval, "fval"), NULL));
-            /*
-             * disp(msg)
-             */
+
+            // disp(msg)
             mlfDisp(mclVv(msg, "msg"));
-        /*
-         * end
-         */
+
+        // end
         }
-        /*
-         * exitflag = 0;
-         */
+
+        // exitflag = 0;
         mlfAssign(exitflag, _mxarray18_);
-    /*
-     * elseif itercount >= maxiter 
-     */
+
+    // elseif itercount >= maxiter 
     } else if (mclGeBool(
                  mclVv(itercount, "itercount"), mclVa(maxiter, "maxiter"))) {
-        /*
-         * if prnt > 0
-         */
+
+        // if prnt > 0
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray18_)) {
-            /*
-             * disp(' ')
-             */
+
+            // disp(' ')
             mlfDisp(_mxarray36_);
-            /*
-             * disp('Exiting: Maximum number of iterations has been exceeded')
-             */
+
+            // disp('Exiting: Maximum number of iterations has been exceeded')
             mlfDisp(_mxarray71_);
-            /*
-             * disp('         - increase MaxIter option.')
-             */
+
+            // disp('         - increase MaxIter option.')
             mlfDisp(_mxarray73_);
-            /*
-             * msg = sprintf('         Current function value: %f \n', fval);
-             */
+
+            // msg = sprintf('         Current function value: %f \n', fval);
             mlfAssign(
               &msg, mlfSprintf(NULL, _mxarray69_, mclVv(*fval, "fval"), NULL));
-            /*
-             * disp(msg)
-             */
+
+            // disp(msg)
             mlfDisp(mclVv(msg, "msg"));
-        /*
-         * end
-         */
+
+        // end
         }
-        /*
-         * exitflag = 0; 
-         */
+
+        // exitflag = 0; 
         mlfAssign(exitflag, _mxarray18_);
-    /*
-     * else
-     */
+
+    // else
     } else {
-        /*
-         * if prnt > 1
-         */
+
+        // if prnt > 1
         if (mclGtBool(mclVv(prnt, "prnt"), _mxarray11_)) {
-            /*
-             * convmsg1 = sprintf([ ...
-             */
+
+            // convmsg1 = sprintf([ ...
             mlfAssign(
               &convmsg1,
               mlfSprintf(
@@ -1768,31 +1633,33 @@ static mxArray * MdoSimplex(mxArray * * fval,
                 mclVa(tolx, "tolx"),
                 mclVa(tolf, "tolf"),
                 NULL));
-            /*
-             * '\nOptimization terminated successfully:\n',...
-             * ' the current x satisfies the termination criteria using OPTIONS.TolX of %e \n',...
-             * ' and F(X) satisfies the convergence criteria using OPTIONS.TolFun of %e \n'
-             * ],tolx, tolf);
-             * disp(convmsg1)
-             */
+
+
+            // '\nOptimization terminated successfully:\n',...
+            // ' the current x satisfies the termination criteria using OPTIONS.TolX of %e \n',...
+            // ' and F(X) satisfies the convergence criteria using OPTIONS.TolFun of %e \n'
+            // ],tolx, tolf);
+            // disp(convmsg1)
             mlfDisp(mclVv(convmsg1, "convmsg1"));
-        /*
-         * end
-         */
+
+
+        // end
         }
-        /*
-         * exitflag = 1;
-         */
+
+
+        // exitflag = 1;
         mlfAssign(exitflag, _mxarray11_);
-    /*
-     * end
-     */
+
+
+    // end
     }
+
     mclVo(&x);
     mclValidateOutput(x, 1, nargout_, "x", "doSimplex");
     mclValidateOutput(*fval, 2, nargout_, "fval", "doSimplex");
     mclValidateOutput(*exitflag, 3, nargout_, "exitflag", "doSimplex");
     mclValidateOutput(*output, 4, nargout_, "output", "doSimplex");
+
     mxDestroyArray(numModelParams);
     mxDestroyArray(ans);
     mxDestroyArray(prnt);
@@ -1828,7 +1695,7 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxDestroyArray(msg);
     mxDestroyArray(convmsg1);
     mxDestroyArray(varargin);
-    mxDestroyArray(debugFlags);
+    mxDestroyArray(debugFlags_mx);
     mxDestroyArray(maxiter);
     mxDestroyArray(maxfun);
     mxDestroyArray(tolf);
@@ -1836,11 +1703,6 @@ static mxArray * MdoSimplex(mxArray * * fval,
     mxDestroyArray(printtype);
     mxDestroyArray(funfcn);
     mclSetCurrentLocalFunctionTable(save_local_function_table_);
+
     return x;
-    /*
-     * 
-     * 
-     * 
-     * 
-     */
 }
