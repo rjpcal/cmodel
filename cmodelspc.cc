@@ -51,7 +51,7 @@ DOTRACE("CmodelSPC::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
-      Mtx category_ = extraArgs.getStructField("category").getMtx();
+      Mtx category_ = extraArgs.getField("category").getMtx();
 
       int category = int(category_.at(0));
 

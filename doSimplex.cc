@@ -98,14 +98,14 @@ void doSimplex(int nlhs, mxArray* plhs[],
 
   MxWrapper output_wrapper(plhs[3]);
 
-  output_wrapper.setStructField("iterations",
-                                mxCreateScalarDouble(opt.iterCount()));
+  output_wrapper.setField("iterations",
+                          mxCreateScalarDouble(opt.iterCount()));
 
-  output_wrapper.setStructField("funcCount",
-                                mxCreateScalarDouble(opt.funcCount()));
+  output_wrapper.setField("funcCount",
+                          mxCreateScalarDouble(opt.funcCount()));
 
-  output_wrapper.setStructField("algorithm",
-                                mxCreateString(opt.algorithm()));
+  output_wrapper.setField("algorithm",
+                          mxCreateString(opt.algorithm()));
 }
 
 
