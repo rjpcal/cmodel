@@ -414,15 +414,17 @@ public:
   AnnealingRun(mxArray* old_astate_mx,
                const Mtx& valueScalingRange,
                const Mtx& bounds,
-               const bool canUseMatrix_,
-               const fstring& func_name_,
-               int nvararg_,
-               mxArray** pvararg_)
+               const bool canUseMatrix,
+               const fstring& funcName,
+               int nvararg,
+               mxArray** pvararg)
     :
     astate_mx(mxDuplicateArray(old_astate_mx)),
     itsRunNum(int(mxGetScalar(mxGetField(astate_mx, 0, "k")))-1),
     itsTalking(mxGetScalar(mxGetField(astate_mx, 0, "talk")) != 0.0),
     itsNvisits(0),
+    itsTemps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW),
+    itsTempRepeats(mxGetField(astate_mx, 0, "x"), Mtx::BORROW),
     itsNumFunEvals(mxGetField(astate_mx, 0, "numFunEvals"), Mtx::REFER),
     itsEnergy(mxGetField(astate_mx, 0, "energy"), Mtx::REFER),
     itsMinUsedParams(mxGetField(astate_mx, 0, "bestModel"), Mtx::COPY),
@@ -430,10 +432,10 @@ public:
     itsDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER),
     itsValueScalingRange(valueScalingRange),
     itsBounds(bounds),
-    canUseMatrix(canUseMatrix_),
-    func_name(func_name_),
-    nvararg(nvararg_),
-    pvararg(pvararg_)
+    itsCanUseMatrix(canUseMatrix),
+    itsFunFunName(funcName),
+    itsNvararg(nvararg),
+    itsPvararg(pvararg)
   {}
 
   mxArray* go();
@@ -450,11 +452,22 @@ public:
       }
   }
 
+  void updateDeltas()
+  {
+    for (int i = 0; i < itsDeltas.nelems(); ++i)
+      {
+        itsDeltas.at(i) =
+          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
+      }
+  }
+
 private:
   mxArray* const astate_mx;
   const int itsRunNum;
   const bool itsTalking;
   int itsNvisits;
+  Mtx itsTemps;
+  Mtx itsTempRepeats;
   Mtx itsNumFunEvals;
   Mtx itsEnergy;
   Mtx itsMinUsedParams;
@@ -462,10 +475,10 @@ private:
   Mtx itsDeltas;
   Mtx itsValueScalingRange;
   Mtx itsBounds;
-  const bool canUseMatrix;
-  fstring func_name;
-  int nvararg;
-  mxArray** pvararg;
+  const bool itsCanUseMatrix;
+  fstring itsFunFunName;
+  int itsNvararg;
+  mxArray** itsPvararg;
 };
 
 //---------------------------------------------------------------------
@@ -479,29 +492,24 @@ mxArray* AnnealingRun::go()
 DOTRACE("AnnealingRun::go");
 
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
- if (nvararg > 0 && int(mxGetScalar(pvararg[0])) == -1)
+ if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -1)
    {
      Util::Prof::printAllProfData(std::cerr);
      return mxCreateScalarDouble(-1.0);
    }
- if (nvararg > 0 && int(mxGetScalar(pvararg[0])) == -2)
+ if (itsNvararg > 0 && int(mxGetScalar(itsPvararg[0])) == -2)
    {
      Util::Prof::resetAllProfData();
      return mxCreateScalarDouble(-2.0);
    }
 #endif
 
-  const Mtx temps(mxGetField(astate_mx, 0, "temps"), Mtx::BORROW);
-  const Mtx astate_x(mxGetField(astate_mx, 0, "x"), Mtx::BORROW);
-
-//   const Mtx deltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::BORROW);
-
-  for (int temps_i = 0; temps_i < temps.nelems(); ++temps_i)
+  for (int temps_i = 0; temps_i < itsTemps.nelems(); ++temps_i)
     {
-      const double temp = temps.at(temps_i);
-      const int temp_repeats = int(astate_x.at(temps_i));
+      const double temp = itsTemps.at(temps_i);
+      const int temp_repeat = int(itsTempRepeats.at(temps_i));
 
-      for (int repeat = 0; repeat < temp_repeats; ++repeat)
+      for (int repeat = 0; repeat < temp_repeat; ++repeat)
         {
           ++itsNvisits;
 
@@ -518,11 +526,11 @@ DOTRACE("AnnealingRun::go");
                                   itsValueScalingRange,
                                   itsDeltas,
                                   itsBounds,
-                                  canUseMatrix,
-                                  func_name,
+                                  itsCanUseMatrix,
+                                  itsFunFunName,
                                   temp,
-                                  nvararg,
-                                  pvararg);
+                                  itsNvararg,
+                                  itsPvararg);
 
           mxSetField(astate_mx, 0, "bestModel", vresult.newModel);
 
@@ -543,17 +551,7 @@ DOTRACE("AnnealingRun::go");
         }
     }
 
-  // Update the deltas
-  {
-//     Mtx currentDeltas(mxGetField(astate_mx, 0, "currentDeltas"), Mtx::REFER);
-
-    for (int i = 0; i < itsDeltas.nelems(); ++i)
-      {
-//         currentDeltas.at(i) =
-        itsDeltas.at(i) =
-          0.75 * (itsMaxUsedParams.at(i) - itsMinUsedParams.at(i));
-      }
-  }
+  updateDeltas();
 
   return astate_mx;
 }
@@ -600,7 +598,7 @@ DOTRACE("mlxAnnealVisitParameters");
          Mtx(prhs[1], Mtx::BORROW), // valueScalingRange
          Mtx(prhs[2], Mtx::BORROW), // bounds
          (mxGetScalar(prhs[3]) != 0.0), // canUseMatrix
-         MxWrapper::extractString(prhs[4]), // func_name
+         MxWrapper::extractString(prhs[4]), // funcName
          nvararg,
          pvararg);
 
