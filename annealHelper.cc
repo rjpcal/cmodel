@@ -18,15 +18,6 @@
 
 #include "trace.h"
 
-fixed_string getString(const mxArray* arr)
-{
-  fixed_string str(mxGetM(arr) * mxGetN(arr) * sizeof(mxChar));
-
-  mxGetString(arr, str.data(), str.length() + 1);
-
-  return str;
-}
-
 static mxArray* _mxarray20_;
 static mxArray* _mxarray21_;
 static mxArray* _mxarray22_;
@@ -493,7 +484,7 @@ DOTRACE("doFuncEvals");
 
 		int nrhs = 6;
 
-  		fixed_string cmd_name = getString(func);
+  		fixed_string cmd_name = Mtx::extractString(func);
 
   		int result = mexCallMATLAB(1, plhs, nrhs, prhs, cmd_name.c_str());
 
