@@ -5,33 +5,34 @@
 // Copyright (c) 2001-2002 Rob Peters rjpeters@klab.caltech.edu
 //
 // created: Fri Mar 23 17:17:00 2001
-// written: Thu Feb 14 13:41:04 2002
+// written: Thu Feb 14 13:43:17 2002
 // $Id$
+//
+//
+// MATLAB Compiler: 2.1
+// Date: Fri Mar 23 17:17:00 2001
+// Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
+// "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
+// "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
+// "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "annealVisitParameters"
 //
 ///////////////////////////////////////////////////////////////////////
 
 #ifndef ANNEALVISITPARAMETERS_CC_DEFINED
 #define ANNEALVISITPARAMETERS_CC_DEFINED
 
-/*
- * MATLAB Compiler: 2.1
- * Date: Fri Mar 23 17:17:00 2001
- * Arguments: "-B" "macro_default" "-O" "all" "-O" "fold_scalar_mxarrays:on"
- * "-O" "fold_non_scalar_mxarrays:on" "-O" "optimize_integer_for_loops:on" "-O"
- * "array_indexing:on" "-O" "optimize_conditionals:on" "-x" "-W" "mex" "-L" "C"
- * "-t" "-T" "link:mexlibrary" "libmatlbmx.mlib" "-h" "annealVisitParameters"
- */
 #include "annealVisitParameters.h"
 
-#include "util/error.h"
 #include "mexbuf.h"
 #include "mtx.h"
 #include "mxwrapper.h"
 #include "rutil.h"
+
+#include "util/error.h"
 #include "util/strings.h"
 
-#include <iostream.h>
-#include "libmatlbm.h"
+#include <iostream>
+#include <libmatlbm.h>
 
 #include "util/trace.h"
 #include "util/debug.h"
@@ -57,11 +58,11 @@ void InitializeModule_annealVisitParameters()
 
   mexBuf = new MexBuf;
 #ifdef MIPS_PRO
-  cout = mexBuf;
-  cerr = mexBuf;
+  std::cout = mexBuf;
+  std::cerr = mexBuf;
 #else
-  coutOrigBuf = cout.rdbuf(mexBuf);
-  cerrOrigBuf = cerr.rdbuf(mexBuf);
+  coutOrigBuf = std::cout.rdbuf(mexBuf);
+  cerrOrigBuf = std::cerr.rdbuf(mexBuf);
 #endif
 
   _mxarray20_ = mclInitializeDouble(0.0);
@@ -80,8 +81,8 @@ void TerminateModule_annealVisitParameters()
   // For some reason we get crashses if we try to reset these to their
   // original streambuf*'s; setting them to 0 effectively just shuts the
   // streams down
-  cout.rdbuf(0);
-  cerr.rdbuf(0);
+  std::cout.rdbuf(0);
+  std::cerr.rdbuf(0);
 
   delete mexBuf;
 
@@ -295,7 +296,7 @@ DOTRACE("MannealVisitParameters");
 #if defined(LOCAL_DEBUG) || defined(LOCAL_PROF)
       if (varargin_mx && mxGetScalar(mxGetCell(varargin_mx,0)) == -1)
         {
-          Util::Prof::printAllProfData(cerr);
+          Util::Prof::printAllProfData(std::cerr);
           return mxCreateScalarDouble(-1.0);
         }
 
@@ -720,8 +721,8 @@ DOTRACE("makePDF");
       // pdf(bad) = 0;
       mclArrayAssign1(&pdf, _mxarray20_, bad);
 
-      cerr << "Warning: the cost function generated a NaN "
-           << "for one or more models.";
+      std::cerr << "Warning: the cost function generated a NaN "
+                << "for one or more models.";
     }
 
   mclValidateOutput(pdf, 1, 1, "pdf", "annealVisitParameters/makePDF");
