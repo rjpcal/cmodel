@@ -19,11 +19,11 @@
 
 #include "mtx/mtx.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 void CModelUtil::clampRows(mtx& src, int firstrow, int nrows, const mtx& hilo)
 {
-DOTRACE("CModelUtil::clampRows");
+GVX_TRACE("CModelUtil::clampRows");
 
   for (int c = 0; c < src.ncols(); ++c)
     {
@@ -41,7 +41,7 @@ DOTRACE("CModelUtil::clampRows");
 mtx CModelUtil::getStoredExemplars(const slice& otherParams, int nstored,
                                    const mtx& hilo0, const mtx& hilo1)
 {
-DOTRACE("CModelUtil::getStoredExemplars");
+GVX_TRACE("CModelUtil::getStoredExemplars");
 
   // reshape params into a stored exemplar matrix
 
@@ -57,7 +57,7 @@ DOTRACE("CModelUtil::getStoredExemplars");
 
 mtx CModelUtil::getHiLo(const mtx& src)
 {
-DOTRACE("CModelUtil::getHiLo");
+GVX_TRACE("CModelUtil::getHiLo");
 
   mtx result = mtx::zeros(2, src.ncols());
 

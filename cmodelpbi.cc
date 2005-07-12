@@ -17,7 +17,7 @@
 
 #include "mtx/mtx.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 CModelPbi::CModelPbi(const mtx& objParams) :
   Classifier(objParams)
@@ -28,7 +28,7 @@ CModelPbi::~CModelPbi() {}
 void CModelPbi::computeDiffEv(const mtx& objects,
                               slice& modelParams, mtx& diffEvOut)
 {
-DOTRACE("CModelPbi::computeDiffEv");
+GVX_TRACE("CModelPbi::computeDiffEv");
 
   mtx_const_iter attWeights =
     static_cast<const slice&>(modelParams(range(0, DIM_OBJ_PARAMS))).begin();

@@ -15,13 +15,13 @@
 
 #include "cmodel/cmodelcssm.h"
 
-#include "util/error.h"
+#include "rutz/error.h"
 
 #include "mtx/mtx.h"
 
 #include <cmath>
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 CModelCssm::CModelCssm(const mtx& objParams,
                        TransferFunction transferFunc,
@@ -33,14 +33,14 @@ CModelCssm::CModelCssm(const mtx& objParams,
   itsCachedRawWts1(mtx::zeros(numStoredExemplars, numTrainingExemplars())),
   itsCachedRawWts2(mtx::zeros(numStoredExemplars, numTrainingExemplars()))
 {
-DOTRACE("CModelCssm::CModelCssm");
+GVX_TRACE("CModelCssm::CModelCssm");
 }
 
 CModelCssm::~CModelCssm() {}
 
 int CModelCssm::numModelParams() const
 {
-DOTRACE("CModelCssm::numModelParams");
+GVX_TRACE("CModelCssm::numModelParams");
 
   return CModelExemplar::numModelParams()
     + 2 * numStoredExemplars() * numTrainingExemplars();
@@ -48,7 +48,7 @@ DOTRACE("CModelCssm::numModelParams");
 
 void CModelCssm::loadModelParams(slice& modelParams)
 {
-DOTRACE("CModelCssm::loadModelParams");
+GVX_TRACE("CModelCssm::loadModelParams");
 
   const int nex = numStoredExemplars();
 
@@ -103,7 +103,7 @@ const mtx& CModelCssm::getStoredExemplars(Category cat)
 
 int CModelCssm::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
-DOTRACE("CModelCssm::fillModelParamsBounds");
+GVX_TRACE("CModelCssm::fillModelParamsBounds");
 
   // We just use the default upper+lower bounds, which are filled in by
   // Classifier to be negative and positive "infinity" (i.e. realmax)

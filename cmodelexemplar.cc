@@ -20,10 +20,10 @@
 
 #include "mx/mxwrapper.h"
 
-#include "util/error.h"
-#include "util/fstring.h"
+#include "rutz/error.h"
+#include "rutz/fstring.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 #include <cmath>
 #include <vector>
@@ -69,7 +69,7 @@ CModelExemplar::handleRequest(rutz::fstring action,
                               const mtx& allModelParams,
                               const mx_wrapper& extraArgs)
 {
-DOTRACE("CModelExemplar::handleRequest");
+GVX_TRACE("CModelExemplar::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
@@ -101,7 +101,7 @@ DOTRACE("CModelExemplar::handleRequest");
 void CModelExemplar::computeDiffEv(const mtx& objects,
                                    slice& modelParams, mtx& diffEvOut)
 {
-DOTRACE("CModelExemplar::computeDiffEv");
+GVX_TRACE("CModelExemplar::computeDiffEv");
 
   const bool newObjects = (objects != itsObjectsCache);
 
@@ -153,7 +153,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
   }
 
   for (int x = 0; x < itsNumStoredExemplars; ++x) {
-  DOTRACE("minkowski loop");
+  GVX_TRACE("minkowski loop");
 
     bool compute1 = newObjects || newAttWts ||
       (itsStored1Cache.row(x) != stored1.row(x));
@@ -162,7 +162,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
       (itsStored2Cache.row(x) != stored2.row(x));
 
     if (compute1) {
-    DOTRACE("compute1");
+    GVX_TRACE("compute1");
 
       const mtx_iter distrust1 = itsEvidence1Cache.row_iter(x);
 
@@ -194,7 +194,7 @@ DOTRACE("CModelExemplar::computeDiffEv");
     }
 
     if (compute2) {
-    DOTRACE("compute2");
+    GVX_TRACE("compute2");
       itsStored2Cache.row(x) = stored2.row(x);
 
       const mtx_iter distrust2 = itsEvidence2Cache.row_iter(x);

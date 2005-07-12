@@ -18,13 +18,13 @@
 #include "cmodel/cmodelutil.h"
 #include "cmodel/eucbinder.h"
 
-#include "util/error.h"
-#include "util/fstring.h"
+#include "rutz/error.h"
+#include "rutz/fstring.h"
 
 #include <cmath>
 #include <limits>
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 CModelSPC::CModelSPC(const mtx& objParams, int numStoredExemplars) :
   Classifier(objParams),
@@ -37,7 +37,7 @@ CModelSPC::~CModelSPC() {}
 
 int CModelSPC::numModelParams() const
 {
-DOTRACE("CModelSPC::numModelParams");
+GVX_TRACE("CModelSPC::numModelParams");
 
   return Classifier::numModelParams()
     + (itsNumStoredExemplars * 2 * DIM_OBJ_PARAMS);
@@ -48,7 +48,7 @@ CModelSPC::handleRequest(rutz::fstring action,
                          const mtx& allModelParams,
                          const mx_wrapper& extraArgs)
 {
-DOTRACE("CmodelSPC::handleRequest");
+GVX_TRACE("CmodelSPC::handleRequest");
 
   if ( action == "getStoredExemplars" )
     {
@@ -81,7 +81,7 @@ DOTRACE("CmodelSPC::handleRequest");
 void CModelSPC::computeDiffEv(const mtx& objects,
                               slice& modelParams, mtx& diffEvOut)
 {
-DOTRACE("CModelSPC::computeDiffEv");
+GVX_TRACE("CModelSPC::computeDiffEv");
 
   //---------------------------------------------------------------------
   //
@@ -102,7 +102,7 @@ DOTRACE("CModelSPC::computeDiffEv");
                                    itsHiLo0,
                                    itsHiLo1);
 
-  {DOTRACE("<cmodelspc.cc>::loop");
+  {GVX_TRACE("<cmodelspc.cc>::loop");
 
   // Loop over the test objects
   for (int r = 0; r < objects.mrows(); ++r)
@@ -116,7 +116,7 @@ DOTRACE("CModelSPC::computeDiffEv");
       double mindist0 = std::numeric_limits<double>::max();
       double mindist1 = std::numeric_limits<double>::max();
 
-      {DOTRACE("<cmodelspc.cc>::minkDist2");
+      {GVX_TRACE("<cmodelspc.cc>::minkDist2");
 
       for (int rr = 0, rr2 = itsNumStoredExemplars;
            rr < itsNumStoredExemplars;
@@ -144,7 +144,7 @@ double CModelSPC::computeSigmaNoise(double rawSigma) const
 
 int CModelSPC::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
-DOTRACE("CModelSPC::fillModelParamsBounds");
+GVX_TRACE("CModelSPC::fillModelParamsBounds");
 
   startRow += Classifier::fillModelParamsBounds(bounds, startRow);
 

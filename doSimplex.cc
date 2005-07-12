@@ -23,9 +23,9 @@
 #include "optim/matlabfunction.h"
 #include "optim/simplexoptimizer.h"
 
-#include "util/error.h"
+#include "rutz/error.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 int extractMaxIters(const mxArray* arr, int numModelParams)
 {
@@ -113,7 +113,7 @@ namespace
 
   void terminateModule()
   {
-  DOTRACE("terminateModule");
+  GVX_TRACE("terminateModule");
     delete mexPkg;
     mexPkg = 0;
   }
@@ -123,7 +123,7 @@ extern "C"
 void mexFunction(int nlhs, mxArray* plhs[],
                  int nrhs, const mxArray* prhs[])
 {
-DOTRACE("mexFunction");
+GVX_TRACE("mexFunction");
 
   if (mexPkg == 0)
     {

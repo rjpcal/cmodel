@@ -17,7 +17,7 @@
 
 #include "mtx/mtx.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 #include <map>
 
@@ -46,7 +46,7 @@ CModelCueValidity::~CModelCueValidity() {}
 void CModelCueValidity::computeDiffEv(const mtx& objects,
                                       slice& modelParams, mtx& diffEvOut)
 {
-DOTRACE("CModelCueValidity::computeDiffEv");
+GVX_TRACE("CModelCueValidity::computeDiffEv");
 
   mtx attWeights(modelParams(range(0, DIM_OBJ_PARAMS)));
   attWeights.apply(&::fabs);

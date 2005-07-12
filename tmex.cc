@@ -17,7 +17,7 @@
 
 #include <mex.h>
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 namespace
 {
@@ -39,7 +39,7 @@ extern "C"
 void mexFunction(int nlhs, mxArray* plhs[],
                  int nrhs, const mxArray* prhs[])
 {
-DOTRACE("mexFunction");
+GVX_TRACE("mexFunction");
   if (mexPkg == 0)
     {
       mexPkg = new MexPkg("tmex", &terminateModule);

@@ -17,9 +17,9 @@
 
 #include "mtx/mtx.h"
 
-#include "util/error.h"
+#include "rutz/error.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 
 CModelGcm::CModelGcm(const mtx& objParams,
@@ -28,7 +28,7 @@ CModelGcm::CModelGcm(const mtx& objParams,
                  MAX_STORED,
                  transferFunc)
 {
-DOTRACE("CModelGcm::CModelGcm");
+GVX_TRACE("CModelGcm::CModelGcm");
 }
 
 
@@ -37,7 +37,7 @@ CModelGcm::~CModelGcm() {}
 
 const mtx& CModelGcm::getStoredExemplars(Category cat)
 {
-DOTRACE("CModelGcm::findStoredExemplar");
+GVX_TRACE("CModelGcm::findStoredExemplar");
 
   if (CAT1 == cat)
     {

@@ -17,9 +17,9 @@
 
 #include "mtx/mtx.h"
 
-#include "util/error.h"
+#include "rutz/error.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 
 CModelWpsm::CModelWpsm(const mtx& objParams,
@@ -28,7 +28,7 @@ CModelWpsm::CModelWpsm(const mtx& objParams,
   itsPrototype1(mtx::zeros(1, DIM_OBJ_PARAMS)),
   itsPrototype2(mtx::zeros(1, DIM_OBJ_PARAMS))
 {
-DOTRACE("CModelWpsm::CModelWpsm");
+GVX_TRACE("CModelWpsm::CModelWpsm");
 
   for (int i = 0; i < DIM_OBJ_PARAMS; ++i)
     {
@@ -43,7 +43,7 @@ CModelWpsm::~CModelWpsm() {}
 
 const mtx& CModelWpsm::getStoredExemplars(Category cat)
 {
-DOTRACE("CModelWpsm::findStoredExemplar");
+GVX_TRACE("CModelWpsm::findStoredExemplar");
 
   if (CAT1 == cat)
     {

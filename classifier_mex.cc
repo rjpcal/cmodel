@@ -32,13 +32,13 @@
 #include "mx/mexpkg.h"
 #include "mx/mx.h"
 
-#include "util/error.h"
-#include "util/fstring.h"
-#include "util/sharedptr.h"
+#include "rutz/error.h"
+#include "rutz/fstring.h"
+#include "rutz/sharedptr.h"
 
 #include <mex.h>
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 #ifdef LOCAL_DEBUG
 #define MEXFUNCNAME "dclassifier"
@@ -73,7 +73,7 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
                                       const mtx& objParams,
                                       const mxArray* extraArgs_mx)
 {
-  DOTRACE("<classifier_mex.cc>::makeClassifier");
+  GVX_TRACE("<classifier_mex.cc>::makeClassifier");
   if (whichType == "cssm" || whichType == "rxmlin")
     {
       const CModelExemplar::TransferFunction tfunc =
@@ -89,13 +89,13 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
            objParams == mexPkg->recentCssm->objParams() &&
            tfunc == mexPkg->recentCssm->transferFunction() )
         {
-          DOTRACE("<classifier_mex.cc>::makeClassifier-use old cssm");
+          GVX_TRACE("<classifier_mex.cc>::makeClassifier-use old cssm");
 
           return mexPkg->recentCssm;
         }
       else
         {
-          DOTRACE("<classifier_mex.cc>::makeClassifier-make new cssm");
+          GVX_TRACE("<classifier_mex.cc>::makeClassifier-make new cssm");
 
           // To avoid relying on transient matlab storage:
           mtx uniqObjParams = objParams;
@@ -124,13 +124,13 @@ shared_ptr<Classifier> makeClassifier(const fstring& whichType,
            objParams == mexPkg->recentRxm->objParams() &&
            tfunc == mexPkg->recentRxm->transferFunction() )
         {
-          DOTRACE("<classifier_mex.cc>::makeClassifier-use old rxm");
+          GVX_TRACE("<classifier_mex.cc>::makeClassifier-use old rxm");
 
           return mexPkg->recentRxm;
         }
       else
         {
-          DOTRACE("<classifier_mex.cc>::makeClassifier-make new rxm");
+          GVX_TRACE("<classifier_mex.cc>::makeClassifier-make new rxm");
 
           // To avoid relying on transient matlab storage:
           mtx uniqObjParams = objParams;
@@ -212,7 +212,7 @@ namespace
 void classifier(int nlhs, mxArray* plhs[],
                 int nrhs, const mxArray* prhs[])
 {
-DOTRACE("<classifier_mex.cc>::classifier");
+GVX_TRACE("<classifier_mex.cc>::classifier");
 
   const mtx      modelParams   (make_mtx(prhs[0], mtx::COPY));
   const fstring  modelName     (mx::as_string(prhs[1]));
@@ -257,7 +257,7 @@ extern "C"
 void mexFunction(int nlhs, mxArray* plhs[],
                  int nrhs, const mxArray* prhs[])
 {
-DOTRACE("mexFunction");
+GVX_TRACE("mexFunction");
 
   if (mexPkg == 0)
     {

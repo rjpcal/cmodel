@@ -21,14 +21,14 @@
 #include "optim/multivarfunction.h"
 #include "optim/simplexoptimizer.h"
 
-#include "util/error.h"
-#include "util/fstring.h"
+#include "rutz/error.h"
+#include "rutz/fstring.h"
 
 #include <limits>
 #include <matrix.h>
 
-#include "util/trace.h"
-#include "util/debug.h"
+#include "rutz/trace.h"
+#include "rutz/debug.h"
 
 using rutz::fstring;
 
@@ -41,7 +41,7 @@ class LLEvaluator : public MultivarFunction
 protected:
   virtual double doEvaluate(const mtx& x)
   {
-    DOTRACE("LLEvaluator::doEvaluate");
+    GVX_TRACE("LLEvaluator::doEvaluate");
     slice params(x.column(0));
     return -itsC.currentLogL(params, itsObjs, itsInc);
   }
@@ -62,7 +62,7 @@ namespace
   // Just check that objParams has the right size
   const mtx& testSize(const mtx& objParams)
   {
-    DOTRACE("<classifier.cc>::testSize");
+    GVX_TRACE("<classifier.cc>::testSize");
     if (objParams.ncols() != Classifier::DIM_OBJ_PARAMS+1)
       throw rutz::error(fstring("objParams must have "
                                 "DIM_OBJ_PARAMS+1 columns "
@@ -82,17 +82,17 @@ Classifier::Classifier(const mtx& objParams) :
   itsObservedIncidenceCache(mtx::empty_mtx()),
   itsCachedLogL_1_2(0.0)
 {
-DOTRACE("Classifier::Classifier");
+GVX_TRACE("Classifier::Classifier");
 }
 
 Classifier::~Classifier()
 {
-DOTRACE("Classifier::~Classifier");
+GVX_TRACE("Classifier::~Classifier");
 }
 
 int Classifier::numModelParams() const
 {
-DOTRACE("Classifier::numModelParams");
+GVX_TRACE("Classifier::numModelParams");
 
   return DIM_OBJ_PARAMS // one attentional weight per obj param
     + 1 // plus one param for the threshold
@@ -101,7 +101,7 @@ DOTRACE("Classifier::numModelParams");
 
 mtx Classifier::modelParamsBounds() const
 {
-DOTRACE("Classifier::modelParamsBounds");
+GVX_TRACE("Classifier::modelParamsBounds");
 
   mtx bounds = mtx::zeros(numModelParams(), 2);
 
@@ -121,7 +121,7 @@ DOTRACE("Classifier::modelParamsBounds");
 mtx Classifier::forwardProbit(const mtx& diffEv,
                               double thresh, double sigmaNoise)
 {
-DOTRACE("Classifier::forwardProbit");
+GVX_TRACE("Classifier::forwardProbit");
 
   const double divisor = (1.0 / M_SQRT2) * (1.0 / sigmaNoise);
 
@@ -154,7 +154,7 @@ DOTRACE("Classifier::forwardProbit");
 double Classifier::computeLogL(const mtx& predictedProbability,
                                const mtx& observedIncidence)
 {
-DOTRACE("Classifier::computeLogL");
+GVX_TRACE("Classifier::computeLogL");
 
   if (observedIncidence != itsObservedIncidenceCache ||
       itsCachedLogL_1_2 == 0.0)
@@ -209,7 +209,7 @@ DOTRACE("Classifier::computeLogL");
 // Returns the classification probability for each of 'objects'
 mtx Classifier::classifyObjects(slice& modelParams, const mtx& testObjects)
 {
-DOTRACE("Classifier::classifyObjects");
+GVX_TRACE("Classifier::classifyObjects");
 
   itsDiffEvidence.resize(testObjects.mrows(), 1);
 
@@ -236,7 +236,7 @@ double Classifier::currentLogL(slice& modelParams,
                                const mtx& testObjects,
                                const mtx& observedIncidence)
 {
-DOTRACE("Classifier::currentLogL");
+GVX_TRACE("Classifier::currentLogL");
 
   mtx pp = classifyObjects(modelParams, testObjects);
 
@@ -248,7 +248,7 @@ DOTRACE("Classifier::currentLogL");
 
 double Classifier::fullLogL(const mtx& observedIncidence)
 {
-DOTRACE("Classifier::fullLogL");
+GVX_TRACE("Classifier::fullLogL");
 
   mtx observedProb = mtx::zeros(numAllExemplars(), 1);
   mtx_iter opiter = observedProb.column_iter(0);
@@ -266,7 +266,7 @@ double Classifier::deviance(slice& modelParams,
                             const mtx& testObjects,
                             const mtx& observedIncidence)
 {
-DOTRACE("Classifier::deviance");
+GVX_TRACE("Classifier::deviance");
 
   double llc = currentLogL(modelParams, testObjects, observedIncidence);
   double llf = fullLogL(observedIncidence);
@@ -307,7 +307,7 @@ Classifier::handleRequest(rutz::fstring action,
                           const mtx& allModelParams,
                           const mx_wrapper& extraArgs)
 {
-DOTRACE("Classifier::handleRequest");
+GVX_TRACE("Classifier::handleRequest");
 
   int multiplier = 1;
   // check for minus sign
@@ -327,14 +327,14 @@ DOTRACE("Classifier::handleRequest");
 
   if ( action == "bounds" )
     {
-      DOTRACE("Classifier::handleRequest-bounds");
+      GVX_TRACE("Classifier::handleRequest-bounds");
 
       return modelParamsBounds();
     }
 
   else if ( action == "ll" || action == "llc" )
     {
-      DOTRACE("Classifier::handleRequest-llc");
+      GVX_TRACE("Classifier::handleRequest-llc");
 
       const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
@@ -355,7 +355,7 @@ DOTRACE("Classifier::handleRequest");
 
   else if ( action == "llf" )
     {
-      DOTRACE("Classifier::handleRequest-llf");
+      GVX_TRACE("Classifier::handleRequest-llf");
 
       const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
@@ -372,7 +372,7 @@ DOTRACE("Classifier::handleRequest");
 
   else if ( action == "dev" )
     {
-      DOTRACE("Classifier::handleRequest-dev");
+      GVX_TRACE("Classifier::handleRequest-dev");
 
       const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
@@ -393,7 +393,7 @@ DOTRACE("Classifier::handleRequest");
 
   else if ( action == "classify" )
     {
-      DOTRACE("Classifier::handleRequest-classify");
+      GVX_TRACE("Classifier::handleRequest-classify");
 
       const mtx testObjects = getTestObjects(extraArgs);
 
@@ -412,7 +412,7 @@ DOTRACE("Classifier::handleRequest");
 
   else if ( action == "simplex" )
     {
-      DOTRACE("Classifier::handleRequest-simplex");
+      GVX_TRACE("Classifier::handleRequest-simplex");
 
       const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
@@ -446,7 +446,7 @@ DOTRACE("Classifier::handleRequest");
 
   else if ( action == "anneal" )
     {
-      DOTRACE("Classifier::handleRequest-anneal");
+      GVX_TRACE("Classifier::handleRequest-anneal");
 
       const mtx observedIncidence = extraArgs.get_mtx_field("observedIncidence");
 
@@ -471,7 +471,7 @@ DOTRACE("Classifier::handleRequest");
 // Count the category training exemplars
 int Classifier::countCategory(int category) const
 {
-DOTRACE("Classifier::countCategory");
+GVX_TRACE("Classifier::countCategory");
   int n = 0;
   mtx_const_iter iter = itsObjCategories.column_iter(0);
   for (; iter.has_more(); ++iter)
@@ -484,7 +484,7 @@ DOTRACE("Classifier::countCategory");
 
 mtx Classifier::objectsOfCategory(int category) const
 {
-DOTRACE("Classifier::objectsOfCategory");
+GVX_TRACE("Classifier::objectsOfCategory");
 
   const int nobjs = countCategory(category);
 
@@ -506,19 +506,19 @@ DOTRACE("Classifier::objectsOfCategory");
 
 int Classifier::exemplarCategory(int i) const
 {
-DOTRACE("Classifier::exemplarCategory");
+GVX_TRACE("Classifier::exemplarCategory");
   return int(itsObjCategories.at(i));
 }
 
 slice Classifier::exemplar(int i) const
 {
-DOTRACE("Classifier::exemplar");
+GVX_TRACE("Classifier::exemplar");
   return itsObjects.row(i);
 }
 
 int Classifier::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
-DOTRACE("Classifier::fillModelParamsBounds");
+GVX_TRACE("Classifier::fillModelParamsBounds");
 
   const double minus_inf = -std::numeric_limits<double>::max();
   const double plus_inf = std::numeric_limits<double>::max();

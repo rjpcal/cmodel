@@ -20,12 +20,12 @@
 #include "optim/annealingoptimizer.h"
 #include "optim/matlabfunction.h"
 
-#include "util/trace.h"
+#include "rutz/trace.h"
 
 void annealHelper(int nlhs, mxArray* plhs[],
                   int nrhs, const mxArray* prhs[])
 {
-DOTRACE("annealHelper");
+GVX_TRACE("annealHelper");
 
   const int NDECLARED = 2; // The minimum number of input arguments
 
@@ -54,7 +54,7 @@ namespace
 
   void terminateModule()
   {
-  DOTRACE("terminateModule");
+  GVX_TRACE("terminateModule");
     delete mexPkg;
     mexPkg = 0;
   }
@@ -64,7 +64,7 @@ extern "C"
 void mexFunction(int nlhs, mxArray* plhs[],
                  int nrhs, const mxArray* prhs[])
 {
-DOTRACE("mexFunction");
+GVX_TRACE("mexFunction");
 
   if (mexPkg == 0)
     {

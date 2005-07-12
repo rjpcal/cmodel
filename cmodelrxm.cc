@@ -17,13 +17,13 @@
 
 #include "cmodel/cmodelutil.h"
 
-#include "util/error.h"
+#include "rutz/error.h"
 
 #include "mtx/mtx.h"
 
 #define LOCAL_DEBUG
-#include "util/debug.h"
-#include "util/trace.h"
+#include "rutz/debug.h"
+#include "rutz/trace.h"
 
 CModelRxm::CModelRxm(const mtx& objParams,
                      TransferFunction transferFunc,
@@ -34,14 +34,14 @@ CModelRxm::CModelRxm(const mtx& objParams,
   itsHiLo1(CModelUtil::getHiLo(objectsOfCategory(0))),
   itsHiLo2(CModelUtil::getHiLo(objectsOfCategory(1)))
 {
-DOTRACE("CModelRxm::CModelRxm");
+GVX_TRACE("CModelRxm::CModelRxm");
 }
 
 CModelRxm::~CModelRxm() {}
 
 int CModelRxm::numModelParams() const
 {
-DOTRACE("CModelRxm::numModelParams");
+GVX_TRACE("CModelRxm::numModelParams");
 
   return CModelExemplar::numModelParams()
     + (numStoredExemplars() * 2 * DIM_OBJ_PARAMS);
@@ -49,7 +49,7 @@ DOTRACE("CModelRxm::numModelParams");
 
 void CModelRxm::loadModelParams(slice& modelParams)
 {
-DOTRACE("CModelRxm::loadModelParams");
+GVX_TRACE("CModelRxm::loadModelParams");
 
   const int nex = numStoredExemplars();
 
@@ -62,7 +62,7 @@ DOTRACE("CModelRxm::loadModelParams");
 
 const mtx& CModelRxm::getStoredExemplars(Category cat)
 {
-DOTRACE("CModelRxm::getStoredExemplars");
+GVX_TRACE("CModelRxm::getStoredExemplars");
   if (CAT1 == cat)
     {
       return itsStored1;
@@ -82,7 +82,7 @@ DOTRACE("CModelRxm::getStoredExemplars");
 
 int CModelRxm::fillModelParamsBounds(mtx& bounds, int startRow) const
 {
-DOTRACE("CModelRxm::fillModelParamsBounds");
+GVX_TRACE("CModelRxm::fillModelParamsBounds");
 
   startRow += CModelExemplar::fillModelParamsBounds(bounds, startRow);
 
